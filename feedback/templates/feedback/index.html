@@ -1,7 +1,219 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Feedback{% endblock %}
+{% block title %}Citizen Feedback{% endblock %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'feedback/css/feedback.css' %}">
+{% endblock %}
 
 {% block content %}
-  <h1>Feedback app is working!</h1>
+<div class="shell">
+  <main class="content" role="main">
+
+    <div class="pg-label">
+      <span class="material-icons-round" aria-hidden="true">feedback</span>
+      Citizen Feedback System
+    </div>
+
+    <h1>Rate your<br><em>experience.</em></h1>
+
+    <p class="pg-desc">Help us serve you better. Select the office you visited and share how your transaction went — takes under a minute.</p>
+
+    <div id="formArea">
+
+      <!-- STEP 1 -->
+      <div class="sec-label">
+        <div class="sec-num" aria-hidden="true">1</div>
+        <span class="sec-title">Office visited</span>
+        <div class="sec-rule"></div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-hint">Select the city government office you transacted with.</p>
+        <div class="sel-wrap">
+          <select id="officeSelect" aria-required="true" aria-describedby="officeErr" onchange="clearErr('officeErr')">
+            <option value="">Choose an office —</option>
+            <option>Mayor's Office</option>
+            <option>City Civil Registrar</option>
+            <option>City Health Office</option>
+            <option>City Social Welfare &amp; Development</option>
+            <option>City Treasurer's Office</option>
+            <option>City Assessor's Office</option>
+            <option>City Engineering Office</option>
+            <option>City Environment &amp; Natural Resources</option>
+            <option>City Planning &amp; Development</option>
+            <option>Business Permits &amp; Licensing Office</option>
+            <option>City Legal Office</option>
+            <option>Human Resource Management Office</option>
+          </select>
+          <span class="sel-arrow" aria-hidden="true">
+            <span class="material-icons-round">expand_more</span>
+          </span>
+        </div>
+        <p class="err" id="officeErr" role="alert">
+          <span class="material-icons-round" aria-hidden="true">error</span>
+          Please select an office.
+        </p>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="panel-spacer"></div>
+
+      <div class="sec-label">
+        <div class="sec-num" aria-hidden="true">2</div>
+        <span class="sec-title">Your experience</span>
+        <div class="sec-rule"></div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-hint">Tap a reaction — no typing needed. Ideal for senior citizens.</p>
+
+        <div class="emo-grid" role="group" aria-label="Rate your experience">
+          <button class="emo-btn" id="btn-pos" onclick="selectEmo('pos')" aria-pressed="false" aria-label="Positive">
+            <div class="emo-icon-ring">
+              <span class="material-icons-round" aria-hidden="true">sentiment_satisfied_alt</span>
+            </div>
+            <span>Positive</span>
+          </button>
+          <button class="emo-btn" id="btn-neu" onclick="selectEmo('neu')" aria-pressed="false" aria-label="Neutral">
+            <div class="emo-icon-ring">
+              <span class="material-icons-round" aria-hidden="true">sentiment_neutral</span>
+            </div>
+            <span>Neutral</span>
+          </button>
+          <button class="emo-btn" id="btn-neg" onclick="selectEmo('neg')" aria-pressed="false" aria-label="Negative">
+            <div class="emo-icon-ring">
+              <span class="material-icons-round" aria-hidden="true">sentiment_dissatisfied</span>
+            </div>
+            <span>Negative</span>
+          </button>
+        </div>
+
+        <p class="err" id="emoErr" role="alert" style="justify-content:center">
+          <span class="material-icons-round" aria-hidden="true">error</span>
+          Please select your experience.
+        </p>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="panel-spacer"></div>
+
+      <div class="sec-label">
+        <div class="sec-num" aria-hidden="true">3</div>
+        <span class="sec-title">Additional concern</span>
+        <div class="sec-rule"></div>
+        <span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink5);margin-left:8px;">Optional</span>
+      </div>
+
+      <div class="panel">
+        <p class="panel-hint">Write your concern or suggestion below if you have more to share.</p>
+        <textarea
+          id="concern"
+          placeholder="e.g. Staff were very accommodating, but the waiting area was overcrowded..."
+          maxlength="500"
+          oninput="updateCount()"
+          aria-label="Additional concern, optional"
+        ></textarea>
+        <p class="char-count" id="charCount" aria-live="polite">0 / 500</p>
+      </div>
+
+      <!-- SUBMIT -->
+      <div class="panel-spacer"></div>
+
+      <div class="submit-wrap">
+        <button class="submit-btn" onclick="handleSubmit()">
+          <span class="material-icons-round" aria-hidden="true">send</span>
+          Submit Feedback
+        </button>
+      </div>
+
+      <p class="form-meta">
+        <span class="material-icons-round" aria-hidden="true">verified_user</span>
+        Responses are confidential and used for service improvement only
+      </p>
+
+    </div><!-- /formArea -->
+
+    <!-- SUCCESS -->
+    <div class="success-wrap" id="successWrap">
+      <div class="success-panel">
+        <div class="success-icon">
+          <span class="material-icons-round" aria-hidden="true">check</span>
+        </div>
+        <h2>Feedback received.</h2>
+        <p>Thank you for taking the time to share.<br>Your response helps us serve citizens better.</p>
+        <div class="success-tag">
+          <span class="material-icons-round" aria-hidden="true">task_alt</span>
+          <span id="successDetailText">—</span>
+        </div>
+        <br />
+        <button class="reset-btn" onclick="resetForm()">
+          <span class="material-icons-round" aria-hidden="true">refresh</span>
+          Submit another
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var selectedEmo = null;
+
+  function selectEmo(val) {
+    selectedEmo = val;
+    ['pos','neu','neg'].forEach(function(e) {
+      var b = document.getElementById('btn-' + e);
+      b.className = 'emo-btn';
+      b.setAttribute('aria-pressed','false');
+    });
+    var btn = document.getElementById('btn-' + val);
+    btn.classList.add('sel-' + val);
+    btn.setAttribute('aria-pressed','true');
+    document.getElementById('emoErr').style.display = 'none';
+  }
+
+  function updateCount() {
+    var ta = document.getElementById('concern');
+    document.getElementById('charCount').textContent = ta.value.length + ' / 500';
+  }
+
+  function clearErr(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  function handleSubmit() {
+    var valid = true;
+    var office = document.getElementById('officeSelect').value;
+    if (!office) { document.getElementById('officeErr').style.display = 'flex'; valid = false; }
+    if (!selectedEmo) { document.getElementById('emoErr').style.display = 'flex'; valid = false; }
+    if (!valid) return;
+    var labels = { pos: 'Positive', neu: 'Neutral', neg: 'Negative' };
+    document.getElementById('successDetailText').textContent = labels[selectedEmo] + ' · ' + office;
+    document.getElementById('formArea').style.display = 'none';
+    var sw = document.getElementById('successWrap');
+    sw.style.display = 'block';
+    sw.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function resetForm() {
+    selectedEmo = null;
+    document.getElementById('officeSelect').value = '';
+    document.getElementById('concern').value = '';
+    document.getElementById('charCount').textContent = '0 / 500';
+    ['pos','neu','neg'].forEach(function(e) {
+      var b = document.getElementById('btn-' + e);
+      b.className = 'emo-btn';
+      b.setAttribute('aria-pressed','false');
+    });
+    document.getElementById('officeErr').style.display = 'none';
+    document.getElementById('emoErr').style.display = 'none';
+    document.getElementById('formArea').style.display = 'block';
+    document.getElementById('successWrap').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
 {% endblock %}
