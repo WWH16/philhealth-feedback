@@ -70,19 +70,19 @@
         <p class="text-[13px] text-[var(--ink5)] mb-[16px] leading-[1.55]">Tap a reaction — no typing needed. Ideal for senior citizens.</p>
 
         <div class="grid grid-cols-3 gap-[8px]" role="group" aria-label="Rate your experience">
-          <button class="emo-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase text-[var(--ink4)] transition-all duration-[120ms] rounded-none select-none relative hover:border-[var(--g4)] hover:bg-[var(--g9)] hover:text-[var(--g1)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]" id="btn-pos" onclick="selectEmo('pos')" aria-pressed="false" aria-label="Positive">
+          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase text-[var(--ink4)] transition-all duration-[120ms] rounded-none select-none relative hover:border-[var(--g4)] hover:bg-[var(--g9)] hover:text-[var(--g1)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]" id="btn-pos" onclick="selectReaction('pos')" aria-pressed="false" aria-label="Positive">
             <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] border-[var(--ink6)] flex items-center justify-center bg-[var(--white)] transition-all duration-[120ms] group-hover:border-[var(--g5)] group-hover:bg-[var(--g9)] group-hover:scale-[1.06]">
               <span class="material-icons-round text-[24px] sm:text-[30px] text-[var(--ink5)] transition-colors duration-[120ms] group-hover:text-[var(--g4)]" aria-hidden="true">sentiment_satisfied_alt</span>
             </div>
             <span>Positive</span>
           </button>
-          <button class="emo-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase text-[var(--ink4)] transition-all duration-[120ms] rounded-none select-none relative hover:border-[var(--g4)] hover:bg-[var(--g9)] hover:text-[var(--g1)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]" id="btn-neu" onclick="selectEmo('neu')" aria-pressed="false" aria-label="Neutral">
+          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase text-[var(--ink4)] transition-all duration-[120ms] rounded-none select-none relative hover:border-[var(--g4)] hover:bg-[var(--g9)] hover:text-[var(--g1)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]" id="btn-neu" onclick="selectReaction('neu')" aria-pressed="false" aria-label="Neutral">
             <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] border-[var(--ink6)] flex items-center justify-center bg-[var(--white)] transition-all duration-[120ms] group-hover:border-[var(--g5)] group-hover:bg-[var(--g9)] group-hover:scale-[1.06]">
               <span class="material-icons-round text-[24px] sm:text-[30px] text-[var(--ink5)] transition-colors duration-[120ms] group-hover:text-[var(--g4)]" aria-hidden="true">sentiment_neutral</span>
             </div>
             <span>Neutral</span>
           </button>
-          <button class="emo-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase text-[var(--ink4)] transition-all duration-[120ms] rounded-none select-none relative hover:border-[var(--g4)] hover:bg-[var(--g9)] hover:text-[var(--g1)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]" id="btn-neg" onclick="selectEmo('neg')" aria-pressed="false" aria-label="Negative">
+          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase text-[var(--ink4)] transition-all duration-[120ms] rounded-none select-none relative hover:border-[var(--g4)] hover:bg-[var(--g9)] hover:text-[var(--g1)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]" id="btn-neg" onclick="selectReaction('neg')" aria-pressed="false" aria-label="Negative">
             <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] border-[var(--ink6)] flex items-center justify-center bg-[var(--white)] transition-all duration-[120ms] group-hover:border-[var(--g5)] group-hover:bg-[var(--g9)] group-hover:scale-[1.06]">
               <span class="material-icons-round text-[24px] sm:text-[30px] text-[var(--ink5)] transition-colors duration-[120ms] group-hover:text-[var(--g4)]" aria-hidden="true">sentiment_dissatisfied</span>
             </div>
@@ -90,7 +90,7 @@
           </button>
         </div>
 
-        <p class="hidden items-center gap-[6px] text-[12px] font-bold tracking-[0.04em] uppercase text-[var(--red)] mt-[10px] justify-center" id="emoErr" role="alert">
+        <p class="hidden items-center gap-[6px] text-[12px] font-bold tracking-[0.04em] uppercase text-[var(--red)] mt-[10px] justify-center" id="reactionErr" role="alert">
           <span class="material-icons-round text-[14px]" aria-hidden="true">error</span>
           Please select your experience.
         </p>
@@ -162,10 +162,10 @@
 
 {% block scripts %}
 <script>
-  var selectedEmo = null;
+  var selectedReaction = null;
 
-  function selectEmo(val) {
-    selectedEmo = val;
+  function selectReaction(val) {
+    selectedReaction = val;
     ['pos','neu','neg'].forEach(function(e) {
       var b = document.getElementById('btn-' + e);
       b.classList.remove('sel-pos', 'sel-neu', 'sel-neg');
@@ -174,8 +174,8 @@
     var btn = document.getElementById('btn-' + val);
     btn.classList.add('sel-' + val);
     btn.setAttribute('aria-pressed','true');
-    document.getElementById('emoErr').classList.add('hidden');
-    document.getElementById('emoErr').classList.remove('flex');
+    document.getElementById('reactionErr').classList.add('hidden');
+    document.getElementById('reactionErr').classList.remove('flex');
   }
 
   function updateCount() {
@@ -196,14 +196,14 @@
       document.getElementById('officeErr').classList.add('flex'); 
       valid = false; 
     }
-    if (!selectedEmo) { 
-      document.getElementById('emoErr').classList.remove('hidden'); 
-      document.getElementById('emoErr').classList.add('flex'); 
+    if (!selectedReaction) { 
+      document.getElementById('reactionErr').classList.remove('hidden'); 
+      document.getElementById('reactionErr').classList.add('flex'); 
       valid = false; 
     }
     if (!valid) return;
     var labels = { pos: 'Positive', neu: 'Neutral', neg: 'Negative' };
-    document.getElementById('successDetailText').textContent = labels[selectedEmo] + ' · ' + office;
+    document.getElementById('successDetailText').textContent = labels[selectedReaction] + ' · ' + office;
     document.getElementById('formArea').style.display = 'none';
     var sw = document.getElementById('successWrap');
     sw.classList.remove('hidden');
@@ -212,7 +212,7 @@
   }
 
   function resetForm() {
-    selectedEmo = null;
+    selectedReaction = null;
     document.getElementById('officeSelect').value = '';
     document.getElementById('concern').value = '';
     document.getElementById('charCount').textContent = '0 / 500';
@@ -223,8 +223,8 @@
     });
     document.getElementById('officeErr').classList.add('hidden');
     document.getElementById('officeErr').classList.remove('flex');
-    document.getElementById('emoErr').classList.add('hidden');
-    document.getElementById('emoErr').classList.remove('flex');
+    document.getElementById('reactionErr').classList.add('hidden');
+    document.getElementById('reactionErr').classList.remove('flex');
     document.getElementById('formArea').style.display = 'block';
     document.getElementById('successWrap').classList.add('hidden');
     document.getElementById('successWrap').classList.remove('block');

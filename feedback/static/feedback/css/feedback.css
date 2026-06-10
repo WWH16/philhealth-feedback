@@ -39,17 +39,17 @@ html { scroll-behavior: smooth; }
 
 /* ── STATE MODIFIERS (Handled by JS) ── */
 
-.emo-btn.sel-pos { border-color: var(--g4); background: var(--g9); color: var(--g1); }
-.emo-btn.sel-pos::after { background: var(--g5); }
-.emo-btn.sel-pos div { border-color: var(--g5); background: var(--g8); }
-.emo-btn.sel-pos div .material-icons-round { color: var(--g4); }
+.reaction-btn.sel-pos { border-color: var(--g4); background: var(--g9); color: var(--g1); }
+.reaction-btn.sel-pos::after { background: var(--g5); }
+.reaction-btn.sel-pos div { border-color: var(--g5); background: var(--g8); }
+.reaction-btn.sel-pos div .material-icons-round { color: var(--g4); }
 
-.emo-btn.sel-neu { border-color: #d97706; background: #fffbeb; color: #78350f; }
-.emo-btn.sel-neu::after { background: #f59e0b; }
-.emo-btn.sel-neu div { border-color: #fbbf24; background: #fef3c7; }
-.emo-btn.sel-neu div .material-icons-round { color: #b45309; }
+.reaction-btn.sel-neu { border-color: #d97706; background: #fffbeb; color: #78350f; }
+.reaction-btn.sel-neu::after { background: #f59e0b; }
+.reaction-btn.sel-neu div { border-color: #fbbf24; background: #fef3c7; }
+.reaction-btn.sel-neu div .material-icons-round { color: #b45309; }
 
-.emo-btn.sel-neg { border-color: var(--red); background: var(--red-bg); color: #7a0011; }
-.emo-btn.sel-neg::after { background: var(--red); }
-.emo-btn.sel-neg div { border-color: #f87171; background: #ffe4e6; }
-.emo-btn.sel-neg div .material-icons-round { color: var(--red); }
+.reaction-btn.sel-neg { border-color: var(--red); background: var(--red-bg); color: #7a0011; }
+.reaction-btn.sel-neg::after { background: var(--red); }
+.reaction-btn.sel-neg div { border-color: #f87171; background: #ffe4e6; }
+.reaction-btn.sel-neg div .material-icons-round { color: var(--red); }
