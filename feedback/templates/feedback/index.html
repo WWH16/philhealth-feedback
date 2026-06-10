@@ -11,14 +11,16 @@
 <div class="grid grid-cols-[1fr_minmax(0,580px)_1fr] pt-[36px] px-[16px] pb-[64px] sm:pt-[56px] sm:px-[20px] sm:pb-[80px]">
   <main class="col-start-2" role="main">
 
-    <div class="inline-flex items-center gap-[6px] text-[11px] font-bold tracking-[0.1em] uppercase mb-[20px]" style="color:var(--g-primary)">
-      <span class="material-icons-round text-[13px]" aria-hidden="true">campaign</span>
-      Boses ng Cauayeno Feedback
+    <div id="headerArea">
+      <div class="inline-flex items-center gap-[6px] text-[11px] font-bold tracking-[0.1em] uppercase mb-[20px]" style="color:var(--g-primary)">
+        <span class="material-icons-round text-[13px]" aria-hidden="true">campaign</span>
+        Boses ng Cauayeno Feedback
+      </div>
+
+      <h1 class="text-[30px] sm:text-[42px] font-extrabold leading-[1.05] tracking-[-0.04em] mb-[14px]" style="color:var(--ink)">Rate your<br><em class="not-italic" style="color:var(--g-primary)">experience.</em></h1>
+
+      <p class="text-[15px] leading-[1.7] mb-[44px] max-w-[440px]" style="color:var(--ink4)">Help us serve you better. Select the office you visited and share how your transaction went — takes under a minute.</p>
     </div>
-
-    <h1 class="text-[30px] sm:text-[42px] font-extrabold leading-[1.05] tracking-[-0.04em] mb-[14px]" style="color:var(--ink)">Rate your<br><em class="not-italic" style="color:var(--g-primary)">experience.</em></h1>
-
-    <p class="text-[15px] leading-[1.7] mb-[44px] max-w-[440px]" style="color:var(--ink4)">Help us serve you better. Select the office you visited and share how your transaction went — takes under a minute.</p>
 
     <div id="formArea">
 
@@ -166,9 +168,9 @@
 
     </div><!-- /formArea -->
 
-    <!-- SUCCESS -->
-    <div class="hidden" id="successWrap">
-      <div class="py-[56px] px-[40px] text-center relative overflow-hidden border" style="background:var(--white);border-color:var(--ink7);border-top:4px solid var(--g-primary)">
+    <!-- SUCCESS MODAL -->
+    <div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-[20px] bg-[rgba(10,26,4,0.4)] backdrop-blur-[4px]" id="successWrap" onclick="handleBackdropClick(event)">
+      <div class="w-full max-w-[480px] py-[56px] px-[40px] text-center relative overflow-hidden border shadow-2xl animate-in fade-in zoom-in duration-300" style="background:var(--white);border-color:var(--ink7);border-top:4px solid var(--g-primary)" onclick="event.stopPropagation()">
         <div class="w-[72px] h-[72px] flex items-center justify-center mx-auto mb-[28px]" style="background:var(--g-xlight);border:1.5px solid var(--g-light)">
           <span class="material-icons-round text-[36px]" style="color:var(--g-primary)" aria-hidden="true">check</span>
         </div>
@@ -236,6 +238,7 @@
     if (!valid) return;
     var labels = { pos: 'Positive', neu: 'Neutral', neg: 'Negative' };
     document.getElementById('successDetailText').textContent = labels[selectedReaction] + ' · ' + office;
+    document.getElementById('headerArea').style.display = 'none';
     document.getElementById('formArea').style.display = 'none';
     var sw = document.getElementById('successWrap');
     sw.classList.remove('hidden');
@@ -257,10 +260,15 @@
       document.getElementById(id).classList.add('hidden');
       document.getElementById(id).classList.remove('flex');
     });
+    document.getElementById('headerArea').style.display = 'block';
     document.getElementById('formArea').style.display = 'block';
     document.getElementById('successWrap').classList.add('hidden');
     document.getElementById('successWrap').classList.remove('block');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleBackdropClick(event) {
+    resetForm();
   }
 </script>
 {% endblock %}
