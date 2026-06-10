@@ -1,31 +1,45 @@
+/* ── CITY FEEDBACK — DESIGN TOKENS ─────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
 :root {
-  --g0: #082112;
-  --g1: #0d361d;
-  --g2: #124c28;
-  --g3: #186134;
-  --g4: #1F964B;
-  --g5: #23A455;
-  --g6: #46b775;
-  --g7: #76cb9a;
-  --g8: #a8dfbf;
-  --g9: #e7f6ed;
+  /* PRIMARY — specified greens only */
+  --g-primary:  #23A455;   /* brand green  */
+  --g-deep:     #1F964B;   /* deeper green */
+  --g-forest:   #0f5a2b;   /* darkest bg   */
+  --g-dark:     #174d2a;   /* nav bg       */
+  --g-mid:      #1a6e36;   /* border/hover */
+  --g-light:    #d4f0e1;   /* tint bg      */
+  --g-xlight:   #f0faf5;   /* soft bg      */
 
-  --ink:    #08090a;
-  --ink2:   #1a1c1e;
-  --ink3:   #3a3d40;
-  --ink4:   #6b6f74;
-  --ink5:   #9ea3a9;
-  --ink6:   #c8ccd1;
-  --ink7:   #e8eaed;
-  --ink8:   #f4f5f7;
-  --ink9:   #fafbfc;
-  --white:  #ffffff;
+  /* ACCENT — warm gold (trust / civic authority) */
+  --gold:       #b8933a;
+  --gold-light: #f5e9c8;
 
-  --red:    #c0001a;
-  --red-bg: #fff0f2;
+  /* NEUTRALS — warm slate (not green-tinted) */
+  --ink:        #1c1e22;
+  --ink2:       #2d3036;
+  --ink3:       #484c53;
+  --ink4:       #73787f;
+  --ink5:       #9ea3a9;
+  --ink6:       #c9cdd3;
+  --ink7:       #e4e7eb;
+  --ink8:       #f2f4f6;
+  --ink9:       #fafbfc;
+  --white:      #ffffff;
 
-  --font: 'Anthropic Sans', ui-sans-serif, system-ui, -apple-system, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+  /* STATUS */
+  --red:        #c0001a;
+  --red-bg:     #fff0f2;
+
+  /* TYPOGRAPHY */
+  --font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
+
+/* ── BASE ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font);
@@ -33,23 +47,100 @@ body {
   min-height: 100vh;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
 }
 
-html { scroll-behavior: smooth; }
+/* ── NAVBAR ─────────────────────────────────────────────────────────────── */
+.nav-root {
+  background: var(--g-dark);
+  border-bottom: 2px solid var(--g-primary);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
 
-/* ── STATE MODIFIERS (Handled by JS) ── */
+.nav-logo-mark {
+  width: 30px; height: 30px;
+  background: var(--g-primary);
+  display: flex; align-items: center; justify-content: center;
+}
 
-.reaction-btn.sel-pos { border-color: var(--g4); background: var(--g9); color: var(--g1); }
-.reaction-btn.sel-pos::after { background: var(--g5); }
-.reaction-btn.sel-pos div { border-color: var(--g5); background: var(--g8); }
-.reaction-btn.sel-pos div .material-icons-round { color: var(--g4); }
+.nav-logo-mark .material-icons-round { font-size: 16px; color: var(--g-dark); }
 
-.reaction-btn.sel-neu { border-color: #d97706; background: #fffbeb; color: #78350f; }
-.reaction-btn.sel-neu::after { background: #f59e0b; }
-.reaction-btn.sel-neu div { border-color: #fbbf24; background: #fef3c7; }
-.reaction-btn.sel-neu div .material-icons-round { color: #b45309; }
+.nav-brand {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--white);
+}
 
-.reaction-btn.sel-neg { border-color: var(--red); background: var(--red-bg); color: #7a0011; }
-.reaction-btn.sel-neg::after { background: var(--red); }
-.reaction-btn.sel-neg div { border-color: #f87171; background: #ffe4e6; }
-.reaction-btn.sel-neg div .material-icons-round { color: var(--red); }
+/* Trust badge — gold, not generic "Secure" */
+.nav-trust-badge {
+  display: none;
+  align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+}
+@media (min-width: 640px) { .nav-trust-badge { display: flex; } }
+.nav-trust-badge .material-icons-round { font-size: 12px; }
+
+/* ── REACTION BUTTONS — STATE MODIFIERS ─────────────────────────────────── */
+.reaction-btn.sel-pos {
+  border-color: var(--g-primary) !important;
+  background: var(--g-xlight) !important;
+  color: var(--g-forest) !important;
+}
+.reaction-btn.sel-pos::after { background: var(--g-primary) !important; }
+.reaction-btn.sel-pos > div {
+  border-color: var(--g-primary) !important;
+  background: var(--g-light) !important;
+}
+.reaction-btn.sel-pos > div .material-icons-round { color: var(--g-deep) !important; }
+
+.reaction-btn.sel-neu {
+  border-color: #c08a1a !important;
+  background: #fffbeb !important;
+  color: #7a5500 !important;
+}
+.reaction-btn.sel-neu::after { background: var(--gold) !important; }
+.reaction-btn.sel-neu > div {
+  border-color: var(--gold) !important;
+  background: var(--gold-light) !important;
+}
+.reaction-btn.sel-neu > div .material-icons-round { color: #a07020 !important; }
+
+.reaction-btn.sel-neg {
+  border-color: var(--red) !important;
+  background: var(--red-bg) !important;
+  color: #7a0011 !important;
+}
+.reaction-btn.sel-neg::after { background: var(--red) !important; }
+.reaction-btn.sel-neg > div {
+  border-color: #f87171 !important;
+  background: #ffe4e6 !important;
+}
+.reaction-btn.sel-neg > div .material-icons-round { color: var(--red) !important; }
+
+/* ── TRUST INDICATORS (footer of form) ──────────────────────────────────── */
+.trust-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 20px; flex-wrap: wrap;
+  margin-top: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--ink7);
+}
+.trust-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--ink5);
+}
+.trust-item .material-icons-round { font-size: 13px; color: var(--g-primary); }

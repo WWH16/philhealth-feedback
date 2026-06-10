@@ -11,28 +11,30 @@
 <div class="grid grid-cols-[1fr_minmax(0,580px)_1fr] pt-[36px] px-[16px] pb-[64px] sm:pt-[56px] sm:px-[20px] sm:pb-[80px]">
   <main class="col-start-2" role="main">
 
-    <div class="inline-flex items-center gap-[6px] text-[11px] font-bold tracking-[0.1em] uppercase text-[var(--g4)] mb-[20px]">
+    <div class="inline-flex items-center gap-[6px] text-[11px] font-bold tracking-[0.1em] uppercase mb-[20px]" style="color:var(--g-primary)">
       <span class="material-icons-round text-[13px]" aria-hidden="true">feedback</span>
       Citizen Feedback System
     </div>
 
-    <h1 class="text-[30px] sm:text-[42px] font-extrabold leading-[1.05] tracking-[-0.04em] text-[var(--ink)] mb-[14px]">Rate your<br><em class="not-italic text-[var(--g4)]">experience.</em></h1>
+    <h1 class="text-[30px] sm:text-[42px] font-extrabold leading-[1.05] tracking-[-0.04em] mb-[14px]" style="color:var(--ink)">Rate your<br><em class="not-italic" style="color:var(--g-primary)">experience.</em></h1>
 
-    <p class="text-[15px] text-[var(--ink4)] leading-[1.7] mb-[44px] max-w-[440px]">Help us serve you better. Select the office you visited and share how your transaction went — takes under a minute.</p>
+    <p class="text-[15px] leading-[1.7] mb-[44px] max-w-[440px]" style="color:var(--ink4)">Help us serve you better. Select the office you visited and share how your transaction went — takes under a minute.</p>
 
     <div id="formArea">
 
       <!-- STEP 1 -->
       <div class="flex items-center gap-[10px] mb-[10px]">
-        <div class="w-[24px] h-[24px] bg-[var(--ink)] flex items-center justify-center text-[11px] font-bold text-[var(--white)] shrink-0" aria-hidden="true">1</div>
-        <span class="text-[11px] font-bold tracking-[0.08em] uppercase text-[var(--ink3)]">Office visited</span>
-        <div class="flex-1 h-[1px] bg-[var(--ink7)]"></div>
+        <div class="w-[24px] h-[24px] flex items-center justify-center text-[11px] font-bold shrink-0" style="background:var(--ink);color:var(--white)" aria-hidden="true">1</div>
+        <span class="text-[11px] font-bold tracking-[0.08em] uppercase" style="color:var(--ink3)">Office visited</span>
+        <div class="flex-1 h-[1px]" style="background:var(--ink7)"></div>
       </div>
 
-      <div class="bg-[var(--white)] border border-[var(--ink7)] p-[20px] sm:p-[28px] mb-[6px]">
-        <p class="text-[13px] text-[var(--ink5)] mb-[16px] leading-[1.55]">Select the city government office you transacted with.</p>
+      <div class="p-[20px] sm:p-[28px] mb-[6px] border" style="background:var(--white);border-color:var(--ink7)">
+        <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">Select the city government office you transacted with.</p>
         <div class="relative">
-          <select id="officeSelect" aria-required="true" aria-describedby="officeErr" onchange="clearErr('officeErr')" class="w-full h-[48px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] pl-[16px] pr-[48px] text-[15px] font-medium text-[var(--ink)] appearance-none cursor-pointer rounded-none transition-colors duration-[120ms] tracking-[-0.01em] focus:outline-none focus:border-[var(--g4)] hover:border-[var(--ink4)]">
+          <select id="officeSelect" aria-required="true" aria-describedby="officeErr" onchange="clearErr('officeErr')"
+            class="w-full h-[48px] pl-[16px] pr-[48px] text-[15px] font-medium appearance-none cursor-pointer transition-colors duration-[120ms] tracking-[-0.01em] focus:outline-none"
+            style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink);border-radius:0">
             <option value="">Choose an office —</option>
             <option>Mayor's Office</option>
             <option>City Civil Registrar</option>
@@ -47,109 +49,139 @@
             <option>City Legal Office</option>
             <option>Human Resource Management Office</option>
           </select>
-          <span class="absolute right-[14px] top-1/2 -translate-y-1/2 pointer-events-none text-[var(--ink4)]" aria-hidden="true">
+          <span class="absolute right-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style="color:var(--ink4)" aria-hidden="true">
             <span class="material-icons-round text-[20px] block">expand_more</span>
           </span>
         </div>
-        <p class="hidden items-center gap-[6px] text-[12px] font-bold tracking-[0.04em] uppercase text-[var(--red)] mt-[10px]" id="officeErr" role="alert">
+        <p class="hidden items-center gap-[6px] text-[12px] font-bold tracking-[0.04em] uppercase mt-[10px]" id="officeErr" role="alert" style="color:var(--red)">
           <span class="material-icons-round text-[14px]" aria-hidden="true">error</span>
           Please select an office.
         </p>
       </div>
 
       <!-- STEP 2 -->
-      <div class="h-[20px] border-l-[1.5px] border-[var(--ink7)] ml-[28px]"></div>
+      <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
 
       <div class="flex items-center gap-[10px] mb-[10px]">
-        <div class="w-[24px] h-[24px] bg-[var(--ink)] flex items-center justify-center text-[11px] font-bold text-[var(--white)] shrink-0" aria-hidden="true">2</div>
-        <span class="text-[11px] font-bold tracking-[0.08em] uppercase text-[var(--ink3)]">Your experience</span>
-        <div class="flex-1 h-[1px] bg-[var(--ink7)]"></div>
+        <div class="w-[24px] h-[24px] flex items-center justify-center text-[11px] font-bold shrink-0" style="background:var(--ink);color:var(--white)" aria-hidden="true">2</div>
+        <span class="text-[11px] font-bold tracking-[0.08em] uppercase" style="color:var(--ink3)">Your experience</span>
+        <div class="flex-1 h-[1px]" style="background:var(--ink7)"></div>
       </div>
 
-      <div class="bg-[var(--white)] border border-[var(--ink7)] p-[20px] sm:p-[28px] mb-[6px]">
-        <p class="text-[13px] text-[var(--ink5)] mb-[16px] leading-[1.55]">Tap a reaction — no typing needed. Ideal for senior citizens.</p>
+      <div class="p-[20px] sm:p-[28px] mb-[6px] border" style="background:var(--white);border-color:var(--ink7)">
+        <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">Tap a reaction — no typing needed. Ideal for senior citizens.</p>
 
         <div class="grid grid-cols-3 gap-[8px]" role="group" aria-label="Rate your experience">
-          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase text-[var(--ink4)] transition-all duration-[120ms] rounded-none select-none relative hover:border-[var(--g4)] hover:bg-[var(--g9)] hover:text-[var(--g1)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]" id="btn-pos" onclick="selectReaction('pos')" aria-pressed="false" aria-label="Positive">
-            <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] border-[var(--ink6)] flex items-center justify-center bg-[var(--white)] transition-all duration-[120ms] group-hover:border-[var(--g5)] group-hover:bg-[var(--g9)] group-hover:scale-[1.06]">
-              <span class="material-icons-round text-[24px] sm:text-[30px] text-[var(--ink5)] transition-colors duration-[120ms] group-hover:text-[var(--g4)]" aria-hidden="true">sentiment_satisfied_alt</span>
+          <!-- Positive -->
+          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
+            id="btn-pos" onclick="selectReaction('pos')" aria-pressed="false" aria-label="Positive"
+            style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
+            <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] flex items-center justify-center transition-all duration-[120ms] group-hover:scale-[1.06]"
+              style="border-color:var(--ink6);background:var(--white)">
+              <span class="material-icons-round text-[24px] sm:text-[30px] transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_satisfied_alt</span>
             </div>
             <span>Positive</span>
           </button>
-          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase text-[var(--ink4)] transition-all duration-[120ms] rounded-none select-none relative hover:border-[var(--g4)] hover:bg-[var(--g9)] hover:text-[var(--g1)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]" id="btn-neu" onclick="selectReaction('neu')" aria-pressed="false" aria-label="Neutral">
-            <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] border-[var(--ink6)] flex items-center justify-center bg-[var(--white)] transition-all duration-[120ms] group-hover:border-[var(--g5)] group-hover:bg-[var(--g9)] group-hover:scale-[1.06]">
-              <span class="material-icons-round text-[24px] sm:text-[30px] text-[var(--ink5)] transition-colors duration-[120ms] group-hover:text-[var(--g4)]" aria-hidden="true">sentiment_neutral</span>
+          <!-- Neutral -->
+          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
+            id="btn-neu" onclick="selectReaction('neu')" aria-pressed="false" aria-label="Neutral"
+            style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
+            <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] flex items-center justify-center transition-all duration-[120ms] group-hover:scale-[1.06]"
+              style="border-color:var(--ink6);background:var(--white)">
+              <span class="material-icons-round text-[24px] sm:text-[30px] transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_neutral</span>
             </div>
             <span>Neutral</span>
           </button>
-          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase text-[var(--ink4)] transition-all duration-[120ms] rounded-none select-none relative hover:border-[var(--g4)] hover:bg-[var(--g9)] hover:text-[var(--g1)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]" id="btn-neg" onclick="selectReaction('neg')" aria-pressed="false" aria-label="Negative">
-            <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] border-[var(--ink6)] flex items-center justify-center bg-[var(--white)] transition-all duration-[120ms] group-hover:border-[var(--g5)] group-hover:bg-[var(--g9)] group-hover:scale-[1.06]">
-              <span class="material-icons-round text-[24px] sm:text-[30px] text-[var(--ink5)] transition-colors duration-[120ms] group-hover:text-[var(--g4)]" aria-hidden="true">sentiment_dissatisfied</span>
+          <!-- Negative -->
+          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
+            id="btn-neg" onclick="selectReaction('neg')" aria-pressed="false" aria-label="Negative"
+            style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
+            <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] flex items-center justify-center transition-all duration-[120ms] group-hover:scale-[1.06]"
+              style="border-color:var(--ink6);background:var(--white)">
+              <span class="material-icons-round text-[24px] sm:text-[30px] transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_dissatisfied</span>
             </div>
             <span>Negative</span>
           </button>
         </div>
 
-        <p class="hidden items-center gap-[6px] text-[12px] font-bold tracking-[0.04em] uppercase text-[var(--red)] mt-[10px] justify-center" id="reactionErr" role="alert">
+        <p class="hidden items-center gap-[6px] text-[12px] font-bold tracking-[0.04em] uppercase mt-[10px] justify-center" id="reactionErr" role="alert" style="color:var(--red)">
           <span class="material-icons-round text-[14px]" aria-hidden="true">error</span>
           Please select your experience.
         </p>
       </div>
 
       <!-- STEP 3 -->
-      <div class="h-[20px] border-l-[1.5px] border-[var(--ink7)] ml-[28px]"></div>
+      <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
 
       <div class="flex items-center gap-[10px] mb-[10px]">
-        <div class="w-[24px] h-[24px] bg-[var(--ink)] flex items-center justify-center text-[11px] font-bold text-[var(--white)] shrink-0" aria-hidden="true">3</div>
-        <span class="text-[11px] font-bold tracking-[0.08em] uppercase text-[var(--ink3)]">Additional concern</span>
-        <div class="flex-1 h-[1px] bg-[var(--ink7)]"></div>
-        <span class="text-[11px] font-semibold tracking-[0.06em] uppercase text-[var(--ink5)] ml-[8px]">Optional</span>
+        <div class="w-[24px] h-[24px] flex items-center justify-center text-[11px] font-bold shrink-0" style="background:var(--ink);color:var(--white)" aria-hidden="true">3</div>
+        <span class="text-[11px] font-bold tracking-[0.08em] uppercase" style="color:var(--ink3)">Additional concern</span>
+        <div class="flex-1 h-[1px]" style="background:var(--ink7)"></div>
+        <span class="text-[11px] font-semibold tracking-[0.06em] uppercase ml-[8px]" style="color:var(--ink5)">Optional</span>
       </div>
 
-      <div class="bg-[var(--white)] border border-[var(--ink7)] p-[20px] sm:p-[28px] mb-[6px]">
-        <p class="text-[13px] text-[var(--ink5)] mb-[16px] leading-[1.55]">Write your concern or suggestion below if you have more to share.</p>
+      <div class="p-[20px] sm:p-[28px] mb-[6px] border" style="background:var(--white);border-color:var(--ink7)">
+        <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">Write your concern or suggestion below if you have more to share.</p>
         <textarea
           id="concern"
           placeholder="e.g. Staff were very accommodating, but the waiting area was overcrowded..."
           maxlength="500"
           oninput="updateCount()"
           aria-label="Additional concern, optional"
-          class="w-full border-[1.5px] border-[var(--ink6)] bg-[var(--ink9)] p-[16px] text-[15px] text-[var(--ink)] resize-y min-h-[108px] leading-[1.65] rounded-none transition-colors duration-[120ms] tracking-[-0.005em] focus:outline-none focus:border-[var(--g4)] hover:border-[var(--ink4)] placeholder:text-[var(--ink6)]"
+          class="w-full p-[16px] text-[15px] resize-y min-h-[108px] leading-[1.65] transition-colors duration-[120ms] tracking-[-0.005em] focus:outline-none"
+          style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink);border-radius:0;font-family:var(--font)"
         ></textarea>
-        <p class="text-[11px] font-semibold tracking-[0.04em] text-[var(--ink6)] text-right mt-[8px] uppercase" id="charCount" aria-live="polite">0 / 500</p>
+        <p class="text-[11px] font-semibold tracking-[0.04em] text-right mt-[8px] uppercase" id="charCount" aria-live="polite" style="color:var(--ink6)">0 / 500</p>
       </div>
 
       <!-- SUBMIT -->
-      <div class="h-[20px] border-l-[1.5px] border-[var(--ink7)] ml-[28px]"></div>
+      <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
 
       <div class="mt-[6px]">
-        <button class="w-full h-[56px] bg-[var(--g0)] text-[var(--white)] border-none rounded-none text-[13px] font-bold tracking-[0.1em] uppercase cursor-pointer flex items-center justify-center gap-[10px] transition-opacity duration-[120ms] relative overflow-hidden hover:opacity-[0.88] active:opacity-[0.95] active:scale-[0.995] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[4px] before:bg-[var(--g5)]" onclick="handleSubmit()">
+        <button
+          class="w-full h-[56px] border-none text-[13px] font-bold tracking-[0.1em] uppercase cursor-pointer flex items-center justify-center gap-[10px] transition-opacity duration-[120ms] relative overflow-hidden hover:opacity-[0.88] active:opacity-[0.95] active:scale-[0.995] focus:outline-none focus:ring-2 focus:ring-offset-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[4px]"
+          style="background:var(--g-forest);color:var(--white);border-radius:0;--tw-ring-color:var(--g-primary)"
+          onclick="handleSubmit()">
+          <span class="before:bg-[var(--g-primary)]"></span>
           <span class="material-icons-round text-[18px]" aria-hidden="true">send</span>
           Submit Feedback
         </button>
       </div>
 
-      <p class="flex items-center justify-center gap-[6px] mt-[16px] text-[11px] font-semibold tracking-[0.06em] uppercase text-[var(--ink5)]">
-        <span class="material-icons-round text-[13px] text-[var(--g5)]" aria-hidden="true">verified_user</span>
-        Responses are confidential and used for service improvement only
-      </p>
+      <!-- Trust row — replaces generic "Responses are confidential" single line -->
+      <div class="trust-row">
+        <div class="trust-item">
+          <span class="material-icons-round" aria-hidden="true">policy</span>
+          Data Privacy Act Compliant
+        </div>
+        <div class="trust-item">
+          <span class="material-icons-round" aria-hidden="true">inventory_2</span>
+          Responses recorded officially
+        </div>
+        <div class="trust-item">
+          <span class="material-icons-round" aria-hidden="true">visibility_off</span>
+          Anonymous submission
+        </div>
+      </div>
 
     </div><!-- /formArea -->
 
     <!-- SUCCESS -->
     <div class="hidden" id="successWrap">
-      <div class="bg-[var(--white)] border border-[var(--ink7)] py-[56px] px-[40px] text-center relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-[4px] before:bg-[var(--g5)]">
-        <div class="w-[72px] h-[72px] bg-[var(--g9)] border-[1.5px] border-[var(--g7)] flex items-center justify-center mx-auto mb-[28px]">
-          <span class="material-icons-round text-[36px] text-[var(--g4)]" aria-hidden="true">check</span>
+      <div class="py-[56px] px-[40px] text-center relative overflow-hidden border" style="background:var(--white);border-color:var(--ink7);border-top:4px solid var(--g-primary)">
+        <div class="w-[72px] h-[72px] flex items-center justify-center mx-auto mb-[28px]" style="background:var(--g-xlight);border:1.5px solid var(--g-light)">
+          <span class="material-icons-round text-[36px]" style="color:var(--g-primary)" aria-hidden="true">check</span>
         </div>
-        <h2 class="text-[28px] font-extrabold tracking-[-0.04em] text-[var(--ink)] mb-[10px]">Feedback received.</h2>
-        <p class="text-[15px] text-[var(--ink4)] leading-[1.65]">Thank you for taking the time to share.<br>Your response helps us serve citizens better.</p>
-        <div class="inline-flex items-center gap-[7px] mt-[24px] bg-[var(--g9)] border border-[var(--g8)] px-[18px] py-[10px] text-[13px] font-semibold text-[var(--g1)] tracking-[-0.01em]">
-          <span class="material-icons-round text-[16px] text-[var(--g4)]" aria-hidden="true">task_alt</span>
+        <h2 class="text-[28px] font-extrabold tracking-[-0.04em] mb-[10px]" style="color:var(--ink)">Feedback received.</h2>
+        <p class="text-[15px] leading-[1.65]" style="color:var(--ink4)">Thank you for taking the time to share.<br>Your response helps us serve citizens better.</p>
+        <div class="inline-flex items-center gap-[7px] mt-[24px] px-[18px] py-[10px] text-[13px] font-semibold tracking-[-0.01em]" style="background:var(--g-xlight);border:1px solid var(--g-light);color:var(--g-forest)">
+          <span class="material-icons-round text-[16px]" style="color:var(--g-primary)" aria-hidden="true">task_alt</span>
           <span id="successDetailText">—</span>
         </div>
         <br />
-        <button class="mt-[28px] inline-flex items-center gap-[7px] border-[1.5px] border-[var(--ink6)] bg-transparent text-[var(--ink3)] px-[24px] py-[11px] text-[12px] font-bold tracking-[0.08em] uppercase rounded-none transition-colors duration-[120ms] hover:border-[var(--ink3)] hover:text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--g4)] focus:ring-offset-2" onclick="resetForm()">
+        <button class="mt-[28px] inline-flex items-center gap-[7px] border-[1.5px] bg-transparent px-[24px] py-[11px] text-[12px] font-bold tracking-[0.08em] uppercase transition-colors duration-[120ms] focus:outline-none focus:ring-2 focus:ring-offset-2"
+          style="border-color:var(--ink6);color:var(--ink3);border-radius:0;--tw-ring-color:var(--g-primary)"
+          onclick="resetForm()">
           <span class="material-icons-round text-[15px]" aria-hidden="true">refresh</span>
           Submit another
         </button>
@@ -191,15 +223,15 @@
   function handleSubmit() {
     var valid = true;
     var office = document.getElementById('officeSelect').value;
-    if (!office) { 
-      document.getElementById('officeErr').classList.remove('hidden'); 
-      document.getElementById('officeErr').classList.add('flex'); 
-      valid = false; 
+    if (!office) {
+      document.getElementById('officeErr').classList.remove('hidden');
+      document.getElementById('officeErr').classList.add('flex');
+      valid = false;
     }
-    if (!selectedReaction) { 
-      document.getElementById('reactionErr').classList.remove('hidden'); 
-      document.getElementById('reactionErr').classList.add('flex'); 
-      valid = false; 
+    if (!selectedReaction) {
+      document.getElementById('reactionErr').classList.remove('hidden');
+      document.getElementById('reactionErr').classList.add('flex');
+      valid = false;
     }
     if (!valid) return;
     var labels = { pos: 'Positive', neu: 'Neutral', neg: 'Negative' };
@@ -221,10 +253,10 @@
       b.classList.remove('sel-pos', 'sel-neu', 'sel-neg');
       b.setAttribute('aria-pressed','false');
     });
-    document.getElementById('officeErr').classList.add('hidden');
-    document.getElementById('officeErr').classList.remove('flex');
-    document.getElementById('reactionErr').classList.add('hidden');
-    document.getElementById('reactionErr').classList.remove('flex');
+    ['officeErr','reactionErr'].forEach(function(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.getElementById(id).classList.remove('flex');
+    });
     document.getElementById('formArea').style.display = 'block';
     document.getElementById('successWrap').classList.add('hidden');
     document.getElementById('successWrap').classList.remove('block');
