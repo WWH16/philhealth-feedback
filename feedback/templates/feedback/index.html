@@ -5,157 +5,6 @@
 
 {% block styles %}
   <link rel="stylesheet" href="{% static 'feedback/css/feedback.css' %}">
-  <style>
-    .reaction-btn {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      cursor: pointer !important;
-      text-transform: uppercase !important;
-      font-weight: 700 !important;
-      user-select: none !important;
-      position: relative !important;
-      transition: all 120ms !important;
-      border-radius: 0 !important;
-      font-size: 8px !important;
-      letter-spacing: -0.03em !important;
-      gap: 6px !important;
-      padding: 12px 2px 10px 2px !important;
-    }
-    .reaction-btn span {
-      text-align: center !important;
-      line-height: 1.15 !important;
-      display: block !important;
-      width: 100% !important;
-      word-break: break-word !important;
-      overflow-wrap: anywhere !important;
-    }
-    .reaction-btn > div {
-      width: 32px !important; height: 32px !important;
-      display: flex !important; align-items: center !important; justify-content: center !important;
-      transition: all 120ms !important;
-    }
-    .reaction-btn > div .material-icons-round { font-size: 18px !important; }
-
-    @media (min-width: 360px) {
-      .reaction-btn { font-size: 9px !important; letter-spacing: -0.02em !important; gap: 8px !important; padding: 14px 4px 12px 4px !important; }
-      .reaction-btn > div { width: 38px !important; height: 38px !important; }
-      .reaction-btn > div .material-icons-round { font-size: 20px !important; }
-    }
-    @media (min-width: 400px) {
-      .reaction-btn { font-size: 9.5px !important; letter-spacing: -0.01em !important; gap: 8px !important; padding: 16px 6px 14px 6px !important; }
-      .reaction-btn > div { width: 42px !important; height: 42px !important; }
-      .reaction-btn > div .material-icons-round { font-size: 22px !important; }
-    }
-    @media (min-width: 480px) {
-      .reaction-btn { font-size: 10.5px !important; letter-spacing: 0.02em !important; gap: 10px !important; padding: 20px 8px 16px 8px !important; }
-      .reaction-btn > div { width: 48px !important; height: 48px !important; }
-      .reaction-btn > div .material-icons-round { font-size: 24px !important; }
-    }
-    @media (min-width: 640px) {
-      .reaction-btn { font-size: 12px !important; letter-spacing: 0.05em !important; gap: 12px !important; padding: 28px 12px 22px 12px !important; }
-      .reaction-btn > div { width: 60px !important; height: 60px !important; }
-      .reaction-btn > div .material-icons-round { font-size: 30px !important; }
-    }
-
-    /* ── SUCCESS MODAL ── */
-    #successWrap { display: none; }
-    #successWrap.is-open { display: flex; }
-
-    .success-card {
-      width: 100%;
-      max-width: 480px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      border-top: 4px solid var(--g-primary);
-      background: var(--white);
-      border: 1px solid var(--ink7);
-      border-top: 4px solid var(--g-primary);
-
-      /* Mobile-first padding */
-      padding: 32px 20px 28px;
-    }
-    @media (min-width: 480px) {
-      .success-card { padding: 48px 36px 40px; }
-    }
-    @media (min-width: 640px) {
-      .success-card { padding: 56px 40px 48px; }
-    }
-
-    .success-icon {
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 20px;
-      background: var(--g-xlight);
-      border: 1.5px solid var(--g-light);
-      /* Mobile */
-      width: 52px; height: 52px;
-    }
-    .success-icon .material-icons-round { font-size: 26px; color: var(--g-primary); }
-
-    @media (min-width: 480px) {
-      .success-icon { width: 64px; height: 64px; margin-bottom: 24px; }
-      .success-icon .material-icons-round { font-size: 32px; }
-    }
-    @media (min-width: 640px) {
-      .success-icon { width: 72px; height: 72px; margin-bottom: 28px; }
-      .success-icon .material-icons-round { font-size: 36px; }
-    }
-
-    .success-title {
-      font-weight: 800;
-      tracking: -0.04em;
-      color: var(--ink);
-      margin-bottom: 8px;
-      /* Mobile */
-      font-size: 22px;
-    }
-    @media (min-width: 480px) { .success-title { font-size: 26px; } }
-    @media (min-width: 640px) { .success-title { font-size: 28px; } }
-
-    .success-sub {
-      line-height: 1.65;
-      color: var(--ink4);
-      /* Mobile */
-      font-size: 13px;
-    }
-    @media (min-width: 480px) { .success-sub { font-size: 14px; } }
-    @media (min-width: 640px) { .success-sub { font-size: 15px; } }
-
-    .success-badge {
-      display: inline-flex; align-items: center; gap: 7px;
-      margin-top: 20px;
-      background: var(--g-xlight);
-      border: 1px solid var(--g-light);
-      color: var(--g-forest);
-      font-weight: 600;
-      /* Mobile */
-      padding: 8px 14px;
-      font-size: 12px;
-    }
-    @media (min-width: 480px) { .success-badge { padding: 10px 18px; font-size: 13px; margin-top: 24px; } }
-    .success-badge .material-icons-round { font-size: 15px; color: var(--g-primary); }
-
-    .success-reset-btn {
-      display: inline-flex; align-items: center; gap: 7px;
-      margin-top: 20px;
-      border: 1.5px solid var(--ink6);
-      background: transparent;
-      color: var(--ink3);
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-radius: 0;
-      transition: border-color 120ms, color 120ms;
-      /* Mobile */
-      padding: 10px 18px;
-      font-size: 11px;
-    }
-    @media (min-width: 480px) { .success-reset-btn { padding: 11px 24px; font-size: 12px; margin-top: 24px; } }
-    .success-reset-btn:hover { border-color: var(--ink3); color: var(--ink); }
-    .success-reset-btn .material-icons-round { font-size: 14px; }
-  </style>
 {% endblock %}
 
 {% block content %}
@@ -234,8 +83,8 @@
       <!-- SUBMIT -->
       <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
       <div class="mt-[6px]">
-        <button class="w-full h-[56px] border-none text-[13px] font-bold tracking-[0.1em] uppercase cursor-pointer flex items-center justify-center gap-[10px] transition-opacity duration-[120ms] relative overflow-hidden hover:opacity-[0.88] active:opacity-[0.95] active:scale-[0.995] focus:outline-none focus:ring-2 focus:ring-offset-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[4px]"
-          style="background:var(--g-forest);color:var(--white);border-radius:0;--tw-ring-color:var(--g-primary)"
+        <button class="w-full h-[56px] border-none text-[13px] font-bold tracking-[0.1em] uppercase cursor-pointer flex items-center justify-center gap-[10px] transition-opacity duration-[120ms] relative overflow-hidden hover:opacity-[0.88] active:opacity-[0.95] active:scale-[0.995] focus:outline-none focus:ring-2 focus:ring-offset-2"
+          style="background:var(--g-forest);color:var(--white);border-radius:0;"
           onclick="handleSubmit()">
           <span class="material-icons-round text-[18px]" aria-hidden="true">send</span>
           Submit Feedback
@@ -260,7 +109,7 @@
         </div>
         <br>
         <button class="success-reset-btn" onclick="resetForm()">
-          <span class="material-icons-round" style="font-size:14px" aria-hidden="true">refresh</span>
+          <span class="material-icons-round" aria-hidden="true">refresh</span>
           Submit another
         </button>
       </div>
@@ -271,61 +120,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-  var selectedReaction = null;
-
-  function selectReaction(val) {
-    selectedReaction = val;
-    ['pos','neu','neg'].forEach(function(e) {
-      var b = document.getElementById('btn-' + e);
-      b.classList.remove('sel-pos', 'sel-neu', 'sel-neg');
-      b.setAttribute('aria-pressed','false');
-    });
-    var btn = document.getElementById('btn-' + val);
-    btn.classList.add('sel-' + val);
-    btn.setAttribute('aria-pressed','true');
-    document.getElementById('reactionErr').classList.add('hidden');
-    document.getElementById('reactionErr').classList.remove('flex');
-  }
-
-  function updateCount() {
-    var ta = document.getElementById('concern');
-    document.getElementById('charCount').textContent = ta.value.length + ' / 500';
-  }
-
-  function handleSubmit() {
-    if (!selectedReaction) {
-      document.getElementById('reactionErr').classList.remove('hidden');
-      document.getElementById('reactionErr').classList.add('flex');
-      return;
-    }
-    var labels = { pos: 'Very satisfactory', neu: 'Satisfactory', neg: 'Unsatisfactory' };
-    document.getElementById('successDetailText').textContent = labels[selectedReaction];
-    document.getElementById('headerArea').style.display = 'none';
-    document.getElementById('formArea').style.display = 'none';
-    var sw = document.getElementById('successWrap');
-    sw.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function resetForm() {
-    selectedReaction = null;
-    document.getElementById('concern').value = '';
-    document.getElementById('charCount').textContent = '0 / 500';
-    ['pos','neu','neg'].forEach(function(e) {
-      var b = document.getElementById('btn-' + e);
-      b.classList.remove('sel-pos', 'sel-neu', 'sel-neg');
-      b.setAttribute('aria-pressed','false');
-    });
-    document.getElementById('reactionErr').classList.add('hidden');
-    document.getElementById('reactionErr').classList.remove('flex');
-    document.getElementById('headerArea').style.display = 'block';
-    document.getElementById('formArea').style.display = 'block';
-    document.getElementById('successWrap').classList.remove('is-open');
-    document.body.style.overflow = '';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function handleBackdropClick(event) { resetForm(); }
-</script>
+  <script src="{% static 'feedback/js/feedback.js' %}"></script>
 {% endblock %}
