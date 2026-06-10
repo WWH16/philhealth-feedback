@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Citizen Feedback | PhilHealth Cauayan City{% endblock %}
+{% block title %}Citizen Feedback — PhilHealth Cauayan City{% endblock %}
 
 {% block styles %}
   <link rel="stylesheet" href="{% static 'feedback/css/feedback.css' %}">
@@ -36,7 +36,7 @@
             id="btn-pos" onclick="selectReaction('pos')" aria-pressed="false" aria-label="Very satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
             <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
-              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_satisfied_alt</span>
+              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--g-primary)" aria-hidden="true">sentiment_satisfied_alt</span>
             </div>
             <span>Very satisfactory</span>
           </button>
@@ -44,7 +44,7 @@
             id="btn-neu" onclick="selectReaction('neu')" aria-pressed="false" aria-label="Satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
             <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
-              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_neutral</span>
+              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--gold)" aria-hidden="true">sentiment_neutral</span>
             </div>
             <span>Satisfactory</span>
           </button>
@@ -52,7 +52,7 @@
             id="btn-neg" onclick="selectReaction('neg')" aria-pressed="false" aria-label="Unsatisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
             <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
-              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_dissatisfied</span>
+              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--red)" aria-hidden="true">sentiment_dissatisfied</span>
             </div>
             <span>Unsatisfactory</span>
           </button>
