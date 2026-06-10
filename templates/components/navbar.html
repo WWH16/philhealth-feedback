@@ -1,9 +1,8 @@
+{% load static %}
 <nav role="banner" class="nav-root">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div class="nav-logo-mark" aria-hidden="true">
-      <span class="material-icons-round">account_balance</span>
-    </div>
-    <span class="nav-brand">City Government Portal</span>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <img src="{% static 'img/logo.png' %}" alt="City Government Logo" style="height:32px; width:auto;">
+    <span class="nav-brand">City of Cauayan | Citizen Feedback</span>
   </div>
   <div class="nav-trust-badge" aria-label="Official government portal">
     <span class="material-icons-round" aria-hidden="true">verified</span>
