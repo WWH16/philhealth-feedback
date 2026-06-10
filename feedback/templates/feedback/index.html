@@ -13,13 +13,13 @@
 
     <div id="headerArea">
       <div class="inline-flex items-center gap-[6px] text-[11px] font-bold tracking-[0.1em] uppercase mb-[20px]" style="color:var(--g-primary)">
-        <span class="material-icons-round text-[13px]" aria-hidden="true">campaign</span>
-        Boses ng Cauayeno Feedback
+        <span class="material-icons-round text-[13px]" aria-hidden="true">volunteer_activism</span>
+        We value your feedback
       </div>
 
-      <h1 class="text-[30px] sm:text-[42px] font-extrabold leading-[1.05] tracking-[-0.04em] mb-[14px]" style="color:var(--ink)">Rate your<br><em class="not-italic" style="color:var(--g-primary)">experience.</em></h1>
+      <h1 class="text-[30px] sm:text-[42px] font-extrabold leading-[1.05] tracking-[-0.04em] mb-[14px]" style="color:var(--ink)">How satisfied are you with the <em class="not-italic" style="color:var(--g-primary)">service you received today?</em></h1>
 
-      <p class="text-[15px] leading-[1.7] mb-[44px] max-w-[440px]" style="color:var(--ink4)">Help us serve you better. Select the office you visited and share how your transaction went — takes under a minute.</p>
+      <p class="text-[15px] leading-[1.7] mb-[44px] max-w-[440px]" style="color:var(--ink4)">Please pick your reaction below.</p>
     </div>
 
     <div id="formArea">
@@ -27,45 +27,6 @@
       <!-- STEP 1 -->
       <div class="flex items-center gap-[10px] mb-[10px]">
         <div class="w-[24px] h-[24px] flex items-center justify-center text-[11px] font-bold shrink-0" style="background:var(--ink);color:var(--white)" aria-hidden="true">1</div>
-        <span class="text-[11px] font-bold tracking-[0.08em] uppercase" style="color:var(--ink3)">Office visited</span>
-        <div class="flex-1 h-[1px]" style="background:var(--ink7)"></div>
-      </div>
-
-      <div class="p-[20px] sm:p-[28px] mb-[6px] border" style="background:var(--white);border-color:var(--ink7)">
-        <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">Select the city government office you transacted with.</p>
-        <div class="relative">
-          <select id="officeSelect" aria-required="true" aria-describedby="officeErr" onchange="clearErr('officeErr')"
-            class="w-full h-[48px] pl-[16px] pr-[48px] text-[15px] font-medium appearance-none cursor-pointer transition-colors duration-[120ms] tracking-[-0.01em] focus:outline-none"
-            style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink);border-radius:0">
-            <option value="">Choose an office —</option>
-            <option>Mayor's Office</option>
-            <option>City Civil Registrar</option>
-            <option>City Health Office</option>
-            <option>City Social Welfare &amp; Development</option>
-            <option>City Treasurer's Office</option>
-            <option>City Assessor's Office</option>
-            <option>City Engineering Office</option>
-            <option>City Environment &amp; Natural Resources</option>
-            <option>City Planning &amp; Development</option>
-            <option>Business Permits &amp; Licensing Office</option>
-            <option>City Legal Office</option>
-            <option>Human Resource Management Office</option>
-          </select>
-          <span class="absolute right-[14px] top-1/2 -translate-y-1/2 pointer-events-none" style="color:var(--ink4)" aria-hidden="true">
-            <span class="material-icons-round text-[20px] block">expand_more</span>
-          </span>
-        </div>
-        <p class="hidden items-center gap-[6px] text-[12px] font-bold tracking-[0.04em] uppercase mt-[10px]" id="officeErr" role="alert" style="color:var(--red)">
-          <span class="material-icons-round text-[14px]" aria-hidden="true">error</span>
-          Please select an office.
-        </p>
-      </div>
-
-      <!-- STEP 2 -->
-      <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
-
-      <div class="flex items-center gap-[10px] mb-[10px]">
-        <div class="w-[24px] h-[24px] flex items-center justify-center text-[11px] font-bold shrink-0" style="background:var(--ink);color:var(--white)" aria-hidden="true">2</div>
         <span class="text-[11px] font-bold tracking-[0.08em] uppercase" style="color:var(--ink3)">Your experience</span>
         <div class="flex-1 h-[1px]" style="background:var(--ink7)"></div>
       </div>
@@ -112,11 +73,11 @@
         </p>
       </div>
 
-      <!-- STEP 3 -->
+      <!-- STEP 2 -->
       <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
 
       <div class="flex items-center gap-[10px] mb-[10px]">
-        <div class="w-[24px] h-[24px] flex items-center justify-center text-[11px] font-bold shrink-0" style="background:var(--ink);color:var(--white)" aria-hidden="true">3</div>
+        <div class="w-[24px] h-[24px] flex items-center justify-center text-[11px] font-bold shrink-0" style="background:var(--ink);color:var(--white)" aria-hidden="true">2</div>
         <span class="text-[11px] font-bold tracking-[0.08em] uppercase" style="color:var(--ink3)">Additional concern</span>
         <div class="flex-1 h-[1px]" style="background:var(--ink7)"></div>
         <span class="text-[11px] font-semibold tracking-[0.06em] uppercase ml-[8px]" style="color:var(--ink5)">Optional</span>
@@ -149,23 +110,6 @@
           Submit Feedback
         </button>
       </div>
-
-      <!-- Trust row — replaces generic "Responses are confidential" single line -->
-      <div class="trust-row">
-        <div class="trust-item">
-          <span class="material-icons-round" aria-hidden="true">policy</span>
-          Data Privacy Act Compliant
-        </div>
-        <div class="trust-item">
-          <span class="material-icons-round" aria-hidden="true">inventory_2</span>
-          Responses recorded officially
-        </div>
-        <div class="trust-item">
-          <span class="material-icons-round" aria-hidden="true">visibility_off</span>
-          Anonymous submission
-        </div>
-      </div>
-
     </div><!-- /formArea -->
 
     <!-- SUCCESS MODAL -->
@@ -224,20 +168,14 @@
 
   function handleSubmit() {
     var valid = true;
-    var office = document.getElementById('officeSelect').value;
-    if (!office) {
-      document.getElementById('officeErr').classList.remove('hidden');
-      document.getElementById('officeErr').classList.add('flex');
-      valid = false;
-    }
     if (!selectedReaction) {
       document.getElementById('reactionErr').classList.remove('hidden');
       document.getElementById('reactionErr').classList.add('flex');
       valid = false;
     }
     if (!valid) return;
-    var labels = { pos: 'Positive', neu: 'Neutral', neg: 'Negative' };
-    document.getElementById('successDetailText').textContent = labels[selectedReaction] + ' · ' + office;
+    var labels = { pos: 'Very satisfactory', neu: 'Satisfactory', neg: 'Unsatisfactory' };
+    document.getElementById('successDetailText').textContent = labels[selectedReaction];
     document.getElementById('headerArea').style.display = 'none';
     document.getElementById('formArea').style.display = 'none';
     var sw = document.getElementById('successWrap');
@@ -248,7 +186,6 @@
 
   function resetForm() {
     selectedReaction = null;
-    document.getElementById('officeSelect').value = '';
     document.getElementById('concern').value = '';
     document.getElementById('charCount').textContent = '0 / 500';
     ['pos','neu','neg'].forEach(function(e) {
@@ -256,10 +193,8 @@
       b.classList.remove('sel-pos', 'sel-neu', 'sel-neg');
       b.setAttribute('aria-pressed','false');
     });
-    ['officeErr','reactionErr'].forEach(function(id) {
-      document.getElementById(id).classList.add('hidden');
-      document.getElementById(id).classList.remove('flex');
-    });
+    document.getElementById('reactionErr').classList.add('hidden');
+    document.getElementById('reactionErr').classList.remove('flex');
     document.getElementById('headerArea').style.display = 'block';
     document.getElementById('formArea').style.display = 'block';
     document.getElementById('successWrap').classList.add('hidden');

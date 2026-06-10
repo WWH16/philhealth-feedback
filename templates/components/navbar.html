@@ -1,8 +1,13 @@
 {% load static %}
 <nav role="banner" class="nav-root">
-  <div style="display:flex;align-items:center;gap:12px;">
-    <img src="{% static 'img/logo.png' %}" alt="City Government Logo" style="height:32px; width:auto;">
-    <span class="nav-brand">City of Cauayan | Citizen Feedback</span>
+  <div class="flex items-center gap-[12px]">
+    <img src="{% static 'img/logo.png' %}" alt="PhilHealth Logo" style="height:36px; width:auto;">
+    <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-[8px]">
+      <span class="nav-brand !text-[14px] !capitalize">PhilHealth</span>
+      <span class="text-[12px] sm:text-[13px] font-medium text-[var(--white)] italic opacity-80 tracking-tight" style="font-family: 'Times New Roman', Times, serif;">Your Partner in Health</span>
+      <span class="hidden sm:inline text-[var(--white)] opacity-30 mx-[2px]">|</span>
+      <span class="text-[10px] font-bold text-[var(--white)] tracking-[0.1em] uppercase opacity-80">Cauayan City</span>
+    </div>
   </div>
   <div class="nav-trust-badge" aria-label="Official government portal">
     <span class="material-icons-round" aria-hidden="true">verified</span>
