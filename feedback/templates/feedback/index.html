@@ -17,14 +17,11 @@
       position: relative !important;
       transition: all 120ms !important;
       border-radius: 0 !important;
-      
-      /* Extremely small mobile defaults (< 360px) */
       font-size: 8px !important;
       letter-spacing: -0.03em !important;
       gap: 6px !important;
       padding: 12px 2px 10px 2px !important;
     }
-
     .reaction-btn span {
       text-align: center !important;
       line-height: 1.15 !important;
@@ -33,87 +30,131 @@
       word-break: break-word !important;
       overflow-wrap: anywhere !important;
     }
-
     .reaction-btn > div {
-      width: 32px !important;
-      height: 32px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+      width: 32px !important; height: 32px !important;
+      display: flex !important; align-items: center !important; justify-content: center !important;
       transition: all 120ms !important;
     }
+    .reaction-btn > div .material-icons-round { font-size: 18px !important; }
 
-    .reaction-btn > div .material-icons-round {
-      font-size: 18px !important;
-    }
-
-    /* Small screens (e.g. iPhone, small Android - 360px to 400px) */
     @media (min-width: 360px) {
-      .reaction-btn {
-        font-size: 9px !important;
-        letter-spacing: -0.02em !important;
-        gap: 8px !important;
-        padding: 14px 4px 12px 4px !important;
-      }
-      .reaction-btn > div {
-        width: 38px !important;
-        height: 38px !important;
-      }
-      .reaction-btn > div .material-icons-round {
-        font-size: 20px !important;
-      }
+      .reaction-btn { font-size: 9px !important; letter-spacing: -0.02em !important; gap: 8px !important; padding: 14px 4px 12px 4px !important; }
+      .reaction-btn > div { width: 38px !important; height: 38px !important; }
+      .reaction-btn > div .material-icons-round { font-size: 20px !important; }
     }
-
-    /* Medium-small screens (400px to 480px) */
     @media (min-width: 400px) {
-      .reaction-btn {
-        font-size: 9.5px !important;
-        letter-spacing: -0.01em !important;
-        gap: 8px !important;
-        padding: 16px 6px 14px 6px !important;
-      }
-      .reaction-btn > div {
-        width: 42px !important;
-        height: 42px !important;
-      }
-      .reaction-btn > div .material-icons-round {
-        font-size: 22px !important;
-      }
+      .reaction-btn { font-size: 9.5px !important; letter-spacing: -0.01em !important; gap: 8px !important; padding: 16px 6px 14px 6px !important; }
+      .reaction-btn > div { width: 42px !important; height: 42px !important; }
+      .reaction-btn > div .material-icons-round { font-size: 22px !important; }
     }
-
-    /* Medium screens (480px to 640px) */
     @media (min-width: 480px) {
-      .reaction-btn {
-        font-size: 10.5px !important;
-        letter-spacing: 0.02em !important;
-        gap: 10px !important;
-        padding: 20px 8px 16px 8px !important;
-      }
-      .reaction-btn > div {
-        width: 48px !important;
-        height: 48px !important;
-      }
-      .reaction-btn > div .material-icons-round {
-        font-size: 24px !important;
-      }
+      .reaction-btn { font-size: 10.5px !important; letter-spacing: 0.02em !important; gap: 10px !important; padding: 20px 8px 16px 8px !important; }
+      .reaction-btn > div { width: 48px !important; height: 48px !important; }
+      .reaction-btn > div .material-icons-round { font-size: 24px !important; }
+    }
+    @media (min-width: 640px) {
+      .reaction-btn { font-size: 12px !important; letter-spacing: 0.05em !important; gap: 12px !important; padding: 28px 12px 22px 12px !important; }
+      .reaction-btn > div { width: 60px !important; height: 60px !important; }
+      .reaction-btn > div .material-icons-round { font-size: 30px !important; }
     }
 
-    /* Tablets and desktops (>= 640px) */
-    @media (min-width: 640px) {
-      .reaction-btn {
-        font-size: 12px !important;
-        letter-spacing: 0.05em !important;
-        gap: 12px !important;
-        padding: 28px 12px 22px 12px !important;
-      }
-      .reaction-btn > div {
-        width: 60px !important;
-        height: 60px !important;
-      }
-      .reaction-btn > div .material-icons-round {
-        font-size: 30px !important;
-      }
+    /* ── SUCCESS MODAL ── */
+    #successWrap { display: none; }
+    #successWrap.is-open { display: flex; }
+
+    .success-card {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-top: 4px solid var(--g-primary);
+      background: var(--white);
+      border: 1px solid var(--ink7);
+      border-top: 4px solid var(--g-primary);
+
+      /* Mobile-first padding */
+      padding: 32px 20px 28px;
     }
+    @media (min-width: 480px) {
+      .success-card { padding: 48px 36px 40px; }
+    }
+    @media (min-width: 640px) {
+      .success-card { padding: 56px 40px 48px; }
+    }
+
+    .success-icon {
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      background: var(--g-xlight);
+      border: 1.5px solid var(--g-light);
+      /* Mobile */
+      width: 52px; height: 52px;
+    }
+    .success-icon .material-icons-round { font-size: 26px; color: var(--g-primary); }
+
+    @media (min-width: 480px) {
+      .success-icon { width: 64px; height: 64px; margin-bottom: 24px; }
+      .success-icon .material-icons-round { font-size: 32px; }
+    }
+    @media (min-width: 640px) {
+      .success-icon { width: 72px; height: 72px; margin-bottom: 28px; }
+      .success-icon .material-icons-round { font-size: 36px; }
+    }
+
+    .success-title {
+      font-weight: 800;
+      tracking: -0.04em;
+      color: var(--ink);
+      margin-bottom: 8px;
+      /* Mobile */
+      font-size: 22px;
+    }
+    @media (min-width: 480px) { .success-title { font-size: 26px; } }
+    @media (min-width: 640px) { .success-title { font-size: 28px; } }
+
+    .success-sub {
+      line-height: 1.65;
+      color: var(--ink4);
+      /* Mobile */
+      font-size: 13px;
+    }
+    @media (min-width: 480px) { .success-sub { font-size: 14px; } }
+    @media (min-width: 640px) { .success-sub { font-size: 15px; } }
+
+    .success-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      margin-top: 20px;
+      background: var(--g-xlight);
+      border: 1px solid var(--g-light);
+      color: var(--g-forest);
+      font-weight: 600;
+      /* Mobile */
+      padding: 8px 14px;
+      font-size: 12px;
+    }
+    @media (min-width: 480px) { .success-badge { padding: 10px 18px; font-size: 13px; margin-top: 24px; } }
+    .success-badge .material-icons-round { font-size: 15px; color: var(--g-primary); }
+
+    .success-reset-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      margin-top: 20px;
+      border: 1.5px solid var(--ink6);
+      background: transparent;
+      color: var(--ink3);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 0;
+      transition: border-color 120ms, color 120ms;
+      /* Mobile */
+      padding: 10px 18px;
+      font-size: 11px;
+    }
+    @media (min-width: 480px) { .success-reset-btn { padding: 11px 24px; font-size: 12px; margin-top: 24px; } }
+    .success-reset-btn:hover { border-color: var(--ink3); color: var(--ink); }
+    .success-reset-btn .material-icons-round { font-size: 14px; }
   </style>
 {% endblock %}
 
@@ -126,9 +167,7 @@
         <span class="material-icons-round text-[13px]" aria-hidden="true">volunteer_activism</span>
         We value your feedback
       </div>
-
       <h1 class="text-[30px] sm:text-[42px] font-extrabold leading-[1.05] tracking-[-0.04em] mb-[14px]" style="color:var(--ink)">How satisfied are you with the <em class="not-italic" style="color:var(--g-primary)">service you received today?</em></h1>
-
       <p class="text-[15px] leading-[1.7] mb-[44px] max-w-[440px]" style="color:var(--ink4)">Please pick your reaction below.</p>
     </div>
 
@@ -143,40 +182,32 @@
 
       <div class="p-[20px] sm:p-[28px] mb-[6px] border" style="background:var(--white);border-color:var(--ink7)">
         <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">Tap a reaction.</p>
-
         <div class="grid grid-cols-3 gap-[8px]" role="group" aria-label="Rate your experience">
-          <!-- Positive -->
           <button class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
             id="btn-pos" onclick="selectReaction('pos')" aria-pressed="false" aria-label="Very satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
-            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]"
-              style="border-color:var(--ink6);background:var(--white)">
+            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
               <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_satisfied_alt</span>
             </div>
             <span>Very satisfactory</span>
           </button>
-          <!-- Neutral -->
           <button class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
             id="btn-neu" onclick="selectReaction('neu')" aria-pressed="false" aria-label="Satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
-            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]"
-              style="border-color:var(--ink6);background:var(--white)">
+            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
               <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_neutral</span>
             </div>
             <span>Satisfactory</span>
           </button>
-          <!-- Negative -->
           <button class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
             id="btn-neg" onclick="selectReaction('neg')" aria-pressed="false" aria-label="Unsatisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
-            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]"
-              style="border-color:var(--ink6);background:var(--white)">
+            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
               <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_dissatisfied</span>
             </div>
             <span>Unsatisfactory</span>
           </button>
         </div>
-
         <p class="hidden items-center gap-[6px] text-[12px] font-bold tracking-[0.04em] uppercase mt-[10px] justify-center" id="reactionErr" role="alert" style="color:var(--red)">
           <span class="material-icons-round text-[14px]" aria-hidden="true">error</span>
           Please select your experience.
@@ -185,37 +216,27 @@
 
       <!-- STEP 2 -->
       <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
-
       <div class="flex items-center gap-[10px] mb-[10px]">
         <div class="w-[24px] h-[24px] flex items-center justify-center text-[11px] font-bold shrink-0" style="background:var(--ink);color:var(--white)" aria-hidden="true">2</div>
         <span class="text-[11px] font-bold tracking-[0.08em] uppercase" style="color:var(--ink3)">Additional concern</span>
         <div class="flex-1 h-[1px]" style="background:var(--ink7)"></div>
         <span class="text-[11px] font-semibold tracking-[0.06em] uppercase ml-[8px]" style="color:var(--ink5)">Optional</span>
       </div>
-
       <div class="p-[20px] sm:p-[28px] mb-[6px] border" style="background:var(--white);border-color:var(--ink7)">
         <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">Write your concern or suggestion below if you have more to share.</p>
-        <textarea
-          id="concern"
-          placeholder="e.g. Staff were very accommodating, but the waiting area was overcrowded..."
-          maxlength="500"
-          oninput="updateCount()"
-          aria-label="Additional concern, optional"
+        <textarea id="concern" placeholder="e.g. Staff were very accommodating, but the waiting area was overcrowded..."
+          maxlength="500" oninput="updateCount()" aria-label="Additional concern, optional"
           class="w-full p-[16px] text-[15px] resize-y min-h-[108px] leading-[1.65] transition-colors duration-[120ms] tracking-[-0.005em] focus:outline-none"
-          style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink);border-radius:0;font-family:var(--font)"
-        ></textarea>
+          style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink);border-radius:0;font-family:var(--font)"></textarea>
         <p class="text-[11px] font-semibold tracking-[0.04em] text-right mt-[8px] uppercase" id="charCount" aria-live="polite" style="color:var(--ink6)">0 / 500</p>
       </div>
 
       <!-- SUBMIT -->
       <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
-
       <div class="mt-[6px]">
-        <button
-          class="w-full h-[56px] border-none text-[13px] font-bold tracking-[0.1em] uppercase cursor-pointer flex items-center justify-center gap-[10px] transition-opacity duration-[120ms] relative overflow-hidden hover:opacity-[0.88] active:opacity-[0.95] active:scale-[0.995] focus:outline-none focus:ring-2 focus:ring-offset-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[4px]"
+        <button class="w-full h-[56px] border-none text-[13px] font-bold tracking-[0.1em] uppercase cursor-pointer flex items-center justify-center gap-[10px] transition-opacity duration-[120ms] relative overflow-hidden hover:opacity-[0.88] active:opacity-[0.95] active:scale-[0.995] focus:outline-none focus:ring-2 focus:ring-offset-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[4px]"
           style="background:var(--g-forest);color:var(--white);border-radius:0;--tw-ring-color:var(--g-primary)"
           onclick="handleSubmit()">
-          <span class="before:bg-[var(--g-primary)]"></span>
           <span class="material-icons-round text-[18px]" aria-hidden="true">send</span>
           Submit Feedback
         </button>
@@ -223,22 +244,23 @@
     </div><!-- /formArea -->
 
     <!-- SUCCESS MODAL -->
-    <div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-[20px] bg-[rgba(10,26,4,0.4)] backdrop-blur-[4px]" id="successWrap" onclick="handleBackdropClick(event)">
-      <div class="w-full max-w-[480px] py-[56px] px-[40px] text-center relative overflow-hidden border shadow-2xl animate-in fade-in zoom-in duration-300" style="background:var(--white);border-color:var(--ink7);border-top:4px solid var(--g-primary)" onclick="event.stopPropagation()">
-        <div class="w-[72px] h-[72px] flex items-center justify-center mx-auto mb-[28px]" style="background:var(--g-xlight);border:1.5px solid var(--g-light)">
-          <span class="material-icons-round text-[36px]" style="color:var(--g-primary)" aria-hidden="true">check</span>
+    <div id="successWrap" role="dialog" aria-modal="true" aria-labelledby="successTitle"
+      class="fixed inset-0 z-[100] items-center justify-center p-[16px] sm:p-[20px]"
+      style="background:rgba(10,26,4,0.45);backdrop-filter:blur(4px);"
+      onclick="handleBackdropClick(event)">
+      <div class="success-card" onclick="event.stopPropagation()">
+        <div class="success-icon" aria-hidden="true">
+          <span class="material-icons-round">check</span>
         </div>
-        <h2 class="text-[28px] font-extrabold tracking-[-0.04em] mb-[10px]" style="color:var(--ink)">Thank you!</h2>
-        <p class="text-[15px] leading-[1.65]" style="color:var(--ink4)">Your feedback helps us improve our service</p>
-        <div class="inline-flex items-center gap-[7px] mt-[24px] px-[18px] py-[10px] text-[13px] font-semibold tracking-[-0.01em]" style="background:var(--g-xlight);border:1px solid var(--g-light);color:var(--g-forest)">
-          <span class="material-icons-round text-[16px]" style="color:var(--g-primary)" aria-hidden="true">task_alt</span>
+        <h2 class="success-title" id="successTitle">Thank you!</h2>
+        <p class="success-sub">Your feedback helps us improve our service.</p>
+        <div class="success-badge">
+          <span class="material-icons-round" aria-hidden="true">task_alt</span>
           <span id="successDetailText">—</span>
         </div>
-        <br />
-        <button class="mt-[28px] inline-flex items-center gap-[7px] border-[1.5px] bg-transparent px-[24px] py-[11px] text-[12px] font-bold tracking-[0.08em] uppercase transition-colors duration-[120ms] focus:outline-none focus:ring-2 focus:ring-offset-2"
-          style="border-color:var(--ink6);color:var(--ink3);border-radius:0;--tw-ring-color:var(--g-primary)"
-          onclick="resetForm()">
-          <span class="material-icons-round text-[15px]" aria-hidden="true">refresh</span>
+        <br>
+        <button class="success-reset-btn" onclick="resetForm()">
+          <span class="material-icons-round" style="font-size:14px" aria-hidden="true">refresh</span>
           Submit another
         </button>
       </div>
@@ -271,27 +293,19 @@
     document.getElementById('charCount').textContent = ta.value.length + ' / 500';
   }
 
-  function clearErr(id) {
-    document.getElementById(id).classList.add('hidden');
-    document.getElementById(id).classList.remove('flex');
-  }
-
   function handleSubmit() {
-    var valid = true;
     if (!selectedReaction) {
       document.getElementById('reactionErr').classList.remove('hidden');
       document.getElementById('reactionErr').classList.add('flex');
-      valid = false;
+      return;
     }
-    if (!valid) return;
     var labels = { pos: 'Very satisfactory', neu: 'Satisfactory', neg: 'Unsatisfactory' };
     document.getElementById('successDetailText').textContent = labels[selectedReaction];
     document.getElementById('headerArea').style.display = 'none';
     document.getElementById('formArea').style.display = 'none';
     var sw = document.getElementById('successWrap');
-    sw.classList.remove('hidden');
-    sw.classList.add('block');
-    sw.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    sw.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
   }
 
   function resetForm() {
@@ -307,13 +321,11 @@
     document.getElementById('reactionErr').classList.remove('flex');
     document.getElementById('headerArea').style.display = 'block';
     document.getElementById('formArea').style.display = 'block';
-    document.getElementById('successWrap').classList.add('hidden');
-    document.getElementById('successWrap').classList.remove('block');
+    document.getElementById('successWrap').classList.remove('is-open');
+    document.body.style.overflow = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function handleBackdropClick(event) {
-    resetForm();
-  }
+  function handleBackdropClick(event) { resetForm(); }
 </script>
 {% endblock %}
