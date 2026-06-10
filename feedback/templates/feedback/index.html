@@ -5,6 +5,116 @@
 
 {% block styles %}
   <link rel="stylesheet" href="{% static 'feedback/css/feedback.css' %}">
+  <style>
+    .reaction-btn {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      cursor: pointer !important;
+      text-transform: uppercase !important;
+      font-weight: 700 !important;
+      user-select: none !important;
+      position: relative !important;
+      transition: all 120ms !important;
+      border-radius: 0 !important;
+      
+      /* Extremely small mobile defaults (< 360px) */
+      font-size: 8px !important;
+      letter-spacing: -0.03em !important;
+      gap: 6px !important;
+      padding: 12px 2px 10px 2px !important;
+    }
+
+    .reaction-btn span {
+      text-align: center !important;
+      line-height: 1.15 !important;
+      display: block !important;
+      width: 100% !important;
+      word-break: break-word !important;
+      overflow-wrap: anywhere !important;
+    }
+
+    .reaction-btn > div {
+      width: 32px !important;
+      height: 32px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 120ms !important;
+    }
+
+    .reaction-btn > div .material-icons-round {
+      font-size: 18px !important;
+    }
+
+    /* Small screens (e.g. iPhone, small Android - 360px to 400px) */
+    @media (min-width: 360px) {
+      .reaction-btn {
+        font-size: 9px !important;
+        letter-spacing: -0.02em !important;
+        gap: 8px !important;
+        padding: 14px 4px 12px 4px !important;
+      }
+      .reaction-btn > div {
+        width: 38px !important;
+        height: 38px !important;
+      }
+      .reaction-btn > div .material-icons-round {
+        font-size: 20px !important;
+      }
+    }
+
+    /* Medium-small screens (400px to 480px) */
+    @media (min-width: 400px) {
+      .reaction-btn {
+        font-size: 9.5px !important;
+        letter-spacing: -0.01em !important;
+        gap: 8px !important;
+        padding: 16px 6px 14px 6px !important;
+      }
+      .reaction-btn > div {
+        width: 42px !important;
+        height: 42px !important;
+      }
+      .reaction-btn > div .material-icons-round {
+        font-size: 22px !important;
+      }
+    }
+
+    /* Medium screens (480px to 640px) */
+    @media (min-width: 480px) {
+      .reaction-btn {
+        font-size: 10.5px !important;
+        letter-spacing: 0.02em !important;
+        gap: 10px !important;
+        padding: 20px 8px 16px 8px !important;
+      }
+      .reaction-btn > div {
+        width: 48px !important;
+        height: 48px !important;
+      }
+      .reaction-btn > div .material-icons-round {
+        font-size: 24px !important;
+      }
+    }
+
+    /* Tablets and desktops (>= 640px) */
+    @media (min-width: 640px) {
+      .reaction-btn {
+        font-size: 12px !important;
+        letter-spacing: 0.05em !important;
+        gap: 12px !important;
+        padding: 28px 12px 22px 12px !important;
+      }
+      .reaction-btn > div {
+        width: 60px !important;
+        height: 60px !important;
+      }
+      .reaction-btn > div .material-icons-round {
+        font-size: 30px !important;
+      }
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -36,34 +146,34 @@
 
         <div class="grid grid-cols-3 gap-[8px]" role="group" aria-label="Rate your experience">
           <!-- Positive -->
-          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
-            id="btn-pos" onclick="selectReaction('pos')" aria-pressed="false" aria-label="Positive"
+          <button class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
+            id="btn-pos" onclick="selectReaction('pos')" aria-pressed="false" aria-label="Very satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
-            <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] flex items-center justify-center transition-all duration-[120ms] group-hover:scale-[1.06]"
+            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]"
               style="border-color:var(--ink6);background:var(--white)">
-              <span class="material-icons-round text-[24px] sm:text-[30px] transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_satisfied_alt</span>
+              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_satisfied_alt</span>
             </div>
-            <span>Positive</span>
+            <span>Very satisfactory</span>
           </button>
           <!-- Neutral -->
-          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
-            id="btn-neu" onclick="selectReaction('neu')" aria-pressed="false" aria-label="Neutral"
+          <button class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
+            id="btn-neu" onclick="selectReaction('neu')" aria-pressed="false" aria-label="Satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
-            <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] flex items-center justify-center transition-all duration-[120ms] group-hover:scale-[1.06]"
+            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]"
               style="border-color:var(--ink6);background:var(--white)">
-              <span class="material-icons-round text-[24px] sm:text-[30px] transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_neutral</span>
+              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_neutral</span>
             </div>
-            <span>Neutral</span>
+            <span>Satisfactory</span>
           </button>
           <!-- Negative -->
-          <button class="reaction-btn group flex flex-col items-center gap-[12px] pt-[20px] px-[8px] pb-[16px] sm:pt-[28px] sm:px-[12px] sm:pb-[22px] cursor-pointer text-[12px] font-bold tracking-[0.06em] uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
-            id="btn-neg" onclick="selectReaction('neg')" aria-pressed="false" aria-label="Negative"
+          <button class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
+            id="btn-neg" onclick="selectReaction('neg')" aria-pressed="false" aria-label="Unsatisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
-            <div class="w-[48px] h-[48px] sm:w-[60px] sm:h-[60px] border-[1.5px] flex items-center justify-center transition-all duration-[120ms] group-hover:scale-[1.06]"
+            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]"
               style="border-color:var(--ink6);background:var(--white)">
-              <span class="material-icons-round text-[24px] sm:text-[30px] transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_dissatisfied</span>
+              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--ink5)" aria-hidden="true">sentiment_dissatisfied</span>
             </div>
-            <span>Negative</span>
+            <span>Unsatisfactory</span>
           </button>
         </div>
 
