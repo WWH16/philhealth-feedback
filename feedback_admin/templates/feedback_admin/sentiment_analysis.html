@@ -1,0 +1,693 @@
+{% extends 'feedback_admin/base.html' %}
+{% load static %}
+
+{% block title %}Sentiment Analysis — PhilHealth Cauayan City{% endblock %}
+
+{% block head_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block nav_sentiment %}active{% endblock %}
+
+{% block extra_styles %}
+/* ── SENTIMENT ANALYSIS PAGE EXTRAS ─────────────────────────────────── */
+.score-ring-wrap {
+  display: flex; align-items: center; justify-content: center;
+  position: relative; width: 160px; height: 160px; margin: 0 auto;
+}
+.score-ring-wrap canvas { position: absolute; inset: 0; }
+.score-ring-center {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+}
+.score-ring-value {
+  font-size: 36px; font-weight: 800; letter-spacing: -0.05em;
+  line-height: 1; color: var(--text-primary);
+}
+.score-ring-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--text-muted); margin-top: 4px;
+}
+
+.keyword-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.03em; border: 1px solid var(--border);
+  background: var(--surface-page); color: var(--text-secondary);
+  cursor: default; transition: all 120ms;
+}
+.keyword-pill:hover { border-color: var(--g-primary); color: var(--g-primary); }
+.keyword-pill.pos { background: var(--g-xlight); border-color: var(--g-light); color: var(--g-forest); }
+.keyword-pill.neg { background: var(--red-bg); border-color: #fca5a5; color: var(--red); }
+.keyword-pill.neu { background: var(--gold-light); border-color: #e8cc8a; color: #7a5500; }
+.keyword-pill-count {
+  font-size: 9px; font-weight: 700; font-family: var(--mono);
+  background: rgba(0,0,0,0.07); padding: 1px 5px; letter-spacing: 0.04em;
+}
+[data-theme="dark"] .keyword-pill-count { background: rgba(255,255,255,0.1); }
+
+.heatmap-cell {
+  width: 100%; aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--white);
+  transition: opacity 120ms; cursor: default; position: relative;
+}
+.heatmap-cell:hover::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: #1c1e22; color: #fff; font-size: 10px;
+  padding: 4px 8px; white-space: nowrap; pointer-events: none;
+  z-index: 10; font-weight: 600;
+}
+
+.insight-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 13px 0; border-bottom: 1px solid var(--border);
+}
+.insight-row:last-child { border-bottom: none; }
+.insight-icon {
+  width: 32px; height: 32px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.insight-icon .material-icons-round { font-size: 17px; }
+.insight-body { flex: 1; }
+.insight-title { font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+.insight-desc  { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+.insight-icon.pos { background: var(--g-xlight); }
+.insight-icon.pos .material-icons-round { color: var(--g-deep); }
+.insight-icon.neg { background: var(--red-bg); }
+.insight-icon.neg .material-icons-round { color: var(--red); }
+.insight-icon.neu { background: var(--gold-light); }
+.insight-icon.neu .material-icons-round { color: var(--gold); }
+.insight-icon.info { background: var(--ink8); }
+.insight-icon.info .material-icons-round { color: var(--ink4); }
+
+.trend-arrow {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+}
+.trend-arrow.up   { background: var(--g-xlight);  color: var(--g-forest); }
+.trend-arrow.down { background: var(--red-bg);     color: var(--red); }
+.trend-arrow.flat { background: var(--ink8);       color: var(--ink4); }
+.trend-arrow .material-icons-round { font-size: 12px; }
+[data-theme="dark"] .trend-arrow.up   { background: rgba(35,164,85,0.15); }
+[data-theme="dark"] .trend-arrow.down { background: rgba(192,0,26,0.15); }
+[data-theme="dark"] .trend-arrow.flat { background: rgba(255,255,255,0.06); }
+
+.score-bar-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.score-bar-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); min-width: 90px; }
+.score-bar-track { flex: 1; height: 8px; background: var(--border); position: relative; }
+.score-bar-fill  { position: absolute; left: 0; top: 0; bottom: 0; transition: width 700ms cubic-bezier(.4,0,.2,1); }
+.score-bar-val   { font-size: 11px; font-weight: 700; color: var(--text-primary); font-family: var(--mono); min-width: 36px; text-align: right; }
+
+.concern-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  border: 1px solid; background: transparent;
+}
+.concern-tag.wait     { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+.concern-tag.staff    { border-color: var(--g-primary); color: var(--g-forest); background: var(--g-xlight); }
+.concern-tag.facility { border-color: var(--gold); color: #7a5500; background: var(--gold-light); }
+.concern-tag.process  { border-color: var(--ink5); color: var(--ink3); background: var(--ink8); }
+[data-theme="dark"] .concern-tag.wait     { background: rgba(192,0,26,0.12); }
+[data-theme="dark"] .concern-tag.staff    { background: rgba(35,164,85,0.12); }
+[data-theme="dark"] .concern-tag.facility { background: rgba(184,147,58,0.12); }
+[data-theme="dark"] .concern-tag.process  { background: rgba(255,255,255,0.05); }
+{% endblock %}
+
+{% block page_content %}
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-row">
+      <div>
+        <div class="page-eyebrow">
+          <span class="material-icons-round">psychology</span>
+          AI-Powered Insights
+        </div>
+        <h1 class="page-title">Sentiment Analysis</h1>
+        <p class="page-subtitle">Automatically categorized themes, tone scores, and trend signals from all submitted feedback.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="date-badge">
+          <span class="material-icons-round">today</span>
+          <span id="currentDate">—</span>
+        </div>
+        <button class="btn-ph btn-ph-primary" onclick="exportReport()">
+          <span class="material-icons-round">download</span> Export Report
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER TABS -->
+  <div style="margin-bottom:20px;">
+    <div class="filter-tabs" style="display:inline-flex;max-width:480px;width:100%">
+      <button class="filter-tab" onclick="setFilter(this,'today')">Today</button>
+      <button class="filter-tab" onclick="setFilter(this,'week')">This Week</button>
+      <button class="filter-tab active" onclick="setFilter(this,'month')">This Month</button>
+      <button class="filter-tab" onclick="setFilter(this,'all')">All Time</button>
+    </div>
+  </div>
+
+  <!-- TOP ROW: Score Ring + Score Breakdown + AI Insights -->
+  <div class="row g-3 mb-3">
+
+    <!-- OVERALL SENTIMENT SCORE -->
+    <div class="col-12 col-md-4 col-lg-3">
+      <div class="card-block h-100">
+        <div class="card-block-head">
+          <h2 class="card-block-title"><span class="material-icons-round">donut_large</span>Overall Score</h2>
+        </div>
+        <div class="card-block-body" style="display:flex;flex-direction:column;align-items:center;gap:20px;">
+          <div class="score-ring-wrap">
+            <canvas id="scoreRingChart" width="160" height="160" aria-label="Overall sentiment score ring" role="img"></canvas>
+            <div class="score-ring-center">
+              <div class="score-ring-value" id="scoreRingVal">82</div>
+              <div class="score-ring-label">/ 100</div>
+            </div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:14px;font-weight:800;letter-spacing:-0.02em;color:var(--g-primary)" id="scoreLabel">Positive</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Overall sentiment trend</div>
+          </div>
+          <div style="width:100%;border-top:1px solid var(--border);padding-top:14px;">
+            <div class="score-bar-row" style="padding-top:0">
+              <span class="score-bar-label">Very Sat.</span>
+              <div class="score-bar-track"><div class="score-bar-fill" style="width:60%;background:var(--g-primary)"></div></div>
+              <span class="score-bar-val">60%</span>
+            </div>
+            <div class="score-bar-row">
+              <span class="score-bar-label">Satisfactory</span>
+              <div class="score-bar-track"><div class="score-bar-fill" style="width:26%;background:var(--gold)"></div></div>
+              <span class="score-bar-val">26%</span>
+            </div>
+            <div class="score-bar-row">
+              <span class="score-bar-label">Unsat.</span>
+              <div class="score-bar-track"><div class="score-bar-fill" style="width:14%;background:var(--red)"></div></div>
+              <span class="score-bar-val">14%</span>
+            </div>
+          </div>
+          <div style="width:100%;background:var(--surface-page);border:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">vs Last Period</span>
+            <span class="trend-arrow up" id="periodTrend"><span class="material-icons-round">arrow_upward</span>+4.2%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SENTIMENT TREND -->
+    <div class="col-12 col-md-8 col-lg-5">
+      <div class="card-block h-100">
+        <div class="card-block-head">
+          <h2 class="card-block-title"><span class="material-icons-round">show_chart</span>Sentiment Score Trend</h2>
+          <button class="btn-ph btn-ph-sm"><span class="material-icons-round">download</span> Export</button>
+        </div>
+        <div class="card-block-body">
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="scoreTrendChart" aria-label="Sentiment score over time" role="img"></canvas>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-secondary)">
+              <div style="width:20px;height:3px;background:var(--g-primary)"></div> Score
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--text-secondary)">
+              <div style="width:20px;height:3px;background:var(--ink6);border-top:2px dashed var(--ink5)"></div> 7-day avg
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI INSIGHTS -->
+    <div class="col-12 col-lg-4">
+      <div class="card-block h-100">
+        <div class="card-block-head">
+          <h2 class="card-block-title"><span class="material-icons-round">auto_awesome</span>AI Insights</h2>
+          <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--g-xlight);color:var(--g-forest);padding:3px 7px;">Live</span>
+        </div>
+        <div class="card-block-body no-pad" style="padding:0 20px;">
+          <div class="insight-row" style="padding-top:16px">
+            <div class="insight-icon pos"><span class="material-icons-round">trending_up</span></div>
+            <div class="insight-body">
+              <div class="insight-title">Satisfaction improving week-on-week</div>
+              <div class="insight-desc">Very Satisfactory responses rose from 55% to 60% over the last 7 days — the strongest weekly gain this month.</div>
+            </div>
+          </div>
+          <div class="insight-row">
+            <div class="insight-icon neg"><span class="material-icons-round">schedule</span></div>
+            <div class="insight-body">
+              <div class="insight-title">Waiting time is the top complaint</div>
+              <div class="insight-desc">Mentions of "wait," "long queue," and "hour" account for 68% of all negative comments this month.</div>
+            </div>
+          </div>
+          <div class="insight-row">
+            <div class="insight-icon neu"><span class="material-icons-round">wb_sunny</span></div>
+            <div class="insight-body">
+              <div class="insight-title">Morning slots receive better ratings</div>
+              <div class="insight-desc">Feedback submitted before 12 PM averages a score of 87 vs. 74 in the afternoon — likely tied to queue volume.</div>
+            </div>
+          </div>
+          <div class="insight-row">
+            <div class="insight-icon info"><span class="material-icons-round">person_outline</span></div>
+            <div class="insight-body">
+              <div class="insight-title">Staff praise up 22% vs. last month</div>
+              <div class="insight-desc">Positive keywords linked to staff (accommodating, professional, patient) increased significantly this period.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /row 1 -->
+
+  <!-- SECOND ROW: Keyword Cloud + Heatmap + Theme Breakdown -->
+  <div class="row g-3 mb-3">
+
+    <!-- TOP KEYWORDS -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card-block h-100">
+        <div class="card-block-head">
+          <h2 class="card-block-title"><span class="material-icons-round">label</span>Top Keywords</h2>
+          <div style="display:flex;gap:6px;">
+            <button class="filter-tab active" id="kwAll"  onclick="setKwFilter('all',  this)" style="flex:1;font-size:9px;padding:5px 8px;">All</button>
+            <button class="filter-tab"        id="kwPos"  onclick="setKwFilter('pos',  this)" style="flex:1;font-size:9px;padding:5px 8px;">Positive</button>
+            <button class="filter-tab"        id="kwNeg"  onclick="setKwFilter('neg',  this)" style="flex:1;font-size:9px;padding:5px 8px;">Negative</button>
+          </div>
+        </div>
+        <div class="card-block-body">
+          <div id="keywordCloud" style="display:flex;flex-wrap:wrap;gap:6px;min-height:140px;align-content:flex-start;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOUR-OF-DAY HEATMAP -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card-block h-100">
+        <div class="card-block-head">
+          <h2 class="card-block-title"><span class="material-icons-round">grid_view</span>Feedback Volume by Hour</h2>
+        </div>
+        <div class="card-block-body">
+          <div style="font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px;">
+            Mon–Fri, office hours
+          </div>
+          <div id="heatmapGrid" style="display:grid;grid-template-columns:repeat(9,1fr);gap:3px;"></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+            <span style="font-size:10px;font-weight:600;color:var(--text-muted);">Low</span>
+            <div style="flex:1;height:6px;background:linear-gradient(to right,#e4f5ec,#23A455,#0f5a2b)"></div>
+            <span style="font-size:10px;font-weight:600;color:var(--text-muted);">High</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THEME BREAKDOWN -->
+    <div class="col-12 col-lg-4">
+      <div class="card-block h-100">
+        <div class="card-block-head">
+          <h2 class="card-block-title"><span class="material-icons-round">category</span>Theme Breakdown</h2>
+          <button class="btn-ph btn-ph-sm"><span class="material-icons-round">download</span> Export</button>
+        </div>
+        <div class="card-block-body">
+          <div class="chart-wrap" style="height:200px;">
+            <canvas id="themeBarChart" aria-label="Comment themes bar chart" role="img"></canvas>
+          </div>
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px;" id="concernTags">
+            <span class="concern-tag wait"><span class="material-icons-round" style="font-size:11px">schedule</span>Waiting Time</span>
+            <span class="concern-tag staff"><span class="material-icons-round" style="font-size:11px">people</span>Staff Conduct</span>
+            <span class="concern-tag facility"><span class="material-icons-round" style="font-size:11px">chair</span>Facility</span>
+            <span class="concern-tag process"><span class="material-icons-round" style="font-size:11px">sync_alt</span>Process</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /row 2 -->
+
+  <!-- THIRD ROW: Day-of-week chart + Recent Flagged Comments -->
+  <div class="row g-3 mb-3">
+
+    <!-- RATING BY DAY OF WEEK -->
+    <div class="col-12 col-lg-5">
+      <div class="card-block h-100">
+        <div class="card-block-head">
+          <h2 class="card-block-title"><span class="material-icons-round">date_range</span>Avg. Score by Day of Week</h2>
+        </div>
+        <div class="card-block-body">
+          <div class="chart-wrap" style="height:220px;">
+            <canvas id="dayOfWeekChart" aria-label="Average sentiment score by day of week" role="img"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLAGGED NEGATIVE COMMENTS -->
+    <div class="col-12 col-lg-7">
+      <div class="card-block h-100">
+        <div class="card-block-head">
+          <h2 class="card-block-title">
+            <span class="material-icons-round" style="color:var(--red)">flag</span>
+            Flagged Comments
+          </h2>
+          <span style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:var(--red-bg);color:var(--red);padding:3px 7px;">Needs Attention</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="ph-table" aria-label="Flagged negative comments">
+            <thead>
+              <tr>
+                <th style="min-width:90px;">Date</th>
+                <th style="min-width:100px;">Theme</th>
+                <th>Comment</th>
+                <th style="min-width:70px;">Score</th>
+              </tr>
+            </thead>
+            <tbody id="flaggedBody"></tbody>
+          </table>
+        </div>
+        <div style="padding:10px 16px;border-top:1px solid var(--border);text-align:right;">
+          <a href="{% url 'responses' %}?filter=neg" class="btn-ph btn-ph-sm btn-ph-primary">
+            <span class="material-icons-round">open_in_new</span> View All Negative
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /row 3 -->
+
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+/* ── DATA ── */
+const KEYWORDS_ALL = [
+  { text:'accommodating', type:'pos', count:38 },
+  { text:'professional',  type:'pos', count:31 },
+  { text:'efficient',     type:'pos', count:28 },
+  { text:'helpful',       type:'pos', count:26 },
+  { text:'fast',          type:'pos', count:22 },
+  { text:'knowledgeable', type:'pos', count:19 },
+  { text:'organized',     type:'pos', count:17 },
+  { text:'patient',       type:'pos', count:15 },
+  { text:'waiting',       type:'neg', count:34 },
+  { text:'long queue',    type:'neg', count:27 },
+  { text:'overcrowded',   type:'neg', count:18 },
+  { text:'rude',          type:'neg', count:11 },
+  { text:'slow',          type:'neg', count:10 },
+  { text:'incorrect info',type:'neg', count:8  },
+  { text:'appointment',   type:'neu', count:21 },
+  { text:'forms',         type:'neu', count:16 },
+  { text:'online portal', type:'neu', count:14 },
+  { text:'signage',       type:'neu', count:9  },
+  { text:'chairs',        type:'neu', count:7  },
+];
+
+const FLAGGED = [
+  { date:'Jun 11', theme:'wait',     comment:'Waited over an hour for a simple inquiry. The waiting area was overcrowded.',         score:18 },
+  { date:'Jun 10', theme:'staff',    comment:'The staff was rude and dismissive when I asked about my claim status.',               score:22 },
+  { date:'Jun 09', theme:'facility', comment:'Air conditioning was not working properly. It was very uncomfortable.',               score:30 },
+  { date:'Jun 08', theme:'process',  comment:'My appointment was not honored. Had to wait two hours despite having a scheduled time.', score:15 },
+  { date:'Jun 06', theme:'process',  comment:'Was given incorrect information about requirements. Wasted a trip.',                  score:25 },
+  { date:'Jun 04', theme:'process',  comment:'Had to visit three times before my concern was resolved.',                            score:28 },
+];
+
+const HEATMAP_DATA = {
+  /* rows = Mon–Fri, cols = 08–16 */
+  labels_row: ['Mon','Tue','Wed','Thu','Fri'],
+  labels_col: ['8am','9am','10am','11am','12pm','1pm','2pm','3pm','4pm'],
+  values: [
+    [2,  6,  12, 15, 8,  10, 13, 9,  4],
+    [3,  8,  14, 18, 9,  11, 16, 12, 5],
+    [1,  5,  10, 14, 7,  8,  11, 8,  3],
+    [2,  7,  11, 16, 10, 9,  14, 10, 4],
+    [4,  9,  13, 17, 11, 12, 15, 11, 6],
+  ],
+};
+
+/* ── FILTER STATE ── */
+const FILTER_SCORES = {
+  today: { score:79, trend:'+1.8%', dir:'up' },
+  week:  { score:81, trend:'+2.5%', dir:'up' },
+  month: { score:82, trend:'+4.2%', dir:'up' },
+  all:   { score:78, trend:'-0.6%', dir:'down' },
+};
+
+function setFilter(btn, period) {
+  document.querySelectorAll('.filter-tab[onclick^="setFilter"]').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  const d = FILTER_SCORES[period];
+  document.getElementById('scoreRingVal').textContent = d.score;
+  const trendEl = document.getElementById('periodTrend');
+  trendEl.className = 'trend-arrow ' + d.dir;
+  trendEl.innerHTML = `<span class="material-icons-round">${d.dir === 'up' ? 'arrow_upward' : 'arrow_downward'}</span>${d.trend}`;
+  initScoreRing(d.score);
+}
+
+/* ── UTILS ── */
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function scoreColor(s) {
+  if (s >= 70) return 'var(--g-primary)';
+  if (s >= 45) return 'var(--gold)';
+  return 'var(--red)';
+}
+
+/* ── SCORE RING ── */
+let scoreRingChart;
+function initScoreRing(val) {
+  const ctx    = document.getElementById('scoreRingChart').getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (scoreRingChart) scoreRingChart.destroy();
+  scoreRingChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [val, 100 - val],
+        backgroundColor: [scoreColor(val), isDark ? '#2a2e35' : '#e4e7eb'],
+        borderWidth: 0,
+        hoverOffset: 0,
+      }]
+    },
+    options: {
+      responsive: false, maintainAspectRatio: false,
+      cutout: '78%',
+      animation: { duration: 700 },
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      events: [],
+    }
+  });
+  const label = val >= 75 ? 'Positive' : val >= 50 ? 'Neutral' : 'Negative';
+  document.getElementById('scoreLabel').textContent = label;
+  document.getElementById('scoreLabel').style.color = scoreColor(val);
+}
+
+/* ── SCORE TREND CHART ── */
+let scoreTrendChart;
+function initScoreTrend() {
+  const ctx     = document.getElementById('scoreTrendChart').getContext('2d');
+  const isDark  = document.documentElement.getAttribute('data-theme') === 'dark';
+  const grid    = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const tick    = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
+  const labels  = ['Jun 1','Jun 2','Jun 3','Jun 4','Jun 5','Jun 6','Jun 7','Jun 8','Jun 9','Jun 10','Jun 11'];
+  const scores  = [76, 79, 74, 81, 78, 83, 80, 85, 82, 84, 82];
+  const avg     = [78, 78, 78, 78.5, 78.5, 79, 79, 80, 80.5, 81, 81.5];
+  if (scoreTrendChart) scoreTrendChart.destroy();
+  scoreTrendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Score', data: scores,
+          borderColor: '#23A455', backgroundColor: 'rgba(35,164,85,0.08)',
+          tension: 0.4, fill: true,
+          pointBackgroundColor: '#23A455', pointRadius: 4, pointHoverRadius: 6,
+          borderWidth: 2,
+        },
+        {
+          label: '7-day avg', data: avg,
+          borderColor: isDark ? '#3a3f47' : '#c9cdd3',
+          borderDash: [5, 4], tension: 0.3, fill: false,
+          pointRadius: 0, borderWidth: 1.5,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { grid: { color: grid }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10 }, maxTicksLimit: 7 }, border: { display: false } },
+        y: { min: 60, max: 100, grid: { color: grid }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10 }, stepSize: 10 }, border: { display: false } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: isDark ? '#2a2e35' : '#1c1e22', titleColor: '#fff', bodyColor: 'rgba(255,255,255,0.7)', padding: 12, cornerRadius: 0, titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, bodyFont: { family: "'IBM Plex Sans'", size: 12 } }
+      }
+    }
+  });
+}
+
+/* ── THEME BAR CHART ── */
+let themeBarChart;
+function initThemeBar() {
+  const ctx    = document.getElementById('themeBarChart').getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const grid   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const tick   = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
+  if (themeBarChart) themeBarChart.destroy();
+  themeBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Waiting Time','Staff Conduct','Facility','Process','Online Portal','Signage'],
+      datasets: [
+        { label: 'Positive', data: [18, 72, 34, 41, 29, 14], backgroundColor: '#23A455' },
+        { label: 'Negative', data: [52, 9,  18, 22, 12, 5  ], backgroundColor: '#c0001a' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      scales: {
+        x: { stacked: false, grid: { color: grid }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10 } }, border: { display: false } },
+        y: { grid: { display: false }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10, weight: '600' } }, border: { display: false } }
+      },
+      plugins: {
+        legend: { position: 'top', align: 'end', labels: { color: tick, font: { family: "'IBM Plex Sans'", size: 10, weight: '700' }, boxWidth: 10, boxHeight: 10, padding: 12, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: { backgroundColor: isDark ? '#2a2e35' : '#1c1e22', titleColor: '#fff', bodyColor: 'rgba(255,255,255,0.7)', padding: 12, cornerRadius: 0, titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, bodyFont: { family: "'IBM Plex Sans'", size: 12 } }
+      }
+    }
+  });
+}
+
+/* ── DAY-OF-WEEK CHART ── */
+let dowChart;
+function initDowChart() {
+  const ctx    = document.getElementById('dayOfWeekChart').getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const grid   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const tick   = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
+  if (dowChart) dowChart.destroy();
+  dowChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Monday','Tuesday','Wednesday','Thursday','Friday'],
+      datasets: [{
+        label: 'Avg. Score',
+        data: [84, 80, 83, 79, 78],
+        backgroundColor: ['#23A455','#1F964B','#23A455','#b8933a','#c0001a'].map(c => c + '99'),
+        borderColor:     ['#23A455','#1F964B','#23A455','#b8933a','#c0001a'],
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10, weight: '600' } }, border: { display: false } },
+        y: { min: 60, max: 100, grid: { color: grid }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10 }, stepSize: 10 }, border: { display: false } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: isDark ? '#2a2e35' : '#1c1e22', titleColor: '#fff', bodyColor: 'rgba(255,255,255,0.7)', padding: 12, cornerRadius: 0, titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, bodyFont: { family: "'IBM Plex Sans'", size: 12 } }
+      }
+    }
+  });
+}
+
+/* ── KEYWORD CLOUD ── */
+let activeKwFilter = 'all';
+function setKwFilter(type, btn) {
+  activeKwFilter = type;
+  document.querySelectorAll('[id^="kw"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderKeywords();
+}
+function renderKeywords() {
+  const container = document.getElementById('keywordCloud');
+  const data = activeKwFilter === 'all'
+    ? KEYWORDS_ALL
+    : KEYWORDS_ALL.filter(k => k.type === activeKwFilter);
+  container.innerHTML = data.map(k => `
+    <span class="keyword-pill ${k.type}" title="${k.count} mentions">
+      ${escHtml(k.text)}
+      <span class="keyword-pill-count">${k.count}</span>
+    </span>`).join('');
+}
+
+/* ── HEATMAP ── */
+function renderHeatmap() {
+  const grid    = document.getElementById('heatmapGrid');
+  const { labels_row, labels_col, values } = HEATMAP_DATA;
+  const flat    = values.flat();
+  const maxVal  = Math.max(...flat);
+
+  /* header row: empty corner + hour labels */
+  let html = `<div style="font-size:0"></div>`;
+  labels_col.forEach(h => {
+    html += `<div style="font-size:9px;font-weight:700;color:var(--text-muted);text-align:center;letter-spacing:-0.01em;padding-bottom:4px;">${h}</div>`;
+  });
+
+  labels_row.forEach((day, ri) => {
+    /* day label — NOT inside the grid, we use a pseudo-first-column cell */
+    html += `<div style="font-size:9px;font-weight:700;color:var(--text-muted);display:flex;align-items:center;letter-spacing:0.04em;">${day}</div>`;
+    values[ri].forEach((v, ci) => {
+      const pct   = v / maxVal;
+      const r     = Math.round(15 + (10 - 15) * pct);   /* 15 → 10 (dark green channel shift) */
+      const g     = Math.round(164 * pct + 60 * (1 - pct));
+      const b     = Math.round(55  * pct + 30 * (1 - pct));
+      const alpha = 0.15 + 0.85 * pct;
+      const bg    = `rgba(${Math.round(35*pct+228*(1-pct))},${Math.round(164*pct+231*(1-pct))},${Math.round(85*pct+236*(1-pct))},${alpha.toFixed(2)})`;
+      const fg    = pct > 0.5 ? 'var(--white)' : 'var(--text-muted)';
+      html += `<div class="heatmap-cell" style="background:${bg};color:${fg};" data-tip="${labels_row[ri]} ${labels_col[ci]}: ${v} responses">${v}</div>`;
+    });
+  });
+  grid.innerHTML = html;
+  /* make grid 10 cols: label + 9 hours */
+  grid.style.gridTemplateColumns = '28px repeat(9, 1fr)';
+}
+
+/* ── FLAGGED TABLE ── */
+function renderFlagged() {
+  const body  = document.getElementById('flaggedBody');
+  const THEME = {
+    wait:     { cls: 'concern-tag wait',     label: 'Waiting' },
+    staff:    { cls: 'concern-tag staff',    label: 'Staff' },
+    facility: { cls: 'concern-tag facility', label: 'Facility' },
+    process:  { cls: 'concern-tag process',  label: 'Process' },
+  };
+  body.innerHTML = FLAGGED.map(f => {
+    const t   = THEME[f.theme] || THEME.process;
+    const col = scoreColor(f.score);
+    return `<tr>
+      <td class="datetime-cell"><div class="datetime-date">${f.date}</div></td>
+      <td><span class="${t.cls}">${t.label}</span></td>
+      <td class="comment-cell"><div class="comment-text">${escHtml(f.comment)}</div></td>
+      <td style="white-space:nowrap;">
+        <span style="font-size:14px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:${col};">${f.score}</span>
+        <span style="font-size:9px;color:var(--text-muted);font-weight:600;">/100</span>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── EXPORT ── */
+function exportReport() {
+  alert('Export feature: integrate with your backend to generate a PDF/XLSX report from real data.');
+}
+
+/* ── THEME CHANGE / RESIZE ── */
+function onThemeChange() { initScoreRing(parseInt(document.getElementById('scoreRingVal').textContent)); initScoreTrend(); initThemeBar(); initDowChart(); }
+function onResize()       { initScoreTrend(); initThemeBar(); initDowChart(); }
+
+/* ── INIT ── */
+function pageInit() {
+  initScoreRing(82);
+  initScoreTrend();
+  initThemeBar();
+  initDowChart();
+  renderKeywords();
+  renderHeatmap();
+  renderFlagged();
+}
+</script>
+{% endblock %}
