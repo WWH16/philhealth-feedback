@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
-/* ── DESIGN TOKENS ─────────────────────────────────────────────────────── */
 :root {
   --g-primary:  #23A455;
   --g-deep:     #1F964B;
@@ -91,7 +90,6 @@ body {
   min-height: 100vh;
 }
 
-/* ── SIDEBAR ─────────────────────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar-w);
   background: var(--surface-sidebar);
@@ -183,7 +181,7 @@ body {
   flex-shrink: 0;
 }
 
-/* ── TOPBAR ──────────────────────────────────────────────────────────── */
+/* ── TOPBAR ── */
 .topbar {
   height: var(--topbar-h);
   background: var(--surface-topbar);
@@ -196,8 +194,6 @@ body {
   z-index: 100;
   gap: 0;
 }
-
-/* Left cluster: burger + logo + brand name */
 .topbar-left {
   display: flex;
   align-items: center;
@@ -232,7 +228,7 @@ body {
 .topbar-brand-name {
   font-size: 13px;
   font-weight: 800;
-  color: var(--white);
+  color: #ffffff;
   letter-spacing: 0.02em;
 }
 .topbar-brand-city {
@@ -245,7 +241,6 @@ body {
 
 .topbar-spacer { flex: 1; }
 
-/* Right cluster: welcome + clock + icons */
 .topbar-right {
   display: flex;
   align-items: center;
@@ -268,7 +263,7 @@ body {
 .topbar-welcome-name {
   font-size: 12px;
   font-weight: 700;
-  color: var(--white);
+  color: #ffffff;
 }
 .topbar-clock {
   font-family: var(--mono);
@@ -289,24 +284,27 @@ body {
   transition: background 120ms, color 120ms;
   position: relative;
 }
-.topbar-icon-btn:hover { background: rgba(255,255,255,0.14); color: var(--white); }
+.topbar-icon-btn:hover { background: rgba(255,255,255,0.14); color: #ffffff; }
 .topbar-icon-btn .material-icons-round { font-size: 18px; }
-.topbar-notif-dot {
-  position: absolute; top: 7px; right: 7px;
-  width: 7px; height: 7px;
-  background: var(--red);
-  border: 1.5px solid var(--surface-topbar);
-  border-radius: 50%;
-}
+
+/* ── UPDATED AVATAR — uses theme vars so it flips in dark mode ── */
 .topbar-avatar {
   width: 34px; height: 34px;
   background: var(--g-primary);
+  border: 2px solid rgba(255,255,255,0.2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700;
-  color: var(--g-dark); cursor: pointer; flex-shrink: 0;
+  cursor: pointer; flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  transition: border-color 120ms;
+}
+.topbar-avatar:hover { border-color: rgba(255,255,255,0.5); }
+.topbar-avatar .material-icons-round {
+  font-size: 20px;
+  color: var(--g-dark);
 }
 
-/* ── MAIN CONTENT ────────────────────────────────────────────────────── */
+/* ── MAIN CONTENT ── */
 .main-content {
   display: flex; flex: 1;
   margin-top: var(--topbar-h);
@@ -316,7 +314,6 @@ body {
 .main-content.sidebar-collapsed { margin-left: var(--sidebar-collapsed-w); }
 .page-body { padding: 28px 24px 48px; max-width: 100%; width: 100%; margin: 0 auto; }
 
-/* ── PAGE HEADER ─────────────────────────────────────────────────────── */
 .page-header { margin-bottom: 28px; }
 .page-eyebrow {
   display: inline-flex; align-items: center; gap: 6px;
@@ -335,7 +332,7 @@ body {
 }
 .date-badge .material-icons-round { font-size: 14px; color: var(--g-primary); }
 
-/* ── STAT CARDS ──────────────────────────────────────────────────────── */
+/* ── STAT CARDS ── */
 .stat-card {
   background: var(--surface-card);
   border: 1px solid var(--border);
@@ -376,13 +373,13 @@ body {
 .stat-card-bg-icon { position: absolute; right: 14px; bottom: 12px; opacity: 0.04; }
 .stat-card-bg-icon .material-icons-round { font-size: 72px; }
 
-/* ── SECTION HEADER ──────────────────────────────────────────────────── */
+/* ── SECTION HEADER ── */
 .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; margin: 0; }
 .section-title::before { content: ''; display: block; width: 3px; height: 14px; background: var(--g-primary); flex-shrink: 0; }
 .section-actions { display: flex; align-items: center; gap: 8px; }
 
-/* ── CARD ────────────────────────────────────────────────────────────── */
+/* ── CARD ── */
 .card-block { background: var(--surface-card); border: 1px solid var(--border); padding: 0; }
 .card-block-head {
   padding: 16px 20px 14px;
@@ -394,7 +391,7 @@ body {
 .card-block-body { padding: 20px; }
 .card-block-body.no-pad { padding: 0; }
 
-/* ── BUTTONS ─────────────────────────────────────────────────────────── */
+/* ── BUTTONS ── */
 .btn-ph {
   display: inline-flex; align-items: center; gap: 6px;
   border: 1.5px solid var(--border);
@@ -410,47 +407,35 @@ body {
 .btn-ph-primary:hover { background: var(--g-deep); border-color: var(--g-deep); color: var(--white); }
 .btn-ph-sm { padding: 5px 9px; font-size: 9px; }
 
-/* ── CHART CONTAINERS ────────────────────────────────────────────────── */
+/* ── CHART CONTAINERS ── */
 .chart-wrap { position: relative; width: 100%; }
 .chart-wrap canvas { display: block; width: 100% !important; }
 
-/* ── PIE CHART LAYOUT — FIXED FOR MOBILE ────────────────────────────── */
+/* ── PIE CHART LAYOUT ── */
 .pie-chart-layout {
   display: flex;
   align-items: center;
   gap: 16px;
+  padding-right: 4px;
 }
-.pie-chart-col { flex: 0 0 55%; max-width: 55%; }
-.pie-legend-col { flex: 0 0 45%; max-width: 45%; }
+.pie-chart-col { flex: 0 0 48%; max-width: 48%; }
+.pie-legend-col { flex: 0 0 52%; max-width: 52%; padding-right: 4px; }
 
-/* On mobile: keep side-by-side but shrink chart column */
 @media (max-width: 575px) {
-  .pie-chart-layout {
-    gap: 10px;
-    align-items: center;
-  }
-  .pie-chart-col {
-    flex: 0 0 44% !important;
-    max-width: 44% !important;
-  }
-  .pie-chart-col .chart-wrap {
-    height: 150px !important;
-  }
-  .pie-legend-col {
-    flex: 1 1 0 !important;
-    max-width: none !important;
-    min-width: 0;
-  }
+  .pie-chart-layout { gap: 10px; align-items: center; }
+  .pie-chart-col { flex: 0 0 44% !important; max-width: 44% !important; }
+  .pie-chart-col .chart-wrap { height: 150px !important; }
+  .pie-legend-col { flex: 1 1 0 !important; max-width: none !important; min-width: 0; }
 }
 
-.pie-legend { display: flex; flex-direction: column; gap: 10px; padding: 4px 0; }
-.pie-legend-item { display: flex; align-items: center; gap: 8px; }
+.pie-legend { display: flex; flex-direction: column; gap: 12px; padding: 4px 0; }
+.pie-legend-item { display: flex; align-items: center; gap: 10px; }
 .pie-legend-dot { width: 10px; height: 10px; flex-shrink: 0; }
 .pie-legend-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); flex: 1; min-width: 0; }
-.pie-legend-value { font-size: 13px; font-weight: 700; color: var(--text-primary); font-family: var(--mono); white-space: nowrap; }
-.pie-legend-pct { font-size: 10px; font-weight: 600; color: var(--text-muted); min-width: 32px; text-align: right; white-space: nowrap; }
+.pie-legend-value { font-size: 13px; font-weight: 700; color: var(--text-primary); font-family: var(--mono); white-space: nowrap; min-width: 36px; text-align: right; }
+.pie-legend-pct { font-size: 10px; font-weight: 600; color: var(--text-muted); min-width: 42px; text-align: right; white-space: nowrap; padding-left: 8px; }
 
-/* ── MINI STAT ROW ───────────────────────────────────────────────────── */
+/* ── MINI STAT ROW ── */
 .mini-stat { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .mini-stat:last-child { border-bottom: none; padding-bottom: 0; }
 .mini-stat-bar-wrap { flex: 1; height: 5px; background: var(--border); position: relative; }
@@ -458,7 +443,7 @@ body {
 .mini-stat-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); min-width: 80px; letter-spacing: 0.02em; }
 .mini-stat-val { font-size: 12px; font-weight: 700; color: var(--text-primary); font-family: var(--mono); min-width: 36px; text-align: right; }
 
-/* ── FILTER TABS ─────────────────────────────────────────────────────── */
+/* ── FILTER TABS ── */
 .filter-tabs { display: flex; gap: 0; border: 1.5px solid var(--border); overflow: hidden; }
 .filter-tab {
   border: none; background: var(--surface-card);
@@ -472,7 +457,7 @@ body {
 .filter-tab:hover { background: var(--surface-page); color: var(--text-primary); }
 .filter-tab.active { background: var(--g-forest); color: var(--white); }
 
-/* ── TABLE ───────────────────────────────────────────────────────────── */
+/* ── TABLE ── */
 .ph-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .ph-table th {
   font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
@@ -505,7 +490,6 @@ body {
 .datetime-date { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 .datetime-time { font-size: 10px; color: var(--text-muted); font-family: var(--mono); margin-top: 1px; }
 
-/* ── TABLE CONTROLS — FIXED FOR MOBILE ──────────────────────────────── */
 .table-controls {
   display: flex;
   align-items: center;
@@ -524,7 +508,6 @@ body {
 .search-box input::placeholder { color: var(--text-muted); }
 .search-box .material-icons-round { font-size: 16px; color: var(--text-muted); flex-shrink: 0; }
 
-/* Right side of table controls: info + dropdown stacked nicely */
 .table-controls-right {
   display: flex;
   align-items: center;
@@ -541,10 +524,8 @@ body {
 .pg-btn:disabled { opacity: 0.35; cursor: default; }
 .pg-btns { display: flex; gap: 4px; flex-wrap: wrap; }
 
-/* ── OVERLAY ─────────────────────────────────────────────────────────── */
 .sidebar-overlay { display: none; position: fixed; left: 0; top: var(--topbar-h); right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 150; }
 
-/* ── ACTIVITY ────────────────────────────────────────────────────────── */
 .activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .activity-item:last-child { border-bottom: none; }
 .activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
@@ -552,58 +533,82 @@ body {
 .activity-text strong { color: var(--text-primary); font-weight: 600; }
 .activity-time { font-size: 10px; color: var(--text-muted); font-family: var(--mono); margin-top: 2px; }
 
-/* ── CHART NO DATA ───────────────────────────────────────────────────── */
 .chart-no-data { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; height: 200px; color: var(--text-muted); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
 .chart-no-data .material-icons-round { font-size: 32px; opacity: 0.3; }
 
-/* ── SCROLLBAR ───────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); }
 
-/* ════════════════════════════════════════════════════════════════════════
-   RESPONSIVE BREAKPOINTS
-   ════════════════════════════════════════════════════════════════════════ */
+/* ── TOPBAR always dark bg — text must stay white in both themes ── */
+.topbar,
+[data-theme="dark"] .topbar {
+  --topbar-text: #ffffff;
+}
+.topbar-brand-name,
+.topbar-welcome-name,
+[data-theme="dark"] .topbar-brand-name,
+[data-theme="dark"] .topbar-welcome-name { color: #ffffff; }
+.topbar-brand-city,
+[data-theme="dark"] .topbar-brand-city { color: var(--g-primary); }
+.topbar-welcome-label,
+[data-theme="dark"] .topbar-welcome-label { color: rgba(255,255,255,0.4); }
+.topbar-clock,
+[data-theme="dark"] .topbar-clock { color: rgba(255,255,255,0.6); }
+.topbar-avatar,
+[data-theme="dark"] .topbar-avatar { background: var(--g-primary); border-color: rgba(255,255,255,0.2); }
+.topbar-avatar .material-icons-round,
+[data-theme="dark"] .topbar-avatar .material-icons-round { color: var(--g-dark); }
+.topbar-icon-btn,
+[data-theme="dark"] .topbar-icon-btn { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
+.topbar-icon-btn:hover,
+[data-theme="dark"] .topbar-icon-btn:hover { background: rgba(255,255,255,0.14); color: #ffffff; }
+.topbar-burger-toggle,
+[data-theme="dark"] .topbar-burger-toggle { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+.topbar-burger-toggle:hover,
+[data-theme="dark"] .topbar-burger-toggle:hover { background: rgba(255,255,255,0.14); color: #ffffff; }
+select.btn-ph {
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+}
+[data-theme="dark"] select.btn-ph {
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
 
-/* Tablets (up to 991px) */
+/* ── RESPONSIVE ── */
 @media (max-width: 991px) {
   .sidebar { transform: translateX(-100%); width: var(--sidebar-w) !important; }
   .sidebar.mobile-open { transform: translateX(0); }
   .sidebar-overlay { display: block; opacity: 0; pointer-events: none; transition: opacity 200ms; }
   .sidebar-overlay.visible { opacity: 1; pointer-events: auto; }
   .main-content { margin-left: 0 !important; }
-  /* welcome text visible on tablets, hidden only on phones */
   .topbar-clock { font-size: 11px; }
 }
 
-/* Small phones (up to 575px) ─ most fixes here */
 @media (max-width: 575px) {
-  :root {
-    --topbar-h: 50px;
-  }
-
-  /* ── Layout ── */
+  :root { --topbar-h: 50px; }
   .page-body { padding: 14px 10px 32px; }
   .page-title { font-size: 20px; }
   .page-subtitle { font-size: 11px; }
   .page-header { margin-bottom: 18px; }
-
   .topbar { padding: 0 10px; }
   .topbar-burger-toggle { width: 32px; height: 32px; }
   .topbar-burger-toggle .material-icons-round { font-size: 20px; }
   .topbar-logo { height: 26px; }
   .topbar-brand-name { font-size: 11px; }
   .topbar-brand-city { font-size: 8px; }
-  .topbar-welcome { display: none; }   /* hide on very small phones */
-  .topbar-clock { display: none; }     /* hide clock on very small phones */
+  .topbar-welcome { display: none; }
+  .topbar-clock { display: none; }
   .topbar-actions { gap: 4px; }
   .topbar-icon-btn { width: 30px; height: 30px; }
   .topbar-icon-btn .material-icons-round { font-size: 16px; }
-  .topbar-avatar { width: 30px; height: 30px; font-size: 10px; }
+  .topbar-avatar { width: 30px; height: 30px; }
+  .topbar-avatar .material-icons-round { font-size: 17px; }
   .date-badge { padding: 5px 10px; font-size: 10px; }
   .date-badge .material-icons-round { font-size: 12px; }
-
-  /* ── Stat cards ── */
   .stat-value { font-size: 26px; }
   .stat-label { font-size: 8px; }
   .stat-card { padding: 14px 12px 12px; }
@@ -611,45 +616,24 @@ body {
   .stat-card-icon .material-icons-round { font-size: 15px; }
   .stat-delta { font-size: 9px; padding: 2px 5px; }
   .stat-delta .material-icons-round { font-size: 10px; }
-
-  /* ── Filter tabs ── */
   .filter-tabs { width: 100% !important; max-width: 100% !important; }
   .filter-tab { padding: 7px 6px; font-size: 9px; letter-spacing: 0.04em; }
-
-  /* ── Card blocks ── */
   .card-block-head { padding: 10px 12px 10px; }
   .card-block-body { padding: 14px 12px; }
   .card-block-title { font-size: 10px; }
   .card-block-title .material-icons-round { font-size: 14px; }
-
-  /* ── Line chart height on mobile (pie chart height set separately) ── */
   #lineChart { height: 200px !important; }
-
-  /* ── Pie legend — tighter on mobile ── */
-  .pie-legend { gap: 7px; }
+  .pie-legend { gap: 8px; }
   .pie-legend-label { font-size: 10px; }
-  .pie-legend-value { font-size: 11px; }
-  .pie-legend-pct   { font-size: 9px; min-width: 26px; }
+  .pie-legend-value { font-size: 11px; min-width: 28px; }
+  .pie-legend-pct   { font-size: 9px; min-width: 30px; padding-left: 4px; }
   .mini-stat-label  { font-size: 10px; min-width: 54px; }
   .mini-stat-val    { font-size: 11px; }
-
-  /* ── Table controls ── */
-  .table-controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 10px 12px;
-  }
+  .table-controls { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
   .search-box { max-width: 100%; height: 32px; }
   .search-box input { font-size: 11px; }
-  .table-controls-right {
-    justify-content: space-between;
-    width: 100%;
-  }
-  /* Rating dropdown full width */
+  .table-controls-right { justify-content: space-between; width: 100%; }
   .rating-select { flex: 1; min-width: 0; }
-
-  /* ── Table ── */
   .ph-table { font-size: 11px; }
   .ph-table th { font-size: 9px; padding: 8px 10px; letter-spacing: 0.06em; }
   .ph-table td { padding: 10px 10px; }
@@ -657,17 +641,11 @@ body {
   .datetime-time { font-size: 9px; }
   .comment-cell { max-width: 130px; }
   .comment-text { font-size: 11px; }
-
-  /* ── Rating chips — slightly smaller ── */
   .rating-chip { font-size: 9px; padding: 3px 6px; letter-spacing: 0.02em; }
   .rating-chip .material-icons-round { font-size: 11px; }
-
-  /* ── Pagination ── */
   .pagination-row { padding: 10px 12px; gap: 6px; }
   .pg-btn { width: 28px; height: 28px; font-size: 11px; }
   .table-info { font-size: 10px; }
-
-  /* ── Section head ── */
   .section-head { gap: 8px; }
   .section-title { font-size: 10px; }
   .btn-ph { padding: 6px 9px; font-size: 9px; }
@@ -732,7 +710,6 @@ body {
 
   <!-- TOPBAR -->
   <header class="topbar" id="topbar">
-    <!-- LEFT: burger + logo + brand -->
     <div class="topbar-left">
       <button class="topbar-burger-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar navigation" title="Toggle sidebar">
         <span class="material-icons-round">menu</span>
@@ -746,7 +723,6 @@ body {
 
     <div class="topbar-spacer"></div>
 
-    <!-- RIGHT: welcome + clock + icons -->
     <div class="topbar-right">
       <div class="topbar-welcome">
         <span class="topbar-welcome-label">Welcome,</span>
@@ -754,17 +730,17 @@ body {
       </div>
       <div class="topbar-clock" id="topbarClock">—</div>
       <div class="topbar-actions">
-        <button class="topbar-icon-btn" title="Notifications" aria-label="Notifications">
-          <span class="material-icons-round">notifications_none</span>
-          <span class="topbar-notif-dot"></span>
-        </button>
+        <!-- Notification icon removed -->
         <button class="topbar-icon-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle theme" onclick="toggleTheme()">
           <span class="material-icons-round">dark_mode</span>
         </button>
         <button class="topbar-icon-btn" title="Refresh data" aria-label="Refresh">
           <span class="material-icons-round">refresh</span>
         </button>
-        <div class="topbar-avatar" title="Admin User" role="img" aria-label="Admin user">AD</div>
+        <!-- Updated avatar: circular with person icon, theme-aware -->
+        <div class="topbar-avatar" title="Admin User" role="img" aria-label="Admin user">
+          <span class="material-icons-round">person</span>
+        </div>
       </div>
     </div>
   </header>
@@ -836,8 +812,6 @@ body {
 
       <!-- CHARTS ROW -->
       <div class="row g-3 mb-4">
-
-        <!-- SENTIMENT PIE — uses new .pie-chart-layout flex container -->
         <div class="col-12 col-lg-5">
           <div class="card-block h-100">
             <div class="card-block-head">
@@ -850,7 +824,6 @@ body {
               </button>
             </div>
             <div class="card-block-body">
-              <!-- NEW: flex layout that stacks on mobile -->
               <div class="pie-chart-layout">
                 <div class="pie-chart-col">
                   <div class="chart-wrap" style="height:200px;">
@@ -907,7 +880,6 @@ body {
           </div>
         </div>
 
-        <!-- FEEDBACK TREND LINE -->
         <div class="col-12 col-lg-7">
           <div class="card-block h-100">
             <div class="card-block-head">
@@ -942,7 +914,6 @@ body {
       </div>
 
       <div class="card-block">
-        <!-- FIXED: table controls now use .table-controls-right wrapper -->
         <div class="table-controls">
           <div class="search-box">
             <span class="material-icons-round">search</span>
@@ -970,28 +941,23 @@ body {
                 <th>Feedback / Comment</th>
               </tr>
             </thead>
-            <tbody id="tableBody">
-              <!-- Populated by JS -->
-            </tbody>
+            <tbody id="tableBody"></tbody>
           </table>
         </div>
 
         <div class="pagination-row">
           <span class="table-info" id="pageInfo">Page 1 of 25</span>
-          <div class="pg-btns" id="paginationBtns" role="navigation" aria-label="Table pagination">
-            <!-- Populated by JS -->
-          </div>
+          <div class="pg-btns" id="paginationBtns" role="navigation" aria-label="Table pagination"></div>
         </div>
       </div>
 
-    </div><!-- /page-body -->
+    </div>
   </main>
 
-</div><!-- /admin-shell -->
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-/* ── SAMPLE DATA ─────────────────────────────────────────────────────── */
 const SAMPLE_DATA = [
   { date: '2026-06-11', time: '14:32', rating: 'Very Satisfactory', comment: 'Staff were very professional and accommodating. My concerns were addressed promptly.' },
   { date: '2026-06-11', time: '13:15', rating: 'Very Satisfactory', comment: 'Excellent service! The queue system was efficient and the staff were knowledgeable.' },
@@ -1147,7 +1113,6 @@ function escHtml(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ── CHARTS ──────────────────────────────────────────────────────────── */
 let pieChart, lineChart;
 
 function initPieChart() {
@@ -1215,7 +1180,6 @@ function initLineChart() {
   });
 }
 
-/* ── SIDEBAR ─────────────────────────────────────────────────────────── */
 const sidebar = document.getElementById('sidebar');
 const mainContent = document.getElementById('mainContent');
 let sidebarCollapsed = false;
@@ -1247,7 +1211,6 @@ function setActive(el, e) {
   if (window.innerWidth < 992) closeSidebar();
 }
 
-/* ── FILTER TABS ─────────────────────────────────────────────────────── */
 function setFilter(btn, period) {
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
@@ -1275,7 +1238,6 @@ function animateCount(id, target) {
   requestAnimationFrame(step);
 }
 
-/* ── DARK MODE ───────────────────────────────────────────────────────── */
 function toggleTheme() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
@@ -1284,21 +1246,16 @@ function toggleTheme() {
   setTimeout(() => { initPieChart(); initLineChart(); }, 50);
 }
 
-/* ── LIVE CLOCK ──────────────────────────────────────────────────────── */
 function tickClock() {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-PH', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
   const timeStr = now.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
-  const full = `${dateStr} · ${timeStr}`;
-  // date badge in page header (date only)
   const dateBadge = document.getElementById('currentDate');
   if (dateBadge) dateBadge.textContent = `${dateStr}  ${timeStr}`;
-  // topbar clock
   const clk = document.getElementById('topbarClock');
   if (clk) clk.textContent = timeStr;
 }
 
-/* ── INIT ────────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   tickClock();
   setInterval(tickClock, 1000);
