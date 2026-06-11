@@ -1,5 +1,5 @@
 """
-WSGI config for city_feedback project.
+WSGI config for philhealth_feedback project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'city_feedback.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'philhealth_feedback.settings')
 
 application = get_wsgi_application()

@@ -1,5 +1,5 @@
 """
-ASGI config for city_feedback project.
+ASGI config for philhealth_feedback project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'city_feedback.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'philhealth_feedback.settings')
 
 application = get_asgi_application()
