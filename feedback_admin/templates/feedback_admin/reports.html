@@ -1,0 +1,566 @@
+{% extends 'feedback_admin/base.html' %}
+{% load static %}
+
+{% block title %}Reports — PhilHealth Cauayan City{% endblock %}
+
+{% block head_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block extra_styles %}
+/* ── REPORTS PAGE EXTRAS ───────────────────────────────────────────── */
+.report-period-btn {
+  padding: 10px 18px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; border: 1.5px solid var(--border);
+  background: transparent; color: var(--text-secondary);
+  cursor: pointer; transition: all 120ms; font-family: var(--font);
+  border-radius: 0;
+}
+.report-period-btn:hover { border-color: var(--g-primary); color: var(--g-primary); }
+.report-period-btn.active {
+  background: var(--g-forest); border-color: var(--g-forest); color: var(--white);
+}
+
+.metric-tile {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 18px; background: var(--surface-card);
+  border: 1px solid var(--border); text-align: center;
+}
+.metric-value { font-size: 32px; font-weight: 800; letter-spacing: -0.05em; color: var(--g-primary); }
+.metric-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.metric-tile.alt .metric-value { color: var(--gold); }
+.metric-tile.neg .metric-value { color: var(--red); }
+
+.summary-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.summary-item:last-child { border-bottom: none; }
+.summary-icon {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 0; font-size: 18px;
+}
+.summary-icon.pos { background: var(--g-xlight); color: var(--g-primary); }
+.summary-icon.neu { background: var(--gold-light); color: var(--gold); }
+.summary-icon.neg { background: var(--red-bg); color: var(--red); }
+.summary-content { flex: 1; }
+.summary-title { font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+.summary-value { font-size: 13px; font-weight: 600; font-family: var(--mono); color: var(--g-primary); }
+
+.export-btn-group {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+
+.suggestion-list {
+  list-style: none; padding: 0; margin: 0;
+}
+.suggestion-item {
+  padding: 12px 14px; background: var(--surface-page); border-left: 3px solid var(--g-primary);
+  margin-bottom: 8px; font-size: 12px; line-height: 1.6; color: var(--text-secondary);
+}
+.suggestion-item strong { color: var(--text-primary); font-weight: 600; }
+.suggestion-item.concern { border-left-color: var(--red); }
+.suggestion-item.concern strong { color: var(--red); }
+
+.performance-bar-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+}
+.performance-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); min-width: 110px; }
+.performance-bar { flex: 1; height: 8px; background: var(--border); position: relative; border-radius: 4px; overflow: hidden; }
+.performance-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--g-primary); border-radius: 4px; }
+.performance-value { font-size: 11px; font-weight: 700; color: var(--text-primary); font-family: var(--mono); min-width: 36px; text-align: right; }
+{% endblock %}
+
+{% block nav_reports %}active{% endblock %}
+
+{% block page_content %}
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-row">
+    <div>
+      <div class="page-eyebrow">
+        <span class="material-icons-round">bar_chart</span>
+        Generated Reports
+      </div>
+      <h1 class="page-title">Reports</h1>
+      <p class="page-subtitle">Comprehensive feedback reports with satisfaction metrics and trend analysis.</p>
+    </div>
+    <div class="date-badge">
+      <span class="material-icons-round">today</span>
+      <span id="currentDate">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT PERIOD SELECTOR -->
+<div style="margin-bottom: 24px;">
+  <p style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;">Select Report Period</p>
+  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <button class="report-period-btn active" onclick="setReportPeriod(this, 'daily')">Daily</button>
+    <button class="report-period-btn" onclick="setReportPeriod(this, 'weekly')">Weekly</button>
+    <button class="report-period-btn" onclick="setReportPeriod(this, 'monthly')">Monthly</button>
+    <button class="report-period-btn" onclick="setReportPeriod(this, 'quarterly')">Quarterly</button>
+    <button class="report-period-btn" onclick="setReportPeriod(this, 'annual')">Annual</button>
+  </div>
+</div>
+
+<!-- KEY METRICS ROW -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-sm-3">
+    <div class="metric-tile">
+      <div class="metric-value" id="metricTotal">18</div>
+      <div class="metric-label">Total Responses</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-3">
+    <div class="metric-tile">
+      <div class="metric-value" id="metricSatisfaction">83</div>
+      <div class="metric-label">Satisfaction Rate %</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-3">
+    <div class="metric-tile alt">
+      <div class="metric-value" id="metricVsat">11</div>
+      <div class="metric-label">Very Satisfactory</div>
+    </div>
+  </div>
+  <div class="col-6 col-sm-3">
+    <div class="metric-tile neg">
+      <div class="metric-value" id="metricNeg">2</div>
+      <div class="metric-label">Unsatisfactory</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT ROW -->
+<div class="row g-3 mb-4">
+
+  <!-- SENTIMENT DISTRIBUTION -->
+  <div class="col-12 col-lg-5">
+    <div class="card-block h-100">
+      <div class="card-block-head">
+        <h2 class="card-block-title">
+          <span class="material-icons-round">donut_large</span>
+          Sentiment Distribution
+        </h2>
+      </div>
+      <div class="card-block-body">
+        <div class="pie-chart-layout">
+          <div class="pie-chart-col">
+            <div class="chart-wrap" style="height: 200px;">
+              <canvas id="reportPieChart" aria-label="Sentiment distribution pie chart" role="img"></canvas>
+            </div>
+          </div>
+          <div class="pie-legend-col">
+            <div class="pie-legend">
+              <div class="pie-legend-item">
+                <div class="pie-legend-dot" style="background: var(--g-primary)"></div>
+                <span class="pie-legend-label">Very Sat.</span>
+                <span class="pie-legend-value" id="legendVsat">11</span>
+                <span class="pie-legend-pct" id="legendVsatPct">61%</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-dot" style="background: var(--gold)"></div>
+                <span class="pie-legend-label">Satisfactory</span>
+                <span class="pie-legend-value" id="legendSat">5</span>
+                <span class="pie-legend-pct" id="legendSatPct">28%</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-dot" style="background: var(--red)"></div>
+                <span class="pie-legend-label">Unsat.</span>
+                <span class="pie-legend-value" id="legendNeg">2</span>
+                <span class="pie-legend-pct" id="legendNegPct">11%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICE PERFORMANCE -->
+  <div class="col-12 col-lg-7">
+    <div class="card-block h-100">
+      <div class="card-block-head">
+        <h2 class="card-block-title">
+          <span class="material-icons-round">trending_up</span>
+          Service Performance Rating
+        </h2>
+      </div>
+      <div class="card-block-body">
+        <div class="performance-bar-row">
+          <span class="performance-label">Staff Conduct</span>
+          <div class="performance-bar"><div class="performance-fill" style="width: 92%"></div></div>
+          <span class="performance-value">92%</span>
+        </div>
+        <div class="performance-bar-row">
+          <span class="performance-label">Service Speed</span>
+          <div class="performance-bar"><div class="performance-fill" style="width: 78%"></div></div>
+          <span class="performance-value">78%</span>
+        </div>
+        <div class="performance-bar-row">
+          <span class="performance-label">Facility Quality</span>
+          <div class="performance-bar"><div class="performance-fill" style="width: 85%"></div></div>
+          <span class="performance-value">85%</span>
+        </div>
+        <div class="performance-bar-row">
+          <span class="performance-label">Process Clarity</span>
+          <div class="performance-bar"><div class="performance-fill" style="width: 81%"></div></div>
+          <span class="performance-value">81%</span>
+        </div>
+        <div class="performance-bar-row">
+          <span class="performance-label">Overall Experience</span>
+          <div class="performance-bar"><div class="performance-fill" style="width: 83%; background: var(--g-deep);"></div></div>
+          <span class="performance-value">83%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /row 1 -->
+
+<!-- CHARTS ROW -->
+<div class="row g-3 mb-4">
+
+  <!-- RESPONSE TREND -->
+  <div class="col-12 col-lg-7">
+    <div class="card-block h-100">
+      <div class="card-block-head">
+        <h2 class="card-block-title">
+          <span class="material-icons-round">show_chart</span>
+          Response Trend
+        </h2>
+      </div>
+      <div class="card-block-body">
+        <div class="chart-wrap" style="height: 260px;">
+          <canvas id="reportTrendChart" aria-label="Response trend chart" role="img"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY STATISTICS -->
+  <div class="col-12 col-lg-5">
+    <div class="card-block h-100">
+      <div class="card-block-head">
+        <h2 class="card-block-title">
+          <span class="material-icons-round">info</span>
+          Report Summary
+        </h2>
+      </div>
+      <div class="card-block-body">
+        <div class="summary-item">
+          <div class="summary-icon pos"><span class="material-icons-round">check_circle</span></div>
+          <div class="summary-content">
+            <div class="summary-title">Very Satisfactory</div>
+            <div class="summary-value" id="summaryVsat">11 responses</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon neu"><span class="material-icons-round">circle</span></div>
+          <div class="summary-content">
+            <div class="summary-title">Satisfactory</div>
+            <div class="summary-value" id="summarySat">5 responses</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon neg"><span class="material-icons-round">cancel</span></div>
+          <div class="summary-content">
+            <div class="summary-title">Unsatisfactory</div>
+            <div class="summary-value" id="summaryNeg">2 responses</div>
+          </div>
+        </div>
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
+          <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Average Score</div>
+          <div style="font-size: 28px; font-weight: 800; letter-spacing: -0.05em; color: var(--g-primary);" id="summaryScore">83/100</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /row 2 -->
+
+<!-- COMMON SUGGESTIONS & CONCERNS -->
+<div class="row g-3 mb-4">
+
+  <!-- TOP SUGGESTIONS -->
+  <div class="col-12 col-lg-6">
+    <div class="card-block h-100">
+      <div class="card-block-head">
+        <h2 class="card-block-title">
+          <span class="material-icons-round">lightbulb</span>
+          Common Suggestions
+        </h2>
+      </div>
+      <div class="card-block-body">
+        <ul class="suggestion-list" id="suggestionsList">
+          <li class="suggestion-item"><strong>Streamline the appointment booking system</strong> — Multiple users mentioned the online system could be more intuitive.</li>
+          <li class="suggestion-item"><strong>Reduce waiting time</strong> — Consider adding more staff during peak hours (12–2 PM).</li>
+          <li class="suggestion-item"><strong>Provide more information signage</strong> — First-time visitors found it difficult to navigate the office.</li>
+          <li class="suggestion-item"><strong>Improve facility comfort</strong> — Requests for better seating and climate control in waiting areas.</li>
+          <li class="suggestion-item"><strong>Expand documentation services</strong> — Several users asked for document scanning and digital submission options.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP CONCERNS -->
+  <div class="col-12 col-lg-6">
+    <div class="card-block h-100">
+      <div class="card-block-head">
+        <h2 class="card-block-title">
+          <span class="material-icons-round">warning</span>
+          Key Concerns
+        </h2>
+      </div>
+      <div class="card-block-body">
+        <ul class="suggestion-list" id="concernsList">
+          <li class="suggestion-item concern"><strong>Excessive waiting time</strong> — 68% of negative feedback mentions queue delays and overcrowding.</li>
+          <li class="suggestion-item concern"><strong>Staff availability</strong> — Some users reported difficulty reaching staff for inquiry assistance.</li>
+          <li class="suggestion-item concern"><strong>Facility maintenance</strong> — Climate control and seating comfort issues noted in multiple feedback entries.</li>
+          <li class="suggestion-item concern"><strong>Process clarity</strong> — Customers occasionally received incomplete or conflicting information about requirements.</li>
+          <li class="suggestion-item concern"><strong>Appointment no-shows</strong> — A few instances where scheduled appointments were not honored.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /row 3 -->
+
+<!-- EXPORT SECTION -->
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card-block">
+      <div class="card-block-head">
+        <h2 class="card-block-title">
+          <span class="material-icons-round">download</span>
+          Export Report
+        </h2>
+        <p style="font-size: 11px; color: var(--text-muted); margin: 0;">Download this report in multiple formats for sharing and analysis.</p>
+      </div>
+      <div class="card-block-body">
+        <div class="export-btn-group">
+          <button class="btn-ph btn-ph-primary" onclick="exportReportPDF()">
+            <span class="material-icons-round">picture_as_pdf</span>
+            Export as PDF
+          </button>
+          <button class="btn-ph btn-ph-primary" onclick="exportReportExcel()">
+            <span class="material-icons-round">table_chart</span>
+            Export as Excel
+          </button>
+          <button class="btn-ph" onclick="printReport()">
+            <span class="material-icons-round">print</span>
+            Print Report
+          </button>
+          <button class="btn-ph" onclick="shareReport()">
+            <span class="material-icons-round">share</span>
+            Share Report
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+/* ── REPORT DATA ── */
+const REPORT_DATA = {
+  daily: {
+    total: 18, vsat: 11, sat: 5, neg: 2,
+    satisfaction: 83,
+    trendData: [2, 3, 4, 5, 3, 1], trendLabels: ['8am', '10am', '12pm', '2pm', '4pm', '5pm'],
+    performance: { staff: 92, speed: 78, facility: 85, process: 81, overall: 83 }
+  },
+  weekly: {
+    total: 84, vsat: 52, sat: 22, neg: 10,
+    satisfaction: 81,
+    trendData: [12, 18, 14, 22, 16, 2], trendLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    performance: { staff: 89, speed: 76, facility: 82, process: 79, overall: 81 }
+  },
+  monthly: {
+    total: 248, vsat: 149, sat: 64, neg: 35,
+    satisfaction: 82,
+    trendData: [30, 35, 28, 42, 38, 45, 50, 40, 35, 38, 32, 32],
+    trendLabels: ['1–3', '4–7', '8–11', '12–14', '15–18', '19–21', '22–24', '25–26', '27–29', '30–31'],
+    performance: { staff: 88, speed: 75, facility: 81, process: 78, overall: 82 }
+  },
+  quarterly: {
+    total: 756, vsat: 453, sat: 204, neg: 99,
+    satisfaction: 79,
+    trendData: [82, 80, 76], trendLabels: ['April', 'May', 'June'],
+    performance: { staff: 86, speed: 72, facility: 78, process: 74, overall: 79 }
+  },
+  annual: {
+    total: 3021, vsat: 1813, sat: 809, neg: 399,
+    satisfaction: 77,
+    trendData: [75, 74, 76, 77, 78, 77, 79, 78, 77, 79, 78, 77],
+    trendLabels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    performance: { staff: 84, speed: 70, facility: 76, process: 72, overall: 77 }
+  }
+};
+
+let currentPeriod = 'daily';
+let reportPieChart, reportTrendChart;
+
+function setReportPeriod(btn, period) {
+  document.querySelectorAll('.report-period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentPeriod = period;
+  updateReport();
+}
+
+function updateReport() {
+  const data = REPORT_DATA[currentPeriod];
+
+  // Update metrics
+  document.getElementById('metricTotal').textContent = data.total.toLocaleString();
+  document.getElementById('metricSatisfaction').textContent = data.satisfaction;
+  document.getElementById('metricVsat').textContent = data.vsat.toLocaleString();
+  document.getElementById('metricNeg').textContent = data.neg.toLocaleString();
+
+  // Calculate percentages
+  const vsatPct = Math.round((data.vsat / data.total) * 100);
+  const satPct = Math.round((data.sat / data.total) * 100);
+  const negPct = Math.round((data.neg / data.total) * 100);
+
+  // Update legend
+  document.getElementById('legendVsat').textContent = data.vsat.toLocaleString();
+  document.getElementById('legendVsatPct').textContent = vsatPct + '%';
+  document.getElementById('legendSat').textContent = data.sat.toLocaleString();
+  document.getElementById('legendSatPct').textContent = satPct + '%';
+  document.getElementById('legendNeg').textContent = data.neg.toLocaleString();
+  document.getElementById('legendNegPct').textContent = negPct + '%';
+
+  // Update summary
+  document.getElementById('summaryVsat').textContent = data.vsat.toLocaleString() + ' responses';
+  document.getElementById('summarySat').textContent = data.sat.toLocaleString() + ' responses';
+  document.getElementById('summaryNeg').textContent = data.neg.toLocaleString() + ' responses';
+  document.getElementById('summaryScore').textContent = data.satisfaction + '/100';
+
+  // Update performance bars
+  document.querySelectorAll('.performance-bar-row').forEach((row, idx) => {
+    const labels = ['Staff Conduct', 'Service Speed', 'Facility Quality', 'Process Clarity', 'Overall Experience'];
+    const values = ['staff', 'speed', 'facility', 'process', 'overall'];
+    if (idx < 5) {
+      const val = data.performance[values[idx]];
+      const fill = row.querySelector('.performance-fill');
+      const valSpan = row.querySelector('.performance-value');
+      fill.style.width = val + '%';
+      valSpan.textContent = val + '%';
+    }
+  });
+
+  // Update charts
+  initReportPieChart(data);
+  initReportTrendChart(data);
+}
+
+function initReportPieChart(data) {
+  const ctx = document.getElementById('reportPieChart').getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (reportPieChart) reportPieChart.destroy();
+  reportPieChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Very Satisfactory', 'Satisfactory', 'Unsatisfactory'],
+      datasets: [{
+        data: [data.vsat, data.sat, data.neg],
+        backgroundColor: ['#23A455', '#b8933a', '#c0001a'],
+        borderColor: isDark ? '#1a1e24' : '#ffffff',
+        borderWidth: 3,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const t = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              return `  ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / t * 100)}%)`;
+            }
+          },
+          backgroundColor: isDark ? '#2a2e35' : '#1c1e22',
+          titleColor: '#ffffff',
+          bodyColor: 'rgba(255,255,255,0.75)',
+          padding: 10,
+          cornerRadius: 0,
+          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 },
+          bodyFont: { family: "'IBM Plex Sans'", size: 12 }
+        }
+      }
+    }
+  });
+}
+
+function initReportTrendChart(data) {
+  const ctx = document.getElementById('reportTrendChart').getContext('2d');
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const grid = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const tick = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
+
+  if (reportTrendChart) reportTrendChart.destroy();
+  reportTrendChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.trendLabels,
+      datasets: [{
+        label: 'Responses',
+        data: data.trendData,
+        backgroundColor: '#23A455',
+        borderColor: '#1F964B',
+        borderWidth: 1.5
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10, weight: '600' } }, border: { display: false } },
+        y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10 } }, border: { display: false } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: isDark ? '#2a2e35' : '#1c1e22', titleColor: '#fff', bodyColor: 'rgba(255,255,255,0.7)', padding: 12, cornerRadius: 0, titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, bodyFont: { family: "'IBM Plex Sans'", size: 12 } }
+      }
+    }
+  });
+}
+
+/* ── EXPORT FUNCTIONS ── */
+function exportReportPDF() {
+  alert('PDF export: Integrate with a library like jsPDF or server-side PDF generation (e.g., ReportLab).');
+}
+
+function exportReportExcel() {
+  alert('Excel export: Integrate with SheetJS (xlsx) or server-side generation (e.g., openpyxl).');
+}
+
+function printReport() {
+  window.print();
+}
+
+function shareReport() {
+  if (navigator.share) {
+    navigator.share({ title: 'PhilHealth Report', text: 'Check out the latest feedback report.' });
+  } else {
+    alert('Share: Copy the report link or email it to stakeholders.');
+  }
+}
+
+/* ── THEME & RESIZE ── */
+function onThemeChange() { updateReport(); }
+function onResize() { updateReport(); }
+
+/* ── INIT ── */
+function pageInit() {
+  updateReport();
+}
+</script>
+{% endblock %}

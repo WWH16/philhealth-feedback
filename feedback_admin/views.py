@@ -91,3 +91,62 @@ def sentiment_analysis(request):
         'negative': 35,
     }
     return render(request, 'feedback_admin/sentiment_analysis.html', context)
+
+def reports(request):
+    """
+    Reports view with multiple report types.
+
+    Replace the dummy context below with real data once the Feedback model is in place:
+
+        from feedback.models import FeedbackEntry
+        from django.db.models import Count, Avg
+        from datetime import timedelta
+        from django.utils import timezone
+
+        entries = FeedbackEntry.objects.all()
+        today = timezone.now().date()
+
+        # Daily report
+        daily_entries = entries.filter(created_at__date=today)
+
+        context = {
+            'daily_total': daily_entries.count(),
+            'weekly_total': entries.filter(created_at__gte=today - timedelta(days=7)).count(),
+            'monthly_total': entries.filter(created_at__gte=today - timedelta(days=30)).count(),
+            'quarterly_total': entries.filter(created_at__gte=today - timedelta(days=90)).count(),
+            'annual_total': entries.filter(created_at__year=today.year).count(),
+            # Add satisfaction rates, suggestions, etc.
+        }
+    """
+    context = {
+        'daily_total': 18,
+        'daily_vsat': 11,
+        'daily_sat': 5,
+        'daily_neg': 2,
+        'daily_satisfaction': 83,
+
+        'weekly_total': 84,
+        'weekly_vsat': 52,
+        'weekly_sat': 22,
+        'weekly_neg': 10,
+        'weekly_satisfaction': 81,
+
+        'monthly_total': 248,
+        'monthly_vsat': 149,
+        'monthly_sat': 64,
+        'monthly_neg': 35,
+        'monthly_satisfaction': 82,
+
+        'quarterly_total': 756,
+        'quarterly_vsat': 453,
+        'quarterly_sat': 204,
+        'quarterly_neg': 99,
+        'quarterly_satisfaction': 79,
+
+        'annual_total': 3021,
+        'annual_vsat': 1813,
+        'annual_sat': 809,
+        'annual_neg': 399,
+        'annual_satisfaction': 77,
+    }
+    return render(request, 'feedback_admin/reports.html', context)
