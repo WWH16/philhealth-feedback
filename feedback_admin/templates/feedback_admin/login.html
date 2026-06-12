@@ -363,8 +363,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 5px;
+  flex-wrap: wrap;
 }
-.card-note .material-icons-round { font-size: 13px; color: var(--g-primary); }
+.card-note .material-icons-round { font-size: 13px; color: var(--g-primary); flex-shrink: 0; }
 
 /* ── RESPONSIVE — collapse left panel ── */
 @media (max-width: 900px) {
@@ -381,6 +382,7 @@ body {
 @media (max-width: 480px) {
   .form-panel { padding: 32px 16px; }
   .card-inner { padding: 28px 20px 24px; }
+  .card-note { gap: 8px; flex-direction: column; }
 }
 
 /* ── REDUCED MOTION ── */
@@ -537,6 +539,17 @@ function togglePassword() {
     icon.textContent = 'visibility';
   }
 }
+
+// Keyboard navigation: Enter on username -> Password focus
+document.getElementById('id_username').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    const pw = document.getElementById('id_password');
+    if (!pw.value) {
+      e.preventDefault();
+      pw.focus();
+    }
+  }
+});
 </script>
 </body>
 </html>
