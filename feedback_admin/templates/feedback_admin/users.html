@@ -1011,9 +1011,9 @@ function _flashSuccessToast(msg, type, reloadAfter) {
   document.getElementById('toastContainer').appendChild(div);
   const toastInstance = new bootstrap.Toast(div);
 
-  // ── KEY FIX: wait for the toast to fully hide, THEN reload ──
+  // ── KEY FIX: Reload/implement immediately, keep toast visible as notification ──
   if (shouldReload) {
-    div.addEventListener('hidden.bs.toast', () => location.reload());
+    location.reload();
   } else {
     // No reload — just clean up the element when hidden
     div.addEventListener('hidden.bs.toast', () => div.remove());

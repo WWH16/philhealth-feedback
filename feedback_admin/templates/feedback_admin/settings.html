@@ -1080,7 +1080,14 @@ function showToast(msg, type) {
     <div class="ph-toast-progress"></div>`;
   document.getElementById('toastContainer').appendChild(div);
   const t = new bootstrap.Toast(div);
-  div.addEventListener('hidden.bs.toast', () => div.remove());
+
+  // If success, reload immediately so changes are "implemented" right away
+  if (type === 'success') {
+    location.reload();
+  } else {
+    div.addEventListener('hidden.bs.toast', () => div.remove());
+  }
+  
   t.show();
 }
 
