@@ -9,6 +9,8 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required  # uncomment when ready
 from django.http import JsonResponse
 from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 # When backend is integrated, import your Feedback model here, e.g.:
 # from feedback.models import FeedbackEntry
@@ -206,24 +208,39 @@ def user_add(request):
     pw2 = request.POST.get('password2', '')
     if pw1 != pw2:
         return err('Passwords do not match.')
-    if len(pw1) < 8:
-        return err('Password must be at least 8 characters.')
 
-    user = User.objects.create(
+    # Build a temporary user object so similarity validator can compare
+    tmp_user = User(
         username=username,
         email=request.POST.get('email', '').strip(),
         first_name=request.POST.get('first_name', '').strip(),
         last_name=request.POST.get('last_name', '').strip(),
-        password=make_password(pw1),
+    )
+    try:
+        validate_password(pw1, user=tmp_user)
+    except ValidationError as e:
+        return err(' '.join(e.messages))
+
+    has_usable_password = request.POST.get('has_usable_password', 'on') == 'on'
+
+    user = User.objects.create(
+        username=username,
+        email=tmp_user.email,
+        first_name=tmp_user.first_name,
+        last_name=tmp_user.last_name,
         is_active='is_active' in request.POST,
         is_staff='is_staff' in request.POST,
         is_superuser='is_superuser' in request.POST,
     )
+    if has_usable_password:
+        user.set_password(pw1)
+    else:
+        user.set_unusable_password()
+    user.save()
 
     group_ids = request.POST.getlist('groups')
     if group_ids:
         user.groups.set(Group.objects.filter(id__in=group_ids))
-
     perm_ids = request.POST.getlist('user_permissions')
     if perm_ids:
         user.user_permissions.set(Permission.objects.filter(id__in=perm_ids))
@@ -256,7 +273,6 @@ def user_edit(request, user_id):
     user.first_name = request.POST.get('first_name', '').strip()
     user.last_name = request.POST.get('last_name', '').strip()
 
-    # Prevent self-deactivation: if editing self, force is_active to True
     if user == request.user:
         user.is_active = True
     else:
@@ -270,12 +286,22 @@ def user_edit(request, user_id):
     if pw1:
         if pw1 != pw2:
             return err('Passwords do not match.')
-        if len(pw1) < 8:
-            return err('Password must be at least 8 characters.')
-        user.password = make_password(pw1)
+        try:
+            validate_password(pw1, user=user)
+        except ValidationError as e:
+            return err(' '.join(e.messages))
+        user.set_password(pw1)
+
+    # Password-based auth toggle (only meaningful when not setting a new password)
+    has_usable_password = request.POST.get('has_usable_password', 'on') == 'on'
+    if not pw1:
+        if has_usable_password and not user.has_usable_password():
+            # Can't re-enable without a new password
+            pass
+        elif not has_usable_password:
+            user.set_unusable_password()
 
     user.save()
-
     user.groups.set(Group.objects.filter(id__in=request.POST.getlist('groups')))
     user.user_permissions.set(Permission.objects.filter(id__in=request.POST.getlist('user_permissions')))
 
@@ -473,23 +499,24 @@ def settings_page(request):
 @require_POST
 def change_password(request):
     current_password = request.POST.get('current_password', '')
-    new_password1    = request.POST.get('new_password1', '')
-    new_password2    = request.POST.get('new_password2', '')
+    new_password1 = request.POST.get('new_password1', '')
+    new_password2 = request.POST.get('new_password2', '')
 
     if not request.user.check_password(current_password):
         messages.error(request, 'Current password is incorrect.')
-        return redirect('settings_page')
-    if len(new_password1) < 8:
-        messages.error(request, 'New password must be at least 8 characters.')
         return redirect('settings_page')
     if new_password1 != new_password2:
         messages.error(request, 'New passwords do not match.')
         return redirect('settings_page')
 
+    try:
+        validate_password(new_password1, user=request.user)
+    except ValidationError as e:
+        messages.error(request, ' '.join(e.messages))
+        return redirect('settings_page')
+
     request.user.set_password(new_password1)
     request.user.save()
-
-    update_session_auth_hash(request, request.user)  # keeps user logged in
-
+    update_session_auth_hash(request, request.user)
     messages.success(request, 'Password updated successfully.')
     return redirect('settings_page')
