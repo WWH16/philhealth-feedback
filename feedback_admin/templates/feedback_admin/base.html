@@ -648,7 +648,12 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
           <span class="material-icons-round">refresh</span>
         </button>
         <div class="topbar-avatar" title="Admin User" role="img" aria-label="Admin user">
-          <span class="material-icons-round">person</span>
+            <span style="font-size:13px;font-weight:700;font-family:'IBM Plex Mono',monospace;">
+              {% with name=request.user.get_full_name %}
+                {% if name %}{{ name|slice:":1"|upper }}{% if name.split|length > 1 %}{{ name.split.1|slice:":1"|upper }}{% endif %}
+                {% else %}{{ request.user.username|slice:":2"|upper }}{% endif %}
+              {% endwith %}
+            </span>
         </div>
       </div>
     </div>
