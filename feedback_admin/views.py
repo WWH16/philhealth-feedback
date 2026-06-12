@@ -245,9 +245,11 @@ def user_add(request):
     if perm_ids:
         user.user_permissions.set(Permission.objects.filter(id__in=perm_ids))
 
+    msg = f'User "{username}" created successfully.'
+    messages.success(request, msg)
+
     if _is_ajax(request):
-        return JsonResponse({'ok': True, 'message': f'User "{username}" created successfully.'})
-    messages.success(request, f'User "{username}" created successfully.')
+        return JsonResponse({'ok': True, 'message': msg})
     return redirect('users')
 
 
@@ -305,9 +307,11 @@ def user_edit(request, user_id):
     user.groups.set(Group.objects.filter(id__in=request.POST.getlist('groups')))
     user.user_permissions.set(Permission.objects.filter(id__in=request.POST.getlist('user_permissions')))
 
+    msg = f'User "{user.username}" updated successfully.'
+    messages.success(request, msg)
+
     if _is_ajax(request):
-        return JsonResponse({'ok': True, 'message': f'User "{user.username}" updated successfully.'})
-    messages.success(request, f'User "{user.username}" updated successfully.')
+        return JsonResponse({'ok': True, 'message': msg})
     return redirect('users')
 
 
@@ -322,9 +326,12 @@ def user_delete(request, user_id):
         return redirect('users')
     username = user.username
     user.delete()
+    
+    msg = f'User "{username}" deleted.'
+    messages.success(request, msg)
+
     if _is_ajax(request):
-        return JsonResponse({'ok': True, 'message': f'User "{username}" deleted.'})
-    messages.success(request, f'User "{username}" deleted.')
+        return JsonResponse({'ok': True, 'message': msg})
     return redirect('users')
 
 
@@ -362,9 +369,11 @@ def group_add(request):
     if perm_ids:
         group.permissions.set(Permission.objects.filter(id__in=perm_ids))
 
+    msg = f'Group "{name}" created.'
+    messages.success(request, msg)
+
     if _is_ajax(request):
-        return JsonResponse({'ok': True, 'message': f'Group "{name}" created.'})
-    messages.success(request, f'Group "{name}" created.')
+        return JsonResponse({'ok': True, 'message': msg})
     return redirect('users')
 
 
@@ -389,9 +398,11 @@ def group_edit(request, group_id):
     group.save()
     group.permissions.set(Permission.objects.filter(id__in=request.POST.getlist('permissions')))
 
+    msg = f'Group "{name}" updated.'
+    messages.success(request, msg)
+
     if _is_ajax(request):
-        return JsonResponse({'ok': True, 'message': f'Group "{name}" updated.'})
-    messages.success(request, f'Group "{name}" updated.')
+        return JsonResponse({'ok': True, 'message': msg})
     return redirect('users')
 
 
@@ -401,9 +412,12 @@ def group_delete(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
     name = group.name
     group.delete()
+
+    msg = f'Group "{name}" deleted.'
+    messages.success(request, msg)
+
     if _is_ajax(request):
-        return JsonResponse({'ok': True, 'message': f'Group "{name}" deleted.'})
-    messages.success(request, f'Group "{name}" deleted.')
+        return JsonResponse({'ok': True, 'message': msg})
     return redirect('users')
 
 
