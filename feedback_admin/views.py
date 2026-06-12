@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required  # uncomment when ready
 from django.http import JsonResponse
+from django.contrib.auth import update_session_auth_hash
 
 # When backend is integrated, import your Feedback model here, e.g.:
 # from feedback.models import FeedbackEntry
@@ -464,8 +465,31 @@ def settings_page(request):
         }
     """
     context = {
-        'setting1': 'Value 1',
-        'setting2': 'Value 2',
-        # Add any additional dummy settings needed for the template
+        'users': User.objects.all().order_by('-date_joined'),
     }
     return render(request, 'feedback_admin/settings.html', context)
+
+@login_required
+@require_POST
+def change_password(request):
+    current_password = request.POST.get('current_password', '')
+    new_password1    = request.POST.get('new_password1', '')
+    new_password2    = request.POST.get('new_password2', '')
+
+    if not request.user.check_password(current_password):
+        messages.error(request, 'Current password is incorrect.')
+        return redirect('settings_page')
+    if len(new_password1) < 8:
+        messages.error(request, 'New password must be at least 8 characters.')
+        return redirect('settings_page')
+    if new_password1 != new_password2:
+        messages.error(request, 'New passwords do not match.')
+        return redirect('settings_page')
+
+    request.user.set_password(new_password1)
+    request.user.save()
+
+    update_session_auth_hash(request, request.user)  # keeps user logged in
+
+    messages.success(request, 'Password updated successfully.')
+    return redirect('settings_page')

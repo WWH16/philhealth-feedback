@@ -18,6 +18,7 @@ urlpatterns = [
     path('users/<int:user_id>/edit/',    views.user_edit,          name='user_edit'),
     path('users/<int:user_id>/delete/',  views.user_delete,        name='user_delete'),
     path('users/<int:user_id>/toggle/',  views.user_toggle_active, name='user_toggle_active'),
+    path('settings/password/', views.change_password, name='change_password'),
 
     # ── Group management ──────────────────────────────────────────────
     path('groups/add/',                   views.group_add,    name='group_add'),
