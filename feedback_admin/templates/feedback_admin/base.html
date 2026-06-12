@@ -257,7 +257,7 @@ body {
 .card-block-body.no-pad { padding: 0; }
 
 /* ── BUTTONS ──────────────────────────────────────────────────────────── */
-.btn-ph { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 12px; cursor: pointer; transition: border-color 120ms, color 120ms, background 120ms; font-family: var(--font); border-radius: 0; text-decoration: none; }
+.btn-ph { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 12px; cursor: pointer; transition: border-color 120ms, color 120ms, background 120ms; font-family: var(--font); border-radius: 0; text-decoration: none; position: relative; }
 .btn-ph:hover { border-color: var(--ink4); color: var(--text-primary); }
 .btn-ph .material-icons-round { font-size: 13px; }
 .btn-ph-primary { background: var(--g-forest); border-color: var(--g-forest); color: var(--white); }
@@ -265,6 +265,41 @@ body {
 .btn-ph-sm { padding: 5px 9px; font-size: 9px; }
 select.btn-ph { background: var(--surface-card); color: var(--text-secondary); border: 1.5px solid var(--border); }
 [data-theme="dark"] select.btn-ph { background: var(--surface-card); color: var(--text-secondary); border-color: var(--border); }
+
+/* ── LOADING STATE ── */
+.btn-ph.is-loading {
+  pointer-events: none;
+  color: transparent !important;
+}
+.btn-ph.is-loading .material-icons-round {
+  visibility: hidden;
+}
+.btn-ph .ph-loader {
+  display: none;
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: ph-spin 0.8s linear infinite;
+}
+.btn-ph:not(.btn-ph-primary) .ph-loader {
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--g-primary);
+}
+[data-theme="dark"] .btn-ph:not(.btn-ph-primary) .ph-loader {
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--g-primary);
+}
+.btn-ph.is-loading .ph-loader {
+  display: block;
+}
+@keyframes ph-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
 
 /* ── FILTER TABS ──────────────────────────────────────────────────────── */
 .filter-tabs { display: flex; gap: 0; border: 1.5px solid var(--border); overflow: hidden; }

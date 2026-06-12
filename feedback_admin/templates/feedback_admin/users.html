@@ -661,11 +661,13 @@
         <div class="modal-footer">
           <div id="userDangerSection" style="display:none;margin-right:auto;">
             <button type="button" class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="submitDeleteUser()">
+              <span class="ph-loader"></span>
               <span class="material-icons-round">delete_forever</span> Delete User
             </button>
           </div>
           <button type="button" class="btn-ph" onclick="closeModal('userModal')">Cancel</button>
           <button type="button" class="btn-ph btn-ph-primary" onclick="submitUserForm()">
+            <span class="ph-loader"></span>
             <span class="material-icons-round">save</span>
             <span id="saveUserLabel">Add User</span>
           </button>
@@ -690,7 +692,7 @@
         </button>
       </div>
 
-      <form method="post" action="" id="groupForm">
+      <form id="groupForm" onsubmit="return false;">
         {% csrf_token %}
         <input type="hidden" id="groupFormId" name="group_id" value="">
         <input type="hidden" name="form_type" value="group">
@@ -731,11 +733,13 @@
         <div class="modal-footer">
           <div id="groupDangerSection" style="display:none;margin-right:auto;">
             <button type="button" class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="submitDeleteGroup()">
+              <span class="ph-loader"></span>
               <span class="material-icons-round">delete_forever</span> Delete Group
             </button>
           </div>
           <button type="button" class="btn-ph" onclick="closeModal('groupModal')">Cancel</button>
-          <button type="submit" class="btn-ph btn-ph-primary">
+          <button type="button" class="btn-ph btn-ph-primary" onclick="submitGroupForm()">
+            <span class="ph-loader"></span>
             <span class="material-icons-round">save</span>
             <span id="saveGroupLabel">Add Group</span>
           </button>
@@ -1024,6 +1028,10 @@ function _flashSuccessToast(msg, type, reloadAfter) {
 async function submitUserForm() {
   clearAllFieldErrors();
   const form = document.getElementById('userForm');
+  const btn  = form.querySelector('.btn-ph-primary');
+  
+  btn.classList.add('is-loading');
+  
   const data = new FormData(form);
   try {
     const res  = await fetch(form.action, {
@@ -1037,9 +1045,41 @@ async function submitUserForm() {
       _flashSuccessToast(json.message, 'success');
     } else {
       routeError(json.error);
+      btn.classList.remove('is-loading');
     }
   } catch (e) {
     showFieldError('fieldUsername', 'errUsername', 'An unexpected error occurred. Please try again.');
+    btn.classList.remove('is-loading');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AJAX GROUP FORM SUBMIT
+═══════════════════════════════════════════════════════════════ */
+async function submitGroupForm() {
+  const form = document.getElementById('groupForm');
+  const btn  = form.querySelector('.btn-ph-primary');
+  
+  btn.classList.add('is-loading');
+  
+  const data = new FormData(form);
+  try {
+    const res  = await fetch(form.action, {
+      method: 'POST',
+      body: data,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    const json = await res.json();
+    if (json.ok) {
+      closeModal('groupModal');
+      _flashSuccessToast(json.message, 'success');
+    } else {
+      alert(json.error);
+      btn.classList.remove('is-loading');
+    }
+  } catch (e) {
+    alert('An unexpected error occurred.');
+    btn.classList.remove('is-loading');
   }
 }
 
@@ -1050,6 +1090,10 @@ async function submitDeleteUser() {
   const uid = document.getElementById('userFormUserId').value;
   if (!uid) return;
   if (!confirm('Delete this user? This action cannot be undone.')) return;
+  
+  const btn = document.querySelector('#userDangerSection .btn-ph');
+  btn.classList.add('is-loading');
+
   const form = document.getElementById('deleteUserForm');
   document.getElementById('deleteUserId').value = uid;
   form.action = `/dashboard/users/${uid}/delete/`;
@@ -1066,9 +1110,11 @@ async function submitDeleteUser() {
       _flashSuccessToast(json.message, 'success');
     } else {
       showFieldError('fieldUsername', 'errUsername', json.error);
+      btn.classList.remove('is-loading');
     }
   } catch (e) {
     showFieldError('fieldUsername', 'errUsername', 'An unexpected error occurred.');
+    btn.classList.remove('is-loading');
   }
 }
 
@@ -1185,6 +1231,10 @@ function submitDeleteGroup() {
   const gid = document.getElementById('groupFormId').value;
   if (!gid) return;
   if (!confirm("Delete this group? Members will lose associated permissions.")) return;
+  
+  const btn = document.querySelector('#groupDangerSection .btn-ph');
+  btn.classList.add('is-loading');
+
   document.getElementById('deleteGroupId').value = gid;
   document.getElementById('deleteGroupForm').action = `/dashboard/groups/${gid}/delete/`;
   document.getElementById('deleteGroupForm').submit();

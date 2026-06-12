@@ -341,10 +341,39 @@ body {
   transition: background 120ms, opacity 120ms;
   border-radius: 0;
   margin-top: 8px;
+  position: relative;
 }
 .btn-login:hover { background: var(--g-deep); }
 .btn-login:active { opacity: 0.9; }
 .btn-login .material-icons-round { font-size: 18px; }
+
+/* ── LOADING STATE ── */
+.btn-login.is-loading {
+  pointer-events: none;
+  color: transparent;
+}
+.btn-login.is-loading .material-icons-round {
+  visibility: hidden;
+}
+
+.btn-login .loader {
+  display: none;
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+
+.btn-login.is-loading .loader {
+  display: block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 /* ── DIVIDER ── */
 .form-divider {
@@ -508,7 +537,8 @@ body {
             </div>
           </div>
 
-          <button type="submit" class="btn-login">
+          <button type="submit" class="btn-login" id="loginBtn">
+            <span class="loader"></span>
             <span class="material-icons-round">login</span>
             Sign In
           </button>
@@ -549,6 +579,12 @@ document.getElementById('id_username').addEventListener('keydown', function(e) {
       pw.focus();
     }
   }
+});
+
+// Form submission loader
+document.querySelector('form').addEventListener('submit', function(e) {
+  const btn = document.getElementById('loginBtn');
+  btn.classList.add('is-loading');
 });
 </script>
 </body>

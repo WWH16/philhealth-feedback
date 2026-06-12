@@ -137,11 +137,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 .settings-save-bar { position: sticky; bottom: 16px; z-index: 40; display: flex; justify-content: flex-end; padding: 0; pointer-events: none; }
 .settings-save-inner { display: flex; align-items: center; gap: 8px; background: var(--surface-card); border: 1px solid var(--border); padding: 10px 16px; pointer-events: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
 
-/* submit spinner */
-.btn-loading { opacity: 0.7; pointer-events: none; }
-.btn-loading .material-icons-round { animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
 @media (max-width: 991px) {
   .settings-nav { flex-direction: row; overflow-x: auto; position: static; border-bottom: 1px solid var(--border); padding-bottom: 0; flex-wrap: nowrap; gap: 0; }
   .settings-nav-item { border-left: none; border-bottom: 2px solid transparent; white-space: nowrap; }
@@ -272,6 +267,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
               </div>
               <div class="col-12">
                 <button type="button" class="btn-ph btn-ph-primary" id="addAdminBtn" onclick="submitAddAdmin()">
+                  <span class="ph-loader"></span>
                   <span class="material-icons-round">person_add</span> Add Admin
                 </button>
               </div>
@@ -379,6 +375,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 </div>
                 <div class="col-12">
                   <button type="button" class="btn-ph btn-ph-primary" id="changePwBtn" onclick="submitChangePw()">
+                    <span class="ph-loader"></span>
                     <span class="material-icons-round">lock_reset</span> Update Password
                   </button>
                 </div>
@@ -999,8 +996,7 @@ function submitAddAdmin() {
   document.getElementById('fa-pw2').value      = p2;
 
   const btn = document.getElementById('addAdminBtn');
-  btn.classList.add('btn-loading');
-  btn.querySelector('.material-icons-round').textContent = 'refresh';
+  btn.classList.add('is-loading');
 
   document.getElementById('addAdminForm').submit();
 }
@@ -1029,8 +1025,7 @@ function submitChangePw() {
   }
 
   const btn = document.getElementById('changePwBtn');
-  btn.classList.add('btn-loading');
-  btn.querySelector('.material-icons-round').textContent = 'refresh';
+  btn.classList.add('is-loading');
 
   document.getElementById('changePwForm').submit();
 }
