@@ -1,0 +1,1030 @@
+{% extends 'feedback_admin/base.html' %}
+{% load static %}
+
+{% block title %}Settings — PhilHealth Cauayan City{% endblock %}
+
+{% block nav_settings %}active{% endblock %}
+
+{% block extra_styles %}
+/* ── SETTINGS PAGE EXTRAS ──────────────────────────────────────────── */
+.settings-nav {
+  display: flex; flex-direction: column; gap: 2px;
+  position: sticky; top: calc(var(--topbar-h) + 20px);
+}
+.settings-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.02em; border: none; background: transparent;
+  color: var(--text-secondary); cursor: pointer;
+  font-family: var(--font); text-align: left; width: 100%;
+  border-left: 2px solid transparent; transition: all 120ms;
+}
+.settings-nav-item:hover { background: var(--surface-card); color: var(--text-primary); }
+.settings-nav-item.active { color: var(--g-primary); border-left-color: var(--g-primary); background: var(--g-xlight); }
+[data-theme="dark"] .settings-nav-item.active { background: rgba(35,164,85,0.08); }
+.settings-nav-item .material-icons-round { font-size: 18px; flex-shrink: 0; }
+.settings-nav-group-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-muted);
+  padding: 14px 14px 5px; margin-top: 4px;
+}
+
+/* ── SETTINGS PANEL ── */
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+
+.settings-section {
+  background: var(--surface-card); border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.settings-section-head {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.settings-section-icon {
+  width: 36px; height: 36px; display: flex; align-items: center;
+  justify-content: center; background: var(--g-xlight); flex-shrink: 0;
+}
+.settings-section-icon .material-icons-round { font-size: 20px; color: var(--g-deep); }
+[data-theme="dark"] .settings-section-icon { background: rgba(35,164,85,0.12); }
+.settings-section-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.settings-section-desc  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.settings-section-body  { padding: 20px; }
+
+/* ── FORM ROWS ── */
+.settings-row {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.settings-row:last-child { border-bottom: none; padding-bottom: 0; }
+.settings-row:first-child { padding-top: 0; }
+.settings-row-info { flex: 1; }
+.settings-row-label {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  margin-bottom: 3px;
+}
+.settings-row-hint { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.settings-row-control { flex-shrink: 0; display: flex; align-items: center; }
+
+/* ── TOGGLE ── */
+.toggle-switch {
+  position: relative; width: 44px; height: 24px;
+  display: inline-flex; align-items: center;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+  position: absolute; cursor: pointer; inset: 0;
+  background: var(--border); transition: background 200ms;
+}
+.toggle-track::after {
+  content: ''; position: absolute;
+  height: 18px; width: 18px; left: 3px; bottom: 3px;
+  background: var(--white); transition: transform 200ms;
+}
+input:checked + .toggle-track { background: var(--g-primary); }
+input:checked + .toggle-track::after { transform: translateX(20px); }
+
+/* ── SETTINGS INPUTS ── */
+.settings-input {
+  height: 36px; padding: 0 12px; font-size: 13px; font-family: var(--font);
+  border: 1.5px solid var(--border); background: var(--surface-page);
+  color: var(--text-primary); outline: none; border-radius: 0;
+  transition: border-color 120ms; min-width: 220px;
+}
+.settings-input:focus { border-color: var(--g-primary); }
+.settings-textarea {
+  width: 100%; padding: 10px 12px; font-size: 13px; font-family: var(--font);
+  border: 1.5px solid var(--border); background: var(--surface-page);
+  color: var(--text-primary); outline: none; border-radius: 0;
+  transition: border-color 120ms; resize: vertical; min-height: 80px; line-height: 1.6;
+}
+.settings-textarea:focus { border-color: var(--g-primary); }
+
+/* ── DANGER ZONE ── */
+.danger-section { border-color: rgba(192,0,26,0.25) !important; }
+.danger-section .settings-section-head { background: var(--red-bg); }
+.danger-section .settings-section-icon { background: rgba(192,0,26,0.1); }
+.danger-section .settings-section-icon .material-icons-round { color: var(--red); }
+[data-theme="dark"] .danger-section .settings-section-head { background: rgba(192,0,26,0.06); }
+
+/* ── KEYWORD TAGS ── */
+.keyword-input-wrap { display: flex; gap: 8px; margin-bottom: 10px; }
+.keyword-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.keyword-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; padding: 4px 10px;
+  background: var(--g-xlight); border: 1px solid var(--g-light);
+  color: var(--g-forest);
+}
+.keyword-tag.neg { background: var(--red-bg); border-color: #fca5a5; color: var(--red); }
+[data-theme="dark"] .keyword-tag     { background: rgba(35,164,85,0.1); border-color: rgba(35,164,85,0.2); }
+[data-theme="dark"] .keyword-tag.neg { background: rgba(192,0,26,0.1); border-color: rgba(192,0,26,0.2); }
+.keyword-tag-remove {
+  cursor: pointer; font-size: 14px; opacity: 0.6;
+  background: none; border: none; color: inherit;
+  padding: 0; display: flex; align-items: center;
+  transition: opacity 120ms; font-family: var(--mono);
+  line-height: 1;
+}
+.keyword-tag-remove:hover { opacity: 1; }
+
+/* ── EMOTION BUTTONS PREVIEW ── */
+.emotion-preview {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+}
+.emotion-preview-btn {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; padding: 14px 8px;
+  border: 1.5px solid var(--border); background: var(--surface-page);
+  cursor: default; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+}
+.emotion-preview-btn .material-icons-round { font-size: 24px; }
+.emotion-preview-btn.pos { border-color: var(--g-primary); color: var(--g-forest); background: var(--g-xlight); }
+.emotion-preview-btn.neu { border-color: var(--gold); color: #7a5500; background: var(--gold-light); }
+.emotion-preview-btn.neg { border-color: var(--red); color: var(--red); background: var(--red-bg); }
+[data-theme="dark"] .emotion-preview-btn.pos { background: rgba(35,164,85,0.1); }
+[data-theme="dark"] .emotion-preview-btn.neu { background: rgba(184,147,58,0.1); }
+[data-theme="dark"] .emotion-preview-btn.neg { background: rgba(192,0,26,0.1); }
+
+/* ── BACKUP LOG ── */
+.backup-log-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px;
+  flex-wrap: wrap;
+}
+.backup-log-item:last-child { border-bottom: none; }
+.backup-log-name { font-size: 12px; font-weight: 600; color: var(--text-primary); font-family: var(--mono); }
+.backup-log-date { font-size: 11px; color: var(--text-muted); }
+.backup-log-size { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
+
+/* ── SAVE BUTTON (fixed) ── */
+.settings-save-bar {
+  position: sticky; bottom: 16px; z-index: 40;
+  display: flex; justify-content: flex-end; padding: 0;
+  pointer-events: none;
+}
+.settings-save-inner {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface-card); border: 1px solid var(--border);
+  padding: 10px 16px;
+  pointer-events: auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 991px) {
+  .settings-nav { flex-direction: row; overflow-x: auto; position: static;
+    border-bottom: 1px solid var(--border); padding-bottom: 0; flex-wrap: nowrap; gap: 0; }
+  .settings-nav-item { border-left: none; border-bottom: 2px solid transparent;
+    white-space: nowrap; flex-direction: row; }
+  .settings-nav-item.active { border-bottom-color: var(--g-primary); border-left: none; background: none; }
+  .settings-nav-group-label { display: none; }
+}
+@media (max-width: 575px) {
+  .settings-section-body { padding: 14px 12px; }
+  .settings-row { flex-direction: column; gap: 10px; }
+  .settings-input { min-width: 0; width: 100%; }
+  .emotion-preview { grid-template-columns: 1fr 1fr 1fr; }
+}
+{% endblock %}
+
+{% block page_content %}
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-row">
+      <div>
+        <div class="page-eyebrow">
+          <span class="material-icons-round">tune</span>
+          System Configuration
+        </div>
+        <h1 class="page-title">Settings</h1>
+        <p class="page-subtitle">Manage users, survey configuration, sentiment rules, and system settings.</p>
+      </div>
+      <div class="date-badge">
+        <span class="material-icons-round">today</span>
+        <span id="currentDate">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 align-items-start">
+
+    <!-- ── LEFT: SETTINGS NAV ── -->
+    <div class="col-12 col-lg-3">
+      <div class="settings-nav" id="settingsNav">
+        <div class="settings-nav-group-label">Users</div>
+        <button class="settings-nav-item active" onclick="showPanel('user-management', this)">
+          <span class="material-icons-round">manage_accounts</span> User Management
+        </button>
+
+        <div class="settings-nav-group-label">Survey</div>
+        <button class="settings-nav-item" onclick="showPanel('survey-settings', this)">
+          <span class="material-icons-round">quiz</span> Survey Settings
+        </button>
+
+        <div class="settings-nav-group-label">Sentiment</div>
+        <button class="settings-nav-item" onclick="showPanel('sentiment-settings', this)">
+          <span class="material-icons-round">psychology</span> Sentiment Analysis
+        </button>
+
+        <div class="settings-nav-group-label">System</div>
+        <button class="settings-nav-item" onclick="showPanel('system-settings', this)">
+          <span class="material-icons-round">settings</span> System Settings
+        </button>
+        <button class="settings-nav-item" onclick="showPanel('notifications', this)">
+          <span class="material-icons-round">notifications</span> Notifications
+        </button>
+      </div>
+    </div><!-- /col -->
+
+    <!-- ── RIGHT: PANEL CONTENT ── -->
+    <div class="col-12 col-lg-9">
+
+      <!-- ══════════════════════════════════════════════════════════════
+           PANEL 1: USER MANAGEMENT
+      ══════════════════════════════════════════════════════════════ -->
+      <div class="settings-panel active" id="panel-user-management">
+
+        <!-- ADD ADMIN -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">person_add</span></div>
+            <div>
+              <div class="settings-section-title">Add Admin User</div>
+              <div class="settings-section-desc">Create a new administrator account.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="row g-3">
+              <div class="col-12 col-sm-6">
+                <label class="form-label" for="newUsername">Username <span style="color:var(--red)">*</span></label>
+                <input class="settings-input w-100" type="text" id="newUsername" placeholder="e.g. admin.santos">
+              </div>
+              <div class="col-12 col-sm-6">
+                <label class="form-label" for="newEmail">Email Address</label>
+                <input class="settings-input w-100" type="email" id="newEmail" placeholder="user@philhealth.gov.ph">
+              </div>
+              <div class="col-12 col-sm-6">
+                <label class="form-label" for="newFirst">First Name</label>
+                <input class="settings-input w-100" type="text" id="newFirst" placeholder="Maria">
+              </div>
+              <div class="col-12 col-sm-6">
+                <label class="form-label" for="newLast">Last Name</label>
+                <input class="settings-input w-100" type="text" id="newLast" placeholder="Santos">
+              </div>
+              <div class="col-12 col-sm-6">
+                <label class="form-label" for="newPw">Password <span style="color:var(--red)">*</span></label>
+                <input class="settings-input w-100" type="password" id="newPw" placeholder="Min. 8 characters">
+              </div>
+              <div class="col-12 col-sm-6">
+                <label class="form-label" for="newPw2">Confirm Password <span style="color:var(--red)">*</span></label>
+                <input class="settings-input w-100" type="password" id="newPw2" placeholder="Repeat password">
+              </div>
+              <div class="col-12">
+                <button class="btn-ph btn-ph-primary" onclick="addAdminUser()">
+                  <span class="material-icons-round">person_add</span> Add Admin
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDIT / DELETE ADMIN -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">manage_accounts</span></div>
+            <div>
+              <div class="settings-section-title">Edit or Delete Admin</div>
+              <div class="settings-section-desc">Modify or remove existing administrator accounts.</div>
+            </div>
+          </div>
+          <div class="settings-section-body" style="padding:0">
+            <div style="overflow-x:auto">
+              <table class="ph-table" aria-label="Admin users quick list">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th style="width:100px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for u in users %}
+                  <tr>
+                    <td style="font-weight:700;font-size:13px">{{ u.username }}</td>
+                    <td style="font-size:12px;color:var(--text-secondary)">{{ u.get_full_name|default:"—" }}</td>
+                    <td>
+                      {% if u.is_superuser %}
+                        <span class="status-chip chip-super"><span class="material-icons-round">verified</span>Superuser</span>
+                      {% elif u.is_staff %}
+                        <span class="status-chip chip-staff"><span class="material-icons-round">admin_panel_settings</span>Staff</span>
+                      {% else %}
+                        <span class="status-chip" style="background:var(--surface-page);border:1px solid var(--border);color:var(--text-muted)"><span class="material-icons-round">person</span>Regular</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if u.is_active %}
+                        <span class="status-chip chip-active"><span class="material-icons-round">check_circle</span>Active</span>
+                      {% else %}
+                        <span class="status-chip chip-inactive"><span class="material-icons-round">cancel</span>Inactive</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div style="display:flex;gap:4px">
+                        <a href="{% url 'users' %}" class="btn-ph btn-ph-sm" title="Manage in Users page">
+                          <span class="material-icons-round">edit</span>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% empty %}
+                  <tr><td colspan="5" style="text-align:center;color:var(--text-muted);font-size:12px;padding:20px">No users found.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHANGE PASSWORD -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">lock_reset</span></div>
+            <div>
+              <div class="settings-section-title">Change Password</div>
+              <div class="settings-section-desc">Update your own account password.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="row g-3">
+              <div class="col-12 col-sm-4">
+                <label class="form-label" for="curPw">Current Password</label>
+                <input class="settings-input w-100" type="password" id="curPw" placeholder="Current password">
+              </div>
+              <div class="col-12 col-sm-4">
+                <label class="form-label" for="changePw1">New Password</label>
+                <input class="settings-input w-100" type="password" id="changePw1" placeholder="New password">
+              </div>
+              <div class="col-12 col-sm-4">
+                <label class="form-label" for="changePw2">Confirm New</label>
+                <input class="settings-input w-100" type="password" id="changePw2" placeholder="Confirm new">
+              </div>
+              <div class="col-12">
+                <button class="btn-ph btn-ph-primary" onclick="showToast('Password change request submitted.','success')">
+                  <span class="material-icons-round">lock_reset</span> Update Password
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-user-management -->
+
+
+      <!-- ══════════════════════════════════════════════════════════════
+           PANEL 2: SURVEY SETTINGS
+      ══════════════════════════════════════════════════════════════ -->
+      <div class="settings-panel" id="panel-survey-settings">
+
+        <!-- ENABLE/DISABLE SURVEY -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">toggle_on</span></div>
+            <div>
+              <div class="settings-section-title">Survey Availability</div>
+              <div class="settings-section-desc">Control whether the public feedback form is accessible.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Enable Survey</div>
+                <div class="settings-row-hint">When enabled, citizens can submit feedback via the public-facing form.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch" aria-label="Enable survey">
+                  <input type="checkbox" id="toggleSurvey" checked onchange="onToggleSurvey(this)">
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+            <div class="settings-row" id="surveyOffMsg" style="display:none">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Offline Message</div>
+                <div class="settings-row-hint">Message shown when the survey is disabled.</div>
+              </div>
+              <div style="width:100%">
+                <textarea class="settings-textarea" id="offlineMsg" style="width:100%;margin-top:8px;">Ang feedback system ay pansamantalang hindi available. Pakisubukan muli mamaya.</textarea>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Schedule Survey Window</div>
+                <div class="settings-row-hint">Automatically enable the survey only within a specified time window (e.g. office hours).</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch" aria-label="Schedule survey">
+                  <input type="checkbox" id="toggleSchedule">
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDIT SURVEY QUESTIONS -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">quiz</span></div>
+            <div>
+              <div class="settings-section-title">Edit Survey Questions</div>
+              <div class="settings-section-desc">Customize the heading and sub-text shown on the feedback form.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Main Question</div>
+                <div class="settings-row-hint">The primary question displayed to citizens.</div>
+              </div>
+              <div style="width:100%;margin-top:6px;">
+                <textarea class="settings-textarea" id="mainQuestion">How satisfied are you with the service you received today?</textarea>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Sub-text / Instruction</div>
+                <div class="settings-row-hint">Short instruction line shown below the main question.</div>
+              </div>
+              <div style="width:100%;margin-top:6px;">
+                <input class="settings-input" id="surveySubtext" type="text" value="Please pick your reaction below." style="width:100%">
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Comment Prompt</div>
+                <div class="settings-row-hint">Label for the optional additional comment field.</div>
+              </div>
+              <div style="width:100%;margin-top:6px;">
+                <input class="settings-input" id="commentPrompt" type="text" value="Additional concern" style="width:100%">
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Max Comment Length</div>
+                <div class="settings-row-hint">Maximum number of characters for the comment field (current: 500).</div>
+              </div>
+              <div class="settings-row-control">
+                <input class="settings-input" type="number" value="500" min="100" max="2000" style="width:100px;text-align:center">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MANAGE EMOTION BUTTONS -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
+            <div>
+              <div class="settings-section-title">Manage Emotion Buttons</div>
+              <div class="settings-section-desc">Configure the labels and visibility of the three reaction buttons.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Button: Very Satisfactory</div>
+                <div class="settings-row-hint">Label for the positive (green) reaction button.</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label class="toggle-switch" aria-label="Show button"><input type="checkbox" checked><span class="toggle-track"></span></label>
+                <input class="settings-input" type="text" value="Very Satisfactory" style="width:180px">
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Button: Satisfactory</div>
+                <div class="settings-row-hint">Label for the neutral (gold) reaction button.</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label class="toggle-switch" aria-label="Show button"><input type="checkbox" checked><span class="toggle-track"></span></label>
+                <input class="settings-input" type="text" value="Satisfactory" style="width:180px">
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Button: Unsatisfactory</div>
+                <div class="settings-row-hint">Label for the negative (red) reaction button.</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <label class="toggle-switch" aria-label="Show button"><input type="checkbox" checked><span class="toggle-track"></span></label>
+                <input class="settings-input" type="text" value="Unsatisfactory" style="width:180px">
+              </div>
+            </div>
+            <!-- PREVIEW -->
+            <div class="emotion-preview">
+              <div class="emotion-preview-btn pos">
+                <span class="material-icons-round">sentiment_satisfied_alt</span>
+                <span>Very Satisfactory</span>
+              </div>
+              <div class="emotion-preview-btn neu">
+                <span class="material-icons-round">sentiment_neutral</span>
+                <span>Satisfactory</span>
+              </div>
+              <div class="emotion-preview-btn neg">
+                <span class="material-icons-round">sentiment_dissatisfied</span>
+                <span>Unsatisfactory</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-save-bar">
+          <div class="settings-save-inner">
+            <span style="font-size:12px;color:var(--text-secondary)">Unsaved changes</span>
+            <button class="btn-ph btn-ph-primary" onclick="showToast('Survey settings saved successfully.','success')">
+              <span class="material-icons-round">save</span> Save Survey Settings
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /panel-survey-settings -->
+
+
+      <!-- ══════════════════════════════════════════════════════════════
+           PANEL 3: SENTIMENT ANALYSIS SETTINGS
+      ══════════════════════════════════════════════════════════════ -->
+      <div class="settings-panel" id="panel-sentiment-settings">
+
+        <!-- KEYWORDS -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">label</span></div>
+            <div>
+              <div class="settings-section-title">Sentiment Keywords</div>
+              <div class="settings-section-desc">Words used to classify comments as positive or negative.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Positive Keywords</div>
+                <div class="settings-row-hint">Words that indicate a positive experience.</div>
+              </div>
+            </div>
+            <div class="keyword-input-wrap">
+              <input class="settings-input" type="text" id="posKwInput" placeholder="Type keyword and press Enter…" onkeydown="addKeyword(event,'pos')">
+              <button class="btn-ph btn-ph-primary" onclick="addKeywordBtn('pos')"><span class="material-icons-round">add</span></button>
+            </div>
+            <div class="keyword-tags" id="posKeywords">
+              <span class="keyword-tag">accommodating <button class="keyword-tag-remove" onclick="removeKw(this,'pos')">×</button></span>
+              <span class="keyword-tag">professional  <button class="keyword-tag-remove" onclick="removeKw(this,'pos')">×</button></span>
+              <span class="keyword-tag">efficient     <button class="keyword-tag-remove" onclick="removeKw(this,'pos')">×</button></span>
+              <span class="keyword-tag">helpful       <button class="keyword-tag-remove" onclick="removeKw(this,'pos')">×</button></span>
+              <span class="keyword-tag">mabilis        <button class="keyword-tag-remove" onclick="removeKw(this,'pos')">×</button></span>
+              <span class="keyword-tag">magaling       <button class="keyword-tag-remove" onclick="removeKw(this,'pos')">×</button></span>
+              <span class="keyword-tag">salamat        <button class="keyword-tag-remove" onclick="removeKw(this,'pos')">×</button></span>
+            </div>
+            <div class="settings-row" style="margin-top:16px;">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Negative Keywords</div>
+                <div class="settings-row-hint">Words that indicate a poor or negative experience.</div>
+              </div>
+            </div>
+            <div class="keyword-input-wrap">
+              <input class="settings-input" type="text" id="negKwInput" placeholder="Type keyword and press Enter…" onkeydown="addKeyword(event,'neg')">
+              <button class="btn-ph btn-ph-primary" onclick="addKeywordBtn('neg')"><span class="material-icons-round">add</span></button>
+            </div>
+            <div class="keyword-tags" id="negKeywords">
+              <span class="keyword-tag neg">mabagal        <button class="keyword-tag-remove" onclick="removeKw(this,'neg')">×</button></span>
+              <span class="keyword-tag neg">rude           <button class="keyword-tag-remove" onclick="removeKw(this,'neg')">×</button></span>
+              <span class="keyword-tag neg">matagal        <button class="keyword-tag-remove" onclick="removeKw(this,'neg')">×</button></span>
+              <span class="keyword-tag neg">bastos         <button class="keyword-tag-remove" onclick="removeKw(this,'neg')">×</button></span>
+              <span class="keyword-tag neg">overcrowded    <button class="keyword-tag-remove" onclick="removeKw(this,'neg')">×</button></span>
+              <span class="keyword-tag neg">waiting        <button class="keyword-tag-remove" onclick="removeKw(this,'neg')">×</button></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CLASSIFICATION RULES -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">rule</span></div>
+            <div>
+              <div class="settings-section-title">Classification Rules</div>
+              <div class="settings-section-desc">Define how comments are automatically categorized.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Positive Rating → Auto-categorize as Compliment</div>
+                <div class="settings-row-hint">Feedback rated "Very Satisfactory" with no complaint keywords is tagged as a Compliment.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Negative Rating → Auto-categorize as Complaint</div>
+                <div class="settings-row-hint">Feedback rated "Unsatisfactory" is automatically tagged as a Complaint.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Suggestion Keywords → Auto-categorize as Suggestion</div>
+                <div class="settings-row-hint">Comments containing "sana," "magdagdag," "suggest," or "iminumungkahi" are tagged as Suggestions.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Confidence Threshold</div>
+                <div class="settings-row-hint">Minimum confidence score (%) required for auto-classification. Below this, the entry is marked "Unclassified."</div>
+              </div>
+              <div class="settings-row-control">
+                <input class="settings-input" type="number" value="65" min="0" max="100" style="width:80px;text-align:center">
+                <span style="font-size:12px;color:var(--text-muted);margin-left:6px">%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AUTO-ANALYSIS TOGGLE -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">auto_awesome</span></div>
+            <div>
+              <div class="settings-section-title">Auto-Analysis</div>
+              <div class="settings-section-desc">Automatically analyze and categorize new feedback on submission.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Enable Auto-Analysis</div>
+                <div class="settings-row-hint">When enabled, every new feedback submission is instantly analyzed for sentiment and category.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Flag for Manual Review</div>
+                <div class="settings-row-hint">Entries with low confidence are placed in a review queue for manual classification.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Batch Re-analyze All Feedback</div>
+                <div class="settings-row-hint">Re-run analysis on all existing feedback using the current rules. This may take a few moments.</div>
+              </div>
+              <div class="settings-row-control">
+                <button class="btn-ph" onclick="showToast('Re-analysis queued. This will complete in the background.','success')">
+                  <span class="material-icons-round">refresh</span> Re-analyze
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-save-bar">
+          <div class="settings-save-inner">
+            <span style="font-size:12px;color:var(--text-secondary)">Unsaved changes</span>
+            <button class="btn-ph btn-ph-primary" onclick="showToast('Sentiment settings saved successfully.','success')">
+              <span class="material-icons-round">save</span> Save Sentiment Settings
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /panel-sentiment-settings -->
+
+
+      <!-- ══════════════════════════════════════════════════════════════
+           PANEL 4: SYSTEM SETTINGS
+      ══════════════════════════════════════════════════════════════ -->
+      <div class="settings-panel" id="panel-system-settings">
+
+        <!-- BACKUP -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">backup</span></div>
+            <div>
+              <div class="settings-section-title">Backup Database</div>
+              <div class="settings-section-desc">Download a full backup of the feedback database.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Create Backup Now</div>
+                <div class="settings-row-hint">Generates a full database backup (.sqlite3 or .json). Recommended before any major changes.</div>
+              </div>
+              <div class="settings-row-control" style="gap:8px;flex-wrap:wrap;">
+                <button class="btn-ph btn-ph-primary" onclick="showToast('Backup created: backup_2026-06-11_14-32.sqlite3','success')">
+                  <span class="material-icons-round">backup</span> Backup Now
+                </button>
+                <button class="btn-ph" onclick="showToast('Downloading backup…','success')">
+                  <span class="material-icons-round">download</span> Download Last
+                </button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Auto-Backup Schedule</div>
+                <div class="settings-row-hint">Automatically create backups on a regular schedule.</div>
+              </div>
+              <div class="settings-row-control">
+                <select class="btn-ph" aria-label="Backup schedule">
+                  <option>Daily at midnight</option>
+                  <option>Every 12 hours</option>
+                  <option>Weekly on Sunday</option>
+                  <option>Disabled</option>
+                </select>
+              </div>
+            </div>
+            <!-- BACKUP LOG -->
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+              <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Recent Backups</div>
+              <div class="backup-log-item">
+                <div>
+                  <div class="backup-log-name">backup_2026-06-11_00-00.sqlite3</div>
+                  <div class="backup-log-date">June 11, 2026 · 12:00 AM</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="backup-log-size">1.2 MB</span>
+                  <button class="btn-ph btn-ph-sm"><span class="material-icons-round">download</span></button>
+                </div>
+              </div>
+              <div class="backup-log-item">
+                <div>
+                  <div class="backup-log-name">backup_2026-06-10_00-00.sqlite3</div>
+                  <div class="backup-log-date">June 10, 2026 · 12:00 AM</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="backup-log-size">1.1 MB</span>
+                  <button class="btn-ph btn-ph-sm"><span class="material-icons-round">download</span></button>
+                </div>
+              </div>
+              <div class="backup-log-item">
+                <div>
+                  <div class="backup-log-name">backup_2026-06-09_00-00.sqlite3</div>
+                  <div class="backup-log-date">June 9, 2026 · 12:00 AM</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="backup-log-size">1.1 MB</span>
+                  <button class="btn-ph btn-ph-sm"><span class="material-icons-round">download</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESTORE -->
+        <div class="settings-section danger-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">restore</span></div>
+            <div>
+              <div class="settings-section-title" style="color:var(--red)">Restore Database</div>
+              <div class="settings-section-desc">Restore the database from a previous backup. This will overwrite current data.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div style="padding:12px 14px;background:var(--red-bg);border:1px solid #fca5a5;border-left:3px solid var(--red);display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;">
+              <span class="material-icons-round" style="color:var(--red);font-size:18px;flex-shrink:0;margin-top:1px">warning</span>
+              <div style="font-size:12px;color:#7a0011;font-weight:600;line-height:1.6">
+                <strong>Warning:</strong> Restoring a backup will permanently replace all current data. Create a backup of the current state before proceeding. This action cannot be undone.
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Upload Backup File</div>
+                <div class="settings-row-hint">Upload a .sqlite3 or .json backup file to restore.</div>
+              </div>
+              <div class="settings-row-control" style="gap:8px;">
+                <input type="file" accept=".sqlite3,.json" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
+                <button class="btn-ph" onclick="document.getElementById('restoreFile').click()">
+                  <span class="material-icons-round">upload</span> Choose File
+                </button>
+                <button class="btn-ph" style="border-color:var(--red);color:var(--red);"
+                  onclick="if(confirm('Are you sure you want to restore? This will overwrite all current data.')) showToast('Restore initiated.','success')">
+                  <span class="material-icons-round">restore</span> Restore
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOGOUT -->
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">logout</span></div>
+            <div>
+              <div class="settings-section-title">Session</div>
+              <div class="settings-section-desc">Sign out of the admin dashboard.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Sign Out</div>
+                <div class="settings-row-hint">End your current admin session. You will be redirected to the login page.</div>
+              </div>
+              <div class="settings-row-control">
+                <button class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="openLogoutModal()">
+                  <span class="material-icons-round">logout</span> Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-system-settings -->
+
+
+      <!-- ══════════════════════════════════════════════════════════════
+           PANEL 5: NOTIFICATIONS
+      ══════════════════════════════════════════════════════════════ -->
+      <div class="settings-panel" id="panel-notifications">
+
+        <div class="settings-section">
+          <div class="settings-section-head">
+            <div class="settings-section-icon"><span class="material-icons-round">notifications</span></div>
+            <div>
+              <div class="settings-section-title">Notification Settings</div>
+              <div class="settings-section-desc">Configure alerts and notification preferences.</div>
+            </div>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">New Feedback Notifications</div>
+                <div class="settings-row-hint">Receive an in-dashboard notification every time a new feedback is submitted.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Negative Feedback Alert</div>
+                <div class="settings-row-hint">Get an immediate alert when an "Unsatisfactory" response is submitted.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Daily Summary Email</div>
+                <div class="settings-row-hint">Receive a daily email summarizing the day's feedback count and satisfaction rate.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch"><input type="checkbox"><span class="toggle-track"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Weekly Report Email</div>
+                <div class="settings-row-hint">Receive a weekly PDF report to your email address.</div>
+              </div>
+              <div class="settings-row-control">
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+              </div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Notification Email Address</div>
+                <div class="settings-row-hint">Email address where alerts and reports are sent.</div>
+              </div>
+              <div class="settings-row-control">
+                <input class="settings-input" type="email" value="{{ request.user.email|default:'' }}" placeholder="admin@philhealth.gov.ph" style="width:240px">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-save-bar">
+          <div class="settings-save-inner">
+            <span style="font-size:12px;color:var(--text-secondary)">Unsaved changes</span>
+            <button class="btn-ph btn-ph-primary" onclick="showToast('Notification settings saved successfully.','success')">
+              <span class="material-icons-round">save</span> Save Notifications
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /panel-notifications -->
+
+    </div><!-- /col-lg-9 -->
+  </div><!-- /row -->
+
+  <!-- Hidden logout form -->
+  <form method="post" action="{% url 'admin_logout' %}" id="settingsLogoutForm" style="display:none">{% csrf_token %}</form>
+
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+/* ── PANEL SWITCHING ── */
+function showPanel(id, btn) {
+  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── SURVEY TOGGLE ── */
+function onToggleSurvey(cb) {
+  document.getElementById('surveyOffMsg').style.display = cb.checked ? 'none' : 'flex';
+}
+
+/* ── ADD ADMIN USER ── */
+function addAdminUser() {
+  const u  = document.getElementById('newUsername').value.trim();
+  const p1 = document.getElementById('newPw').value;
+  const p2 = document.getElementById('newPw2').value;
+  if (!u) { showToast('Username is required.', 'error'); return; }
+  if (p1.length < 8) { showToast('Password must be at least 8 characters.', 'error'); return; }
+  if (p1 !== p2) { showToast('Passwords do not match.', 'error'); return; }
+  /* Submit to real view in actual integration: */
+  showToast(`User "${u}" created. Redirecting to Users page…`, 'success');
+  setTimeout(() => { window.location = "{% url 'users' %}"; }, 1800);
+}
+
+/* ── KEYWORD MANAGEMENT ── */
+function addKeyword(event, type) {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  addKeywordBtn(type);
+}
+function addKeywordBtn(type) {
+  const input = document.getElementById(type + 'KwInput');
+  const val   = input.value.trim();
+  if (!val) return;
+  const container = document.getElementById(type + 'Keywords');
+  const cls       = type === 'neg' ? 'keyword-tag neg' : 'keyword-tag';
+  const tag       = document.createElement('span');
+  tag.className   = cls;
+  tag.innerHTML   = `${escHtml(val)} <button class="keyword-tag-remove" onclick="removeKw(this,'${type}')">×</button>`;
+  container.appendChild(tag);
+  input.value = '';
+}
+function removeKw(btn) {
+  btn.closest('.keyword-tag').remove();
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── RESTORE FILE ── */
+function onRestoreFileSelected(input) {
+  if (input.files.length) {
+    showToast('File selected: ' + input.files[0].name + '. Press Restore to proceed.', 'success');
+  }
+}
+
+/* ── TOAST (reuse base layout mechanism) ── */
+function showToast(msg, type) {
+  const isError    = type === 'error';
+  const toastColor = isError ? 'var(--red)' : 'var(--g-primary)';
+  const icon       = isError ? 'error' : 'check_circle';
+  const div        = document.createElement('div');
+  div.className    = 'toast ph-toast fade align-items-center border-0';
+  div.setAttribute('role','alert');
+  div.setAttribute('data-bs-delay','4000');
+  div.style.setProperty('--toast-color', toastColor);
+  div.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-3 py-3"
+        style="color:var(--text-primary);font-size:13px;font-weight:600;">
+        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>
+        ${msg}
+      </div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" style="font-size:10px;"></button>
+    </div>
+    <div class="ph-toast-progress"></div>`;
+  document.getElementById('toastContainer').appendChild(div);
+  const t = new bootstrap.Toast(div);
+  div.addEventListener('hidden.bs.toast', () => div.remove());
+  t.show();
+}
+
+function pageInit() {}
+</script>
+{% endblock %}
