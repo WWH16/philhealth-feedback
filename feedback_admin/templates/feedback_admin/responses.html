@@ -6,7 +6,6 @@
 {% block nav_responses %}active{% endblock %}
 
 {% block extra_styles %}
-/* ── RESPONSES PAGE EXTRAS ───────────────────────────────────────────── */
 .expand-btn {
   background: none; border: none; cursor: pointer; padding: 4px;
   color: var(--text-muted); transition: color 120ms; line-height: 1;
@@ -49,11 +48,24 @@
 [data-theme="dark"] .bulk-bar { background: rgba(35,164,85,0.08); border-color: rgba(35,164,85,0.15); color: #5fcf8a; }
 .bulk-bar.visible { display: flex; }
 .bulk-bar .material-icons-round { font-size: 16px; }
+
+.status-select {
+  font-size: 11px; font-weight: 700; padding: 3px 7px;
+  border: 1.5px solid var(--border); background: var(--surface-page);
+  color: var(--text-secondary); cursor: pointer; font-family: var(--font);
+  border-radius: 0; outline: none; transition: border-color 120ms;
+}
+.status-select:focus { border-color: var(--g-primary); }
+.status-select.s-pending  { border-color: var(--gold);      color: #7a5500;       background: #fffbeb; }
+.status-select.s-reviewed { border-color: var(--g-primary); color: var(--g-forest); background: var(--g-xlight); }
+.status-select.s-resolved { border-color: #1d4ed8;          color: #1d4ed8;       background: #eff6ff; }
+[data-theme="dark"] .status-select.s-pending  { background: rgba(184,147,58,0.12); }
+[data-theme="dark"] .status-select.s-reviewed { background: rgba(35,164,85,0.12); }
+[data-theme="dark"] .status-select.s-resolved { background: rgba(59,130,246,0.12); }
 {% endblock %}
 
 {% block page_content %}
 
-  <!-- PAGE HEADER -->
   <div class="page-header">
     <div class="page-header-row">
       <div>
@@ -67,12 +79,11 @@
     </div>
   </div>
 
-  <!-- SUMMARY STRIP -->
   <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
       <div class="stat-card card-sat">
         <div class="stat-card-icon"><span class="material-icons-round" style="color:var(--g-primary);background:var(--g-xlight)">forum</span></div>
-        <div class="stat-value" id="totalVal">248</div>
+        <div class="stat-value" id="totalVal">{{ total }}</div>
         <div class="stat-label">Total</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">forum</span></div>
       </div>
@@ -80,7 +91,7 @@
     <div class="col-6 col-md-3">
       <div class="stat-card card-vsat">
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
-        <div class="stat-value">149</div>
+        <div class="stat-value">{{ very_satisfactory }}</div>
         <div class="stat-label">Very Satisfactory</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
       </div>
@@ -88,7 +99,7 @@
     <div class="col-6 col-md-3">
       <div class="stat-card card-neu">
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_neutral</span></div>
-        <div class="stat-value">64</div>
+        <div class="stat-value">{{ satisfactory }}</div>
         <div class="stat-label">Satisfactory</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_neutral</span></div>
       </div>
@@ -96,17 +107,15 @@
     <div class="col-6 col-md-3">
       <div class="stat-card card-neg">
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
-        <div class="stat-value">35</div>
+        <div class="stat-value">{{ unsatisfactory }}</div>
         <div class="stat-label">Unsatisfactory</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
       </div>
     </div>
   </div>
 
-  <!-- RESPONSES TABLE -->
   <div class="card-block">
 
-    <!-- TABLE CONTROLS -->
     <div class="table-controls">
       <div class="search-box">
         <span class="material-icons-round">search</span>
@@ -120,6 +129,18 @@
           <option value="Satisfactory">Satisfactory</option>
           <option value="Unsatisfactory">Unsatisfactory</option>
         </select>
+        <select class="btn-ph" id="sentimentFilter" onchange="applyFilters()" aria-label="Filter by sentiment" style="cursor:pointer">
+          <option value="">All Sentiments</option>
+          <option value="Positive">Positive</option>
+          <option value="Neutral">Neutral</option>
+          <option value="Negative">Negative</option>
+        </select>
+        <select class="btn-ph" id="statusFilter" onchange="applyFilters()" aria-label="Filter by status" style="cursor:pointer">
+          <option value="">All Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="Reviewed">Reviewed</option>
+          <option value="Resolved">Resolved</option>
+        </select>
         <select class="btn-ph" id="dateRangeFilter" onchange="applyFilters()" aria-label="Filter by date range" style="cursor:pointer">
           <option value="all">All Time</option>
           <option value="today">Today</option>
@@ -132,7 +153,6 @@
       </div>
     </div>
 
-    <!-- BULK ACTION BAR -->
     <div class="bulk-bar" id="bulkBar">
       <span class="material-icons-round">check_box</span>
       <span id="bulkCount">0 selected</span>
@@ -144,7 +164,6 @@
       </button>
     </div>
 
-    <!-- TABLE -->
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
       <table class="ph-table" id="responseTable" aria-label="All feedback responses">
         <thead>
@@ -158,6 +177,8 @@
             <th class="sort-th" onclick="sortTable('rating')" style="min-width:140px">
               Rating <span class="material-icons-round sort-icon" id="sort-rating">unfold_more</span>
             </th>
+            <th style="min-width:100px">Sentiment</th>
+            <th style="min-width:110px">Status</th>
             <th>Feedback / Comment</th>
             <th style="width:44px"></th>
           </tr>
@@ -166,7 +187,6 @@
       </table>
     </div>
 
-    <!-- PAGINATION -->
     <div class="pagination-row">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <span class="table-info" id="pageInfo">—</span>
@@ -186,38 +206,43 @@
 
 {% block page_scripts %}
 <script>
-/* ── DATA ── */
+const CSRF_TOKEN = '{{ csrf_token }}';
+
+/* ── DATA from Django context ── */
+/* When real model exists, replace ALL_DATA with entries serialized from the view:
+   const ALL_DATA = {{ entries_json|safe }};
+   For now, dummy data covers all 7 columns. */
 const ALL_DATA = [
-  { id:1,  date:'2026-06-11', time:'14:32', rating:'Very Satisfactory', comment:'Staff were very professional and accommodating. My concerns were addressed promptly.' },
-  { id:2,  date:'2026-06-11', time:'13:15', rating:'Very Satisfactory', comment:'Excellent service! The queue system was efficient and the staff were knowledgeable.' },
-  { id:3,  date:'2026-06-11', time:'12:48', rating:'Satisfactory',      comment:'Service was okay. The waiting time was a bit long but staff were helpful.' },
-  { id:4,  date:'2026-06-11', time:'11:30', rating:'Very Satisfactory', comment:'Very smooth transaction. The online appointment system works well.' },
-  { id:5,  date:'2026-06-11', time:'10:55', rating:'Unsatisfactory',    comment:'Waited over an hour for a simple inquiry. The waiting area was overcrowded.' },
-  { id:6,  date:'2026-06-10', time:'16:20', rating:'Very Satisfactory', comment:'Staff explained all requirements clearly. No issues at all.' },
-  { id:7,  date:'2026-06-10', time:'15:05', rating:'Satisfactory',      comment:'Good service overall. Could improve on signage for first-time visitors.' },
-  { id:8,  date:'2026-06-10', time:'14:40', rating:'Very Satisfactory', comment:'Fast and efficient. The new numbering system helped a lot.' },
-  { id:9,  date:'2026-06-10', time:'13:22', rating:'Unsatisfactory',    comment:'The staff was rude and dismissive when I asked about my claim status.' },
-  { id:10, date:'2026-06-10', time:'11:10', rating:'Very Satisfactory', comment:'' },
-  { id:11, date:'2026-06-09', time:'15:44', rating:'Satisfactory',      comment:'Acceptable service. The forms could be made available online to save time.' },
-  { id:12, date:'2026-06-09', time:'14:30', rating:'Very Satisfactory', comment:'Staff went above and beyond to help me with my documents.' },
-  { id:13, date:'2026-06-09', time:'13:05', rating:'Very Satisfactory', comment:'Very organized office. I was in and out in 20 minutes.' },
-  { id:14, date:'2026-06-09', time:'11:50', rating:'Satisfactory',      comment:'Average experience. Nothing exceptional, nothing terrible.' },
-  { id:15, date:'2026-06-09', time:'10:25', rating:'Unsatisfactory',    comment:'Air conditioning was not working properly. It was very uncomfortable.' },
-  { id:16, date:'2026-06-08', time:'16:10', rating:'Very Satisfactory', comment:'The staff member who assisted me was very patient and thorough.' },
-  { id:17, date:'2026-06-08', time:'15:00', rating:'Very Satisfactory', comment:'Excellent front-desk service. Thank you.' },
-  { id:18, date:'2026-06-08', time:'13:30', rating:'Satisfactory',      comment:'Decent service but the waiting area could use more chairs.' },
-  { id:19, date:'2026-06-08', time:'11:15', rating:'Very Satisfactory', comment:'Transaction completed on time. Highly recommend the online pre-registration.' },
-  { id:20, date:'2026-06-08', time:'10:00', rating:'Unsatisfactory',    comment:'My appointment was not honored. Had to wait two hours despite having a scheduled time.' },
-  { id:21, date:'2026-06-07', time:'14:55', rating:'Very Satisfactory', comment:'Very informative staff. They helped me understand my benefits.' },
-  { id:22, date:'2026-06-07', time:'13:40', rating:'Satisfactory',      comment:'Adequate service. Room for improvement in the processing speed.' },
-  { id:23, date:'2026-06-06', time:'16:30', rating:'Very Satisfactory', comment:'Quick and hassle-free. I was pleasantly surprised.' },
-  { id:24, date:'2026-06-06', time:'15:20', rating:'Unsatisfactory',    comment:'Was given incorrect information about requirements. Wasted a trip.' },
-  { id:25, date:'2026-06-06', time:'11:45', rating:'Very Satisfactory', comment:'' },
-  { id:26, date:'2026-06-05', time:'14:10', rating:'Satisfactory',      comment:'The staff were polite but the process took longer than expected.' },
-  { id:27, date:'2026-06-05', time:'11:00', rating:'Very Satisfactory', comment:'Very impressed with the cleanliness of the office.' },
-  { id:28, date:'2026-06-04', time:'15:30', rating:'Unsatisfactory',    comment:'Had to visit three times before my concern was resolved.' },
-  { id:29, date:'2026-06-04', time:'10:20', rating:'Very Satisfactory', comment:'Staff remembered me from my last visit. Very personal service.' },
-  { id:30, date:'2026-06-03', time:'13:50', rating:'Satisfactory',      comment:'Good but the online portal sometimes has errors.' },
+  { id:1,  date:'2026-06-11', time:'14:32', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Staff were very professional and accommodating. My concerns were addressed promptly.' },
+  { id:2,  date:'2026-06-11', time:'13:15', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Excellent service! The queue system was efficient and the staff were knowledgeable.' },
+  { id:3,  date:'2026-06-11', time:'12:48', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Service was okay. The waiting time was a bit long but staff were helpful.' },
+  { id:4,  date:'2026-06-11', time:'11:30', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Very smooth transaction. The online appointment system works well.' },
+  { id:5,  date:'2026-06-11', time:'10:55', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'Waited over an hour for a simple inquiry. The waiting area was overcrowded.' },
+  { id:6,  date:'2026-06-10', time:'16:20', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Staff explained all requirements clearly. No issues at all.' },
+  { id:7,  date:'2026-06-10', time:'15:05', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Good service overall. Could improve on signage for first-time visitors.' },
+  { id:8,  date:'2026-06-10', time:'14:40', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Fast and efficient. The new numbering system helped a lot.' },
+  { id:9,  date:'2026-06-10', time:'13:22', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'The staff was rude and dismissive when I asked about my claim status.' },
+  { id:10, date:'2026-06-10', time:'11:10', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'' },
+  { id:11, date:'2026-06-09', time:'15:44', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Acceptable service. The forms could be made available online to save time.' },
+  { id:12, date:'2026-06-09', time:'14:30', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Staff went above and beyond to help me with my documents.' },
+  { id:13, date:'2026-06-09', time:'13:05', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Very organized office. I was in and out in 20 minutes.' },
+  { id:14, date:'2026-06-09', time:'11:50', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Average experience. Nothing exceptional, nothing terrible.' },
+  { id:15, date:'2026-06-09', time:'10:25', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'Air conditioning was not working properly. It was very uncomfortable.' },
+  { id:16, date:'2026-06-08', time:'16:10', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'The staff member who assisted me was very patient and thorough.' },
+  { id:17, date:'2026-06-08', time:'15:00', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Excellent front-desk service. Thank you.' },
+  { id:18, date:'2026-06-08', time:'13:30', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Decent service but the waiting area could use more chairs.' },
+  { id:19, date:'2026-06-08', time:'11:15', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Transaction completed on time. Highly recommend the online pre-registration.' },
+  { id:20, date:'2026-06-08', time:'10:00', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'My appointment was not honored. Had to wait two hours despite having a scheduled time.' },
+  { id:21, date:'2026-06-07', time:'14:55', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Very informative staff. They helped me understand my benefits.' },
+  { id:22, date:'2026-06-07', time:'13:40', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Adequate service. Room for improvement in the processing speed.' },
+  { id:23, date:'2026-06-06', time:'16:30', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Quick and hassle-free. I was pleasantly surprised.' },
+  { id:24, date:'2026-06-06', time:'15:20', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'Was given incorrect information about requirements. Wasted a trip.' },
+  { id:25, date:'2026-06-06', time:'11:45', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'' },
+  { id:26, date:'2026-06-05', time:'14:10', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'The staff were polite but the process took longer than expected.' },
+  { id:27, date:'2026-06-05', time:'11:00', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Very impressed with the cleanliness of the office.' },
+  { id:28, date:'2026-06-04', time:'15:30', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'Had to visit three times before my concern was resolved.' },
+  { id:29, date:'2026-06-04', time:'10:20', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Staff remembered me from my last visit. Very personal service.' },
+  { id:30, date:'2026-06-03', time:'13:50', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Good but the online portal sometimes has errors.' },
 ];
 
 const RATING_CONFIG = {
@@ -226,63 +251,69 @@ const RATING_CONFIG = {
   'Unsatisfactory':    { cls:'chip-neg', icon:'sentiment_dissatisfied' },
 };
 
+const SENTIMENT_CONFIG = {
+  'Positive': { cls:'chip-pos', icon:'thumb_up' },
+  'Neutral':  { cls:'chip-neu', icon:'remove'   },
+  'Negative': { cls:'chip-neg', icon:'thumb_down' },
+};
+
+const STATUS_CLS = {
+  'Pending':  's-pending',
+  'Reviewed': 's-reviewed',
+  'Resolved': 's-resolved',
+};
+
 /* ── STATE ── */
-let filteredRows   = [...ALL_DATA];
-let currentPage    = 1;
-let pageSize       = 10;
-let sortField      = 'date';
-let sortDir        = -1;
-let selectedIds    = new Set();
-let expandedIds    = new Set();
+let filteredRows    = [...ALL_DATA];
+let currentPage     = 1;
+let pageSize        = 10;
+let sortField       = 'date';
+let sortDir         = -1;
+let selectedIds     = new Set();
+let expandedIds     = new Set();
 let activeDateRange = 'all';
 
 /* ── UTILS ── */
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 function dateOf(r) { return new Date(r.date + 'T' + r.time); }
 
 function inDateRange(r) {
-  const d   = dateOf(r);
-  const now = new Date();
-  if (activeDateRange === 'today') {
-    return d.toDateString() === now.toDateString();
-  }
-  if (activeDateRange === 'week') {
-    const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
-    return d >= weekAgo;
-  }
-  if (activeDateRange === 'month') {
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }
+  const d = dateOf(r), now = new Date();
+  if (activeDateRange === 'today') return d.toDateString() === now.toDateString();
+  if (activeDateRange === 'week')  { const w = new Date(now); w.setDate(now.getDate()-7); return d >= w; }
+  if (activeDateRange === 'month') return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   return true;
 }
 
 /* ── FILTER & SORT ── */
 function applyFilters() {
-  const q      = document.getElementById('tableSearch').value.toLowerCase();
-  const rating = document.getElementById('ratingFilter').value;
+  const q         = document.getElementById('tableSearch').value.toLowerCase();
+  const rating    = document.getElementById('ratingFilter').value;
+  const sentiment = document.getElementById('sentimentFilter').value;
+  const status    = document.getElementById('statusFilter').value;
+  activeDateRange = document.getElementById('dateRangeFilter').value;
+
   filteredRows = ALL_DATA.filter(r => {
-    const matchQ = !q || r.comment.toLowerCase().includes(q) || r.rating.toLowerCase().includes(q) || r.date.includes(q);
-    const matchR = !rating || r.rating === rating;
-    return matchQ && matchR && inDateRange(r);
+    const matchQ    = !q || (r.comment||'').toLowerCase().includes(q)
+                         || r.rating.toLowerCase().includes(q)
+                         || r.date.includes(q)
+                         || (r.sentiment||'').toLowerCase().includes(q);
+    const matchR    = !rating    || r.rating    === rating;
+    const matchS    = !sentiment || r.sentiment === sentiment;
+    const matchSt   = !status    || r.status    === status;
+    return matchQ && matchR && matchS && matchSt && inDateRange(r);
   });
   doSort();
   currentPage = 1;
   renderTable();
 }
 
-function setDateFilter(btn, range) {
-  activeDateRange = range;
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('dateRangeFilter').value = range;
-  applyFilters();
-}
-
 function doSort() {
   filteredRows.sort((a, b) => {
     if (sortField === 'date') return (dateOf(a) - dateOf(b)) * sortDir;
-    return a[sortField].localeCompare(b[sortField]) * sortDir;
+    return (a[sortField]||'').localeCompare(b[sortField]||'') * sortDir;
   });
 }
 
@@ -294,26 +325,37 @@ function sortTable(field) {
     el.textContent = f === field ? (sortDir === -1 ? 'arrow_downward' : 'arrow_upward') : 'unfold_more';
     el.classList.toggle('active', f === field);
   });
-  doSort();
-  currentPage = 1;
-  renderTable();
+  doSort(); currentPage = 1; renderTable();
 }
 
-function changePageSize(val) {
-  pageSize = parseInt(val); currentPage = 1; renderTable();
+function changePageSize(val) { pageSize = parseInt(val); currentPage = 1; renderTable(); }
+
+/* ── STATUS INLINE UPDATE ── */
+function updateStatus(id, newStatus) {
+  /* When real model exists, POST to a status-update endpoint:
+     fetch(`/dashboard/responses/${id}/status/`, {
+       method:'POST',
+       headers:{'X-CSRFToken': CSRF_TOKEN, 'Content-Type':'application/json'},
+       body: JSON.stringify({status: newStatus})
+     });
+  */
+  const row = ALL_DATA.find(r => r.id === id);
+  if (row) row.status = newStatus;
+  /* Re-style the select without a full re-render */
+  const sel = document.getElementById('status-sel-' + id);
+  if (sel) {
+    sel.className = 'status-select s-' + newStatus.toLowerCase();
+  }
 }
 
 /* ── SELECTION ── */
 function toggleSelect(id, checked) {
   if (checked) selectedIds.add(id); else selectedIds.delete(id);
-  updateBulkBar();
-  updateSelectAll();
+  updateBulkBar(); updateSelectAll();
 }
 function toggleSelectAll(cb) {
-  const page  = getPageRows();
-  page.forEach(r => { if (cb.checked) selectedIds.add(r.id); else selectedIds.delete(r.id); });
-  updateBulkBar();
-  renderTable();
+  getPageRows().forEach(r => { if (cb.checked) selectedIds.add(r.id); else selectedIds.delete(r.id); });
+  updateBulkBar(); renderTable();
 }
 function clearSelection() {
   selectedIds.clear(); updateBulkBar();
@@ -322,16 +364,15 @@ function clearSelection() {
 }
 function updateBulkBar() {
   const bar = document.getElementById('bulkBar');
-  if (selectedIds.size > 0) { bar.classList.add('visible'); document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`; }
-  else { bar.classList.remove('visible'); }
+  bar.classList.toggle('visible', selectedIds.size > 0);
+  if (selectedIds.size > 0) document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
 }
 function updateSelectAll() {
-  const page = getPageRows();
-  const cb   = document.getElementById('selectAll');
-  if (page.length === 0) { cb.checked = false; cb.indeterminate = false; return; }
-  const selCount = page.filter(r => selectedIds.has(r.id)).length;
-  cb.indeterminate = selCount > 0 && selCount < page.length;
-  cb.checked       = selCount === page.length;
+  const page = getPageRows(), cb = document.getElementById('selectAll');
+  if (!page.length) { cb.checked = false; cb.indeterminate = false; return; }
+  const n = page.filter(r => selectedIds.has(r.id)).length;
+  cb.indeterminate = n > 0 && n < page.length;
+  cb.checked       = n === page.length;
 }
 
 /* ── EXPAND ── */
@@ -347,21 +388,30 @@ function getPageRows() {
 }
 
 function renderTable() {
-  const body    = document.getElementById('tableBody');
-  const start   = (currentPage - 1) * pageSize;
-  const end     = Math.min(start + pageSize, filteredRows.length);
-  const rows    = filteredRows.slice(start, end);
+  const body  = document.getElementById('tableBody');
+  const start = (currentPage - 1) * pageSize;
+  const end   = Math.min(start + pageSize, filteredRows.length);
+  const rows  = filteredRows.slice(start, end);
 
-  if (rows.length === 0) {
-    body.innerHTML = `<tr><td colspan="5"><div class="empty-state"><span class="material-icons-round">inbox</span><div class="empty-state-title">No responses found</div><div class="empty-state-sub">Try adjusting your search or filters.</div></div></td></tr>`;
+  const COLS = 7; /* checkbox + date + rating + sentiment + status + comment + expand */
+
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="${COLS}">
+      <div class="empty-state">
+        <span class="material-icons-round">inbox</span>
+        <div class="empty-state-title">No responses found</div>
+        <div class="empty-state-sub">Try adjusting your search or filters.</div>
+      </div></td></tr>`;
   } else {
     body.innerHTML = rows.flatMap(r => {
-      const cfg       = RATING_CONFIG[r.rating] || RATING_CONFIG['Satisfactory'];
+      const rCfg      = RATING_CONFIG[r.rating]    || RATING_CONFIG['Satisfactory'];
+      const sCfg      = SENTIMENT_CONFIG[r.sentiment] || SENTIMENT_CONFIG['Neutral'];
+      const stCls     = STATUS_CLS[r.status]       || 's-pending';
       const dateStr   = new Date(r.date).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
       const checked   = selectedIds.has(r.id) ? 'checked' : '';
       const expanded  = expandedIds.has(r.id);
       const hasComment = !!r.comment;
-      const preview   = r.comment
+      const preview   = hasComment
         ? `<div class="comment-text">${escHtml(r.comment)}</div>`
         : `<span style="color:var(--text-muted);font-size:11px;font-style:italic">No comment</span>`;
 
@@ -374,25 +424,51 @@ function renderTable() {
           <div class="datetime-date">${dateStr}</div>
           <div class="datetime-time">${r.time}</div>
         </td>
-        <td><span class="rating-chip ${cfg.cls}"><span class="material-icons-round">${cfg.icon}</span>${r.rating}</span></td>
+        <td>
+          <span class="rating-chip ${rCfg.cls}">
+            <span class="material-icons-round">${rCfg.icon}</span>${r.rating}
+          </span>
+        </td>
+        <td>
+          <span class="rating-chip ${sCfg.cls}">
+            <span class="material-icons-round">${sCfg.icon}</span>${r.sentiment || '—'}
+          </span>
+        </td>
+        <td>
+          <select id="status-sel-${r.id}"
+            class="status-select ${stCls}"
+            onchange="updateStatus(${r.id}, this.value)"
+            aria-label="Status for response ${r.id}">
+            <option value="Pending"  ${r.status==='Pending'  ? 'selected':''}>Pending</option>
+            <option value="Reviewed" ${r.status==='Reviewed' ? 'selected':''}>Reviewed</option>
+            <option value="Resolved" ${r.status==='Resolved' ? 'selected':''}>Resolved</option>
+          </select>
+        </td>
         <td class="comment-cell">${preview}</td>
         <td style="padding:13px 12px 13px 4px;text-align:center;">
-          ${hasComment ? `<button class="expand-btn" onclick="toggleExpand(${r.id})" title="${expanded ? 'Collapse' : 'Expand'}" aria-expanded="${expanded}"><span class="material-icons-round">${expanded ? 'expand_less' : 'expand_more'}</span></button>` : ''}
+          ${hasComment
+            ? `<button class="expand-btn" onclick="toggleExpand(${r.id})"
+                title="${expanded ? 'Collapse' : 'Expand'}" aria-expanded="${expanded}">
+                <span class="material-icons-round">${expanded ? 'expand_less' : 'expand_more'}</span>
+              </button>`
+            : ''}
         </td>
       </tr>`;
 
-      const detailRow = expanded && hasComment ? `<tr class="detail-row" data-detail="${r.id}">
-        <td colspan="5">
-          <div class="detail-inner">${escHtml(r.comment)}</div>
-        </td>
-      </tr>` : '';
+      const detailRow = expanded && hasComment
+        ? `<tr class="detail-row" data-detail="${r.id}">
+            <td colspan="${COLS}">
+              <div class="detail-inner">${escHtml(r.comment)}</div>
+            </td>
+          </tr>`
+        : '';
 
       return [mainRow, detailRow];
     }).join('');
   }
 
   document.getElementById('tableInfo').textContent =
-    filteredRows.length === 0 ? 'No results' : `Showing ${start + 1}–${end} of ${filteredRows.length}`;
+    filteredRows.length === 0 ? 'No results' : `Showing ${start+1}–${end} of ${filteredRows.length}`;
 
   updateSelectAll();
   renderPagination();
@@ -401,55 +477,62 @@ function renderTable() {
 function renderPagination() {
   const total     = Math.ceil(filteredRows.length / pageSize);
   const container = document.getElementById('paginationBtns');
-  document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.max(total, 1)}`;
+  document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.max(total,1)}`;
 
-  let html = `<button class="pg-btn" onclick="goPage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''} aria-label="Previous page">
+  let html = `<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage<=1?'disabled':''} aria-label="Previous page">
     <span class="material-icons-round" style="font-size:16px">chevron_left</span></button>`;
 
   const pages = [];
-  if (total <= 7) { for (let i = 1; i <= total; i++) pages.push(i); }
+  if (total <= 7) { for (let i=1;i<=total;i++) pages.push(i); }
   else {
     pages.push(1);
     if (currentPage > 3) pages.push('…');
-    for (let i = Math.max(2, currentPage - 1); i <= Math.min(total - 1, currentPage + 1); i++) pages.push(i);
-    if (currentPage < total - 2) pages.push('…');
+    for (let i=Math.max(2,currentPage-1); i<=Math.min(total-1,currentPage+1); i++) pages.push(i);
+    if (currentPage < total-2) pages.push('…');
     pages.push(total);
   }
   pages.forEach(p => {
-    html += p === '…'
+    html += p==='…'
       ? `<button class="pg-btn" disabled style="cursor:default">…</button>`
-      : `<button class="pg-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})" aria-label="Page ${p}">${p}</button>`;
+      : `<button class="pg-btn ${p===currentPage?'active':''}" onclick="goPage(${p})" aria-label="Page ${p}">${p}</button>`;
   });
-
-  html += `<button class="pg-btn" onclick="goPage(${currentPage + 1})" ${currentPage >= total ? 'disabled' : ''} aria-label="Next page">
+  html += `<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage>=total?'disabled':''} aria-label="Next page">
     <span class="material-icons-round" style="font-size:16px">chevron_right</span></button>`;
-
   container.innerHTML = html;
 }
 
 function goPage(p) {
   const total = Math.ceil(filteredRows.length / pageSize);
-  if (p < 1 || p > total) return;
-  currentPage = p;
-  renderTable();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (p<1||p>total) return;
+  currentPage = p; renderTable();
+  window.scrollTo({ top:0, behavior:'smooth' });
 }
 
 /* ── EXPORT ── */
-function exportCSV(rows) {
-  const data = rows || filteredRows;
-  const header = ['ID', 'Date', 'Time', 'Rating', 'Comment'];
-  const csvRows = [header, ...data.map(r => [r.id, r.date, r.time, r.rating, `"${r.comment.replace(/"/g,'""')}"`])];
-  const blob = new Blob([csvRows.map(r => r.join(',')).join('\n')], { type:'text/csv' });
-  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'philhealth-responses.csv' });
-  a.click();
+function buildCSVRows(data) {
+  const header = ['ID','Date','Time','Rating','Sentiment','Status','Comment'];
+  const body   = data.map(r => [
+    r.id, r.date, r.time, r.rating,
+    r.sentiment || '',
+    r.status    || '',
+    `"${(r.comment||'').replace(/"/g,'""')}"`
+  ]);
+  return [header, ...body].map(r => r.join(',')).join('\n');
 }
-function exportSelected() { exportCSV(ALL_DATA.filter(r => selectedIds.has(r.id))); }
+function exportCSV() {
+  const blob = new Blob([buildCSVRows(filteredRows)], { type:'text/csv' });
+  Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob), download: 'philhealth-responses.csv'
+  }).click();
+}
+function exportSelected() {
+  const blob = new Blob([buildCSVRows(ALL_DATA.filter(r => selectedIds.has(r.id)))], { type:'text/csv' });
+  Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob), download: 'philhealth-responses-selected.csv'
+  }).click();
+}
 
 /* ── INIT ── */
-function pageInit() {
-  doSort();
-  renderTable();
-}
+function pageInit() { doSort(); renderTable(); }
 </script>
 {% endblock %}
