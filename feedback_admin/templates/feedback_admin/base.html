@@ -367,6 +367,30 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); }
 
+/* ── TOASTS ── */
+@keyframes toast-progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+.ph-toast {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--border) !important;
+  border-left: 4px solid var(--toast-color) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12) !important;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 !important;
+}
+.ph-toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--toast-color);
+  animation: toast-progress 5000ms linear forwards;
+  opacity: 0.4;
+}
+
 /* ── RESPONSIVE ───────────────────────────────────────────────────────── */
 @media (max-width: 991px) {
   .sidebar { transform: translateX(-100%); width: var(--sidebar-w) !important; }
@@ -460,7 +484,7 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
         <span class="material-icons-round">chat_bubble_outline</span>
         <span class="nav-item-label">Feedback</span>
       </a>
-      <a href="#" class="nav-item {% block nav_users %}{% endblock %}">
+      <a href="{% url 'users' %}" class="nav-item {% block nav_users %}{% endblock %}">
         <span class="material-icons-round">manage_accounts</span>
         <span class="nav-item-label">Users</span>
       </a>
@@ -517,10 +541,61 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
     </div>
   </main>
 
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050; margin-top: 60px;">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="toast ph-toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000"
+             style="--toast-color: {% if message.tags == 'success' %}var(--g-primary){% elif message.tags == 'error' %}var(--red){% elif message.tags == 'warning' %}var(--gold){% else %}var(--ink5){% endif %};">
+          <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-3 py-3" style="color: var(--text-primary); font-size: 13px; font-weight: 600;">
+              <span class="material-icons-round" style="font-size: 20px; color: var(--toast-color);">
+                {% if message.tags == 'success' %}check_circle
+                {% elif message.tags == 'error' %}error
+                {% elif message.tags == 'warning' %}warning
+                {% else %}info{% endif %}
+              </span>
+              {{ message }}
+            </div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size: 10px;"></button>
+          </div>
+          <div class="ph-toast-progress"></div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+/* ── TOASTS ── */
+function adjustToastPosition() {
+  const container = document.getElementById('toastContainer');
+  if (window.innerWidth < 576) {
+    container.classList.remove('top-0', 'end-0');
+    container.classList.add('bottom-0', 'start-50', 'translate-middle-x');
+    container.style.marginTop = '0';
+    container.style.marginBottom = '20px';
+  } else {
+    container.classList.add('top-0', 'end-0');
+    container.classList.remove('bottom-0', 'start-50', 'translate-middle-x');
+    container.style.marginTop = '60px';
+    container.style.marginBottom = '0';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  adjustToastPosition();
+  window.addEventListener('resize', adjustToastPosition);
+  
+  const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+  toastElList.map(function (toastEl) {
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+  });
+});
+
 /* ── SIDEBAR ── */
 const sidebar      = document.getElementById('sidebar');
 const mainContent  = document.getElementById('mainContent');

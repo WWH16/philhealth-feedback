@@ -1,0 +1,863 @@
+{% extends 'feedback_admin/base.html' %}
+{% load static %}
+
+{% block title %}User Management — PhilHealth Cauayan City{% endblock %}
+
+{% block nav_users %}active{% endblock %}
+
+{% block extra_styles %}
+.tab-bar {
+  display: flex; gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 24px;
+}
+.tab-btn {
+  padding: 10px 20px; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  border: none; border-bottom: 2px solid transparent;
+  background: transparent; color: var(--text-muted);
+  cursor: pointer; font-family: var(--font);
+  margin-bottom: -2px; transition: color 120ms, border-color 120ms;
+  display: flex; align-items: center; gap: 7px;
+}
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--g-primary); border-bottom-color: var(--g-primary); }
+.tab-btn .material-icons-round { font-size: 16px; }
+.tab-count {
+  font-size: 9px; font-weight: 700; padding: 2px 6px;
+  background: var(--border); color: var(--text-muted); font-family: var(--mono);
+}
+.tab-btn.active .tab-count { background: var(--g-xlight); color: var(--g-forest); }
+
+.user-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; font-family: var(--mono); flex-shrink: 0;
+}
+.avatar-superuser { background: var(--g-xlight); color: var(--g-forest); border: 1.5px solid var(--g-light); }
+.avatar-staff     { background: #fff8e6; color: #7a5500; border: 1.5px solid #eed89a; }
+.avatar-user      { background: var(--ink8); color: var(--ink3); border: 1.5px solid var(--border); }
+[data-theme="dark"] .avatar-superuser { background: rgba(35,164,85,0.12); border-color: rgba(35,164,85,0.25); }
+[data-theme="dark"] .avatar-staff     { background: rgba(184,147,58,0.12); border-color: rgba(184,147,58,0.25); }
+[data-theme="dark"] .avatar-user      { background: rgba(255,255,255,0.06); border-color: var(--border); }
+
+.status-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; padding: 3px 7px; white-space: nowrap;
+}
+.status-chip .material-icons-round { font-size: 11px; }
+.chip-active   { background: var(--g-xlight); color: var(--g-forest); }
+.chip-inactive { background: var(--ink8); color: var(--ink4); }
+.chip-super    { background: #fffbe6; color: #7a5500; border: 1px solid #f5e4a0; }
+.chip-staff    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+[data-theme="dark"] .chip-active   { background: rgba(35,164,85,0.12); color: #5fcf8a; }
+[data-theme="dark"] .chip-inactive { background: rgba(255,255,255,0.05); color: var(--ink5); }
+[data-theme="dark"] .chip-super    { background: rgba(184,147,58,0.12); color: #d4a840; border-color: rgba(184,147,58,0.25); }
+[data-theme="dark"] .chip-staff    { background: rgba(59,130,246,0.12); color: #93c5fd; border-color: rgba(59,130,246,0.25); }
+
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 300;
+  background: rgba(10,26,4,0.5); backdrop-filter: blur(3px);
+  align-items: flex-start; justify-content: center; padding: 40px 16px;
+  overflow-y: auto;
+}
+.modal-backdrop.open { display: flex; }
+.modal-card {
+  background: var(--surface-card); border: 1px solid var(--border);
+  border-top: 3px solid var(--g-primary);
+  width: 100%; max-width: 640px; flex-shrink: 0; position: relative;
+}
+.modal-head {
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.modal-title {
+  font-size: 13px; font-weight: 800; color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+}
+.modal-title .material-icons-round { font-size: 18px; color: var(--g-primary); }
+.modal-close {
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); background: transparent; color: var(--text-muted);
+  cursor: pointer; transition: all 120ms;
+}
+.modal-close:hover { border-color: var(--red); color: var(--red); }
+.modal-close .material-icons-round { font-size: 16px; }
+.modal-body { padding: 20px 24px; max-height: 72vh; overflow-y: auto; }
+.modal-body::-webkit-scrollbar { width: 4px; }
+.modal-body::-webkit-scrollbar-thumb { background: var(--border); }
+.modal-footer {
+  padding: 16px 24px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+}
+
+.form-section { margin-bottom: 24px; }
+.form-section-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-muted); padding-bottom: 10px; margin-bottom: 14px;
+  border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
+}
+.form-section-label .material-icons-round { font-size: 14px; color: var(--g-primary); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-row.full { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
+.form-label .req { color: var(--red); margin-left: 2px; }
+.form-input {
+  height: 36px; padding: 0 12px; font-size: 13px; font-family: var(--font);
+  border: 1.5px solid var(--border); background: var(--surface-page);
+  color: var(--text-primary); outline: none; border-radius: 0;
+  transition: border-color 120ms;
+}
+.form-input:focus { border-color: var(--g-primary); }
+.form-hint { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+
+.perm-grid { display: flex; flex-direction: column; gap: 5px; max-height: 180px; overflow-y: auto; padding-right: 4px; }
+.perm-grid::-webkit-scrollbar { width: 4px; }
+.perm-grid::-webkit-scrollbar-thumb { background: var(--border); }
+.perm-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px;
+  border: 1px solid var(--border); background: var(--surface-page); cursor: pointer;
+  transition: border-color 120ms, background 120ms;
+}
+.perm-item:hover { border-color: var(--g-primary); }
+.perm-item.checked { border-color: var(--g-primary); background: var(--g-xlight); }
+[data-theme="dark"] .perm-item.checked { background: rgba(35,164,85,0.08); }
+.perm-item input[type="checkbox"] { cursor: pointer; accent-color: var(--g-primary); flex-shrink: 0; margin-top: 2px; }
+.perm-item-label { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.perm-item-module { font-size: 10px; color: var(--text-muted); font-family: var(--mono); }
+
+@media (max-width: 575px) {
+  .form-row { grid-template-columns: 1fr; gap: 10px; }
+  .modal-backdrop { padding: 0; align-items: flex-end; }
+  .modal-card {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    border-top: 4px solid var(--g-primary);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+  }
+  .modal-body { max-height: 75vh; padding: 20px 20px 30px; }
+  .modal-head { padding: 16px 20px; }
+  .modal-footer {
+    padding: 16px 20px 24px;
+    background: var(--surface-card);
+    position: sticky; bottom: 0; z-index: 10;
+    border-top: 1px solid var(--border);
+  }
+  .tab-btn { padding: 10px 12px; font-size: 10px; }
+  .form-section-label { font-size: 8px; }
+}
+{% endblock %}
+
+{% block page_content %}
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-row">
+      <div>
+        <div class="page-eyebrow">
+          <span class="material-icons-round">manage_accounts</span>
+          Authentication &amp; Authorization
+        </div>
+        <h1 class="page-title">User Management</h1>
+        <p class="page-subtitle">Manage admin users, permissions, and groups.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="date-badge">
+          <span class="material-icons-round">today</span>
+          <span id="currentDate">—</span>
+        </div>
+        <button class="btn-ph btn-ph-primary" onclick="openUserModal()">
+          <span class="material-icons-round">person_add</span> Add User
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card card-sat">
+        <div class="stat-card-icon"><span class="material-icons-round" style="color:var(--g-primary);background:var(--g-xlight)">people</span></div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-label">Total Users</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">people</span></div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card card-vsat">
+        <div class="stat-card-icon"><span class="material-icons-round">verified_user</span></div>
+        <div class="stat-value">{{ active_users }}</div>
+        <div class="stat-label">Active</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">verified_user</span></div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card card-neu">
+        <div class="stat-card-icon"><span class="material-icons-round">admin_panel_settings</span></div>
+        <div class="stat-value">{{ staff_users }}</div>
+        <div class="stat-label">Staff / Admin</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">admin_panel_settings</span></div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card card-sat" style="border-top-color:var(--gold)">
+        <div class="stat-card-icon" style="background:#fef9ee"><span class="material-icons-round" style="color:var(--gold)">groups</span></div>
+        <div class="stat-value">{{ total_groups }}</div>
+        <div class="stat-label">Groups</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">groups</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('users', this)">
+      <span class="material-icons-round">person</span>
+      Users
+      <span class="tab-count">{{ total_users }}</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('groups', this)">
+      <span class="material-icons-round">groups</span>
+      Groups
+      <span class="tab-count">{{ total_groups }}</span>
+    </button>
+  </div>
+
+  <!-- ── USERS TAB ── -->
+  <div id="panel-users">
+    <div class="card-block">
+      <div class="table-controls">
+        <div class="search-box">
+          <span class="material-icons-round">search</span>
+          <input type="text" id="userSearch" placeholder="Search username or email…" oninput="filterUsers()" aria-label="Search users">
+        </div>
+        <div class="table-controls-right">
+          <select class="btn-ph" id="roleFilter" onchange="filterUsers()" style="cursor:pointer">
+            <option value="">All Roles</option>
+            <option value="superuser">Superuser</option>
+            <option value="staff">Staff</option>
+            <option value="user">Regular</option>
+          </select>
+          <select class="btn-ph" id="statusFilter" onchange="filterUsers()" style="cursor:pointer">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <span class="table-info" id="userTableInfo">—</span>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table class="ph-table" aria-label="Admin users">
+          <thead>
+            <tr>
+              <th style="min-width:190px;">Username</th>
+              <th style="min-width:210px;">Email Address</th>
+              <th style="min-width:130px;">Full Name</th>
+              <th style="min-width:100px;">Role</th>
+              <th style="min-width:90px;">Status</th>
+              <th style="min-width:130px;">Last Login</th>
+              <th style="min-width:110px;">Date Joined</th>
+              <th style="width:90px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            {% for u in users %}
+            <tr class="user-row"
+              data-username="{{ u.username|lower }}"
+              data-email="{{ u.email|lower }}"
+              data-fullname="{{ u.get_full_name|lower }}"
+              data-role="{% if u.is_superuser %}superuser{% elif u.is_staff %}staff{% else %}user{% endif %}"
+              data-status="{% if u.is_active %}active{% else %}inactive{% endif %}">
+              <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div class="user-avatar {% if u.is_superuser %}avatar-superuser{% elif u.is_staff %}avatar-staff{% else %}avatar-user{% endif %}">
+                    {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}{% if not u.first_name and not u.last_name %}{{ u.username|slice:":2"|upper }}{% endif %}
+                  </div>
+                  <div>
+                    <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ u.username }}</div>
+                    {% if u.groups.all %}
+                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--mono)">
+                      {% for g in u.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td><span style="font-size:12px;color:var(--text-secondary)">{{ u.email|default:"—" }}</span></td>
+              <td><span style="font-size:12px;font-weight:600;color:var(--text-primary)">{{ u.get_full_name|default:"—" }}</span></td>
+              <td>
+                {% if u.is_superuser %}
+                  <span class="status-chip chip-super"><span class="material-icons-round">verified</span>Superuser</span>
+                {% elif u.is_staff %}
+                  <span class="status-chip chip-staff"><span class="material-icons-round">admin_panel_settings</span>Staff</span>
+                {% else %}
+                  <span class="status-chip" style="background:var(--surface-page);border:1px solid var(--border);color:var(--text-muted)"><span class="material-icons-round">person</span>Regular</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if u.is_active %}
+                  <span class="status-chip chip-active"><span class="material-icons-round">check_circle</span>Active</span>
+                {% else %}
+                  <span class="status-chip chip-inactive"><span class="material-icons-round">cancel</span>Inactive</span>
+                {% endif %}
+              </td>
+              <td class="datetime-cell">
+                {% if u.last_login %}
+                  <div class="datetime-date">{{ u.last_login|date:"M j, Y" }}</div>
+                  <div class="datetime-time">{{ u.last_login|date:"g:i A" }}</div>
+                {% else %}
+                  <span style="color:var(--text-muted);font-style:italic;font-size:11px">Never</span>
+                {% endif %}
+              </td>
+              <td class="datetime-cell">
+                <div class="datetime-date">{{ u.date_joined|date:"M j, Y" }}</div>
+                <div class="datetime-time">{{ u.date_joined|date:"g:i A" }}</div>
+              </td>
+              <td style="white-space:nowrap;">
+                <div style="display:flex;gap:4px;">
+                  <button class="btn-ph btn-ph-sm"
+                    onclick="openUserModal({{ u.id }}, '{{ u.username }}', '{{ u.email }}', '{{ u.first_name }}', '{{ u.last_name }}', {{ u.is_active|yesno:'true,false' }}, {{ u.is_staff|yesno:'true,false' }}, {{ u.is_superuser|yesno:'true,false' }}, [{% for g in u.groups.all %}'{{ g.id }}'{% if not forloop.last %},{% endif %}{% endfor %}], [{% for p in u.user_permissions.all %}'{{ p.id }}'{% if not forloop.last %},{% endif %}{% endfor %}])"
+                    title="Edit" aria-label="Edit {{ u.username }}">
+                    <span class="material-icons-round">edit</span>
+                  </button>
+                  {% if u.id != request.user.id %}
+                  <form method="post" action="{% url 'user_toggle_active' u.id %}" style="display:inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-ph btn-ph-sm"
+                      style="{% if u.is_active %}color:var(--red);border-color:var(--red){% else %}color:var(--g-primary);border-color:var(--g-primary){% endif %}"
+                      title="{% if u.is_active %}Deactivate{% else %}Activate{% endif %}"
+                      aria-label="{% if u.is_active %}Deactivate{% else %}Activate{% endif %} {{ u.username }}">
+                      <span class="material-icons-round">{% if u.is_active %}person_off{% else %}how_to_reg{% endif %}</span>
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8">
+              <div class="empty-state">
+                <span class="material-icons-round">manage_accounts</span>
+                <div class="empty-state-title">No users yet</div>
+                <div class="empty-state-sub">Add your first user to get started.</div>
+              </div>
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-row">
+        <span class="table-info" id="userPageInfo">Showing all {{ total_users }} user{{ total_users|pluralize }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GROUPS TAB ── -->
+  <div id="panel-groups" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+      <div class="section-title">Permission Groups</div>
+      <button class="btn-ph btn-ph-primary" onclick="openGroupModal()">
+        <span class="material-icons-round">add</span> Add Group
+      </button>
+    </div>
+
+    <div class="card-block">
+      <div style="overflow-x:auto;">
+        <table class="ph-table" aria-label="Permission groups">
+          <thead>
+            <tr>
+              <th style="min-width:180px;">Group Name</th>
+              <th style="min-width:80px;">Members</th>
+              <th>Permissions Assigned</th>
+              <th style="width:100px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for g in groups %}
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div style="width:32px;height:32px;background:var(--g-xlight);border:1.5px solid var(--g-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <span class="material-icons-round" style="font-size:17px;color:var(--g-deep)">groups</span>
+                  </div>
+                  <span style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ g.name }}</span>
+                </div>
+              </td>
+              <td>
+                <span style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--text-primary)">{{ g.member_count }}</span>
+                <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">user{{ g.member_count|pluralize }}</span>
+              </td>
+              <td>
+                <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                  {% for p in g.permissions.all|slice:":8" %}
+                    <span style="font-size:10px;font-weight:600;font-family:var(--mono);padding:3px 7px;background:var(--surface-page);border:1px solid var(--border);color:var(--text-secondary)">{{ p.codename }}</span>
+                  {% empty %}
+                    <span style="font-size:11px;color:var(--text-muted);font-style:italic">No permissions assigned</span>
+                  {% endfor %}
+                  {% if g.permissions.count > 8 %}
+                    <span style="font-size:10px;font-weight:600;font-family:var(--mono);padding:3px 7px;background:var(--g-xlight);border:1px solid var(--g-light);color:var(--g-forest)">+{{ g.permissions.count|add:"-8" }} more</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td style="white-space:nowrap;">
+                <div style="display:flex;gap:4px;">
+                  <button class="btn-ph btn-ph-sm"
+                    onclick="openGroupModal({{ g.id }}, '{{ g.name }}', [{% for p in g.permissions.all %}'{{ p.id }}'{% if not forloop.last %},{% endif %}{% endfor %}])"
+                    aria-label="Edit {{ g.name }}">
+                    <span class="material-icons-round">edit</span>
+                  </button>
+                  <form method="post" action="{% url 'group_delete' g.id %}" style="display:inline"
+                    onsubmit="return confirm('Delete group \'{{ g.name }}\'? Members will lose associated permissions.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-ph btn-ph-sm"
+                      style="color:var(--red);border-color:var(--red)" aria-label="Delete {{ g.name }}">
+                      <span class="material-icons-round">delete</span>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">
+              <div class="empty-state">
+                <span class="material-icons-round">groups</span>
+                <div class="empty-state-title">No groups yet</div>
+                <div class="empty-state-sub">Create a group to assign bulk permissions to users.</div>
+              </div>
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding:14px 18px;border:1px solid var(--border);background:var(--surface-card);display:flex;align-items:flex-start;gap:12px;">
+      <span class="material-icons-round" style="color:var(--g-primary);font-size:18px;flex-shrink:0;margin-top:1px;">info</span>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-primary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;">Django Auth Groups</div>
+        <p style="font-size:12px;color:var(--text-secondary);margin:0;line-height:1.7;">
+          Groups categorize users and apply permissions in bulk. A user in a group automatically inherits all permissions granted to that group. Users may belong to any number of groups.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- USER MODAL -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="userModal" role="dialog" aria-modal="true" aria-labelledby="userModalTitle"
+    onclick="if(event.target===this) closeModal('userModal')">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">
+          <span class="material-icons-round">person</span>
+          <span id="userModalTitle">Add User</span>
+        </div>
+        <button class="modal-close" onclick="closeModal('userModal')" aria-label="Close">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+
+      <form method="post" action="" id="userForm">
+        {% csrf_token %}
+        <input type="hidden" id="userFormUserId" name="user_id" value="">
+        <input type="hidden" name="form_type" value="user">
+
+        <div class="modal-body">
+
+          <!-- PERSONAL INFO -->
+          <div class="form-section">
+            <div class="form-section-label">
+              <span class="material-icons-round">badge</span> Personal Information
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="fieldUsername">Username <span class="req">*</span></label>
+                <input class="form-input" type="text" id="fieldUsername" name="username" placeholder="e.g. juan.dela_cruz" autocomplete="off" required>
+                <span class="form-hint">Required. 150 chars max. Letters, digits, and @/./+/-/_ only.</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fieldEmail">Email Address</label>
+                <input class="form-input" type="email" id="fieldEmail" name="email" placeholder="user@philhealth.gov.ph">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="fieldFirstName">First Name</label>
+                <input class="form-input" type="text" id="fieldFirstName" name="first_name" placeholder="Juan">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fieldLastName">Last Name</label>
+                <input class="form-input" type="text" id="fieldLastName" name="last_name" placeholder="Dela Cruz">
+              </div>
+            </div>
+          </div>
+
+          <!-- CREDENTIALS -->
+          <div class="form-section">
+            <div class="form-section-label">
+              <span class="material-icons-round">lock</span> Credentials
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="fieldPassword">Password <span class="req" id="pwRequired">*</span></label>
+                <input class="form-input" type="password" id="fieldPassword" name="password1" placeholder="••••••••" autocomplete="new-password">
+                <span class="form-hint">Min. 8 chars. Not too common. Not entirely numeric.</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fieldPassword2">Confirm Password <span class="req" id="pw2Required">*</span></label>
+                <input class="form-input" type="password" id="fieldPassword2" name="password2" placeholder="••••••••" autocomplete="new-password">
+              </div>
+            </div>
+            <div id="editPasswordNote" style="display:none;font-size:12px;color:var(--text-muted);padding:10px 12px;border:1px solid var(--border);background:var(--surface-page);">
+              <span class="material-icons-round" style="font-size:14px;vertical-align:middle;color:var(--g-primary)">info</span>
+              Leave both fields blank to keep the current password.
+            </div>
+          </div>
+
+          <!-- PERMISSIONS -->
+          <div class="form-section">
+            <div class="form-section-label">
+              <span class="material-icons-round">security</span> Permissions
+            </div>
+            <div class="form-row full" style="margin-bottom:8px;">
+              <div class="perm-item" id="permActiveRow" onclick="togglePermItem(this)">
+                <input type="checkbox" id="chkActive" name="is_active" checked onclick="event.stopPropagation();this.closest('.perm-item').classList.toggle('checked',this.checked)" style="accent-color:var(--g-primary)">
+                <div>
+                  <div class="perm-item-label">Active</div>
+                  <div class="perm-item-module">Designates whether this user should be treated as active. Uncheck instead of deleting accounts.</div>
+                </div>
+              </div>
+            </div>
+            <div class="form-row full" style="margin-bottom:8px;">
+              <div class="perm-item" id="permStaffRow" onclick="togglePermItem(this)">
+                <input type="checkbox" id="chkStaff" name="is_staff" onclick="event.stopPropagation();this.closest('.perm-item').classList.toggle('checked',this.checked)" style="accent-color:var(--g-primary)">
+                <div>
+                  <div class="perm-item-label">Staff Status</div>
+                  <div class="perm-item-module">Designates whether the user can log into the admin dashboard.</div>
+                </div>
+              </div>
+            </div>
+            <div class="form-row full" style="margin-bottom:0;">
+              <div class="perm-item" id="permSuperRow" onclick="togglePermItem(this)">
+                <input type="checkbox" id="chkSuperuser" name="is_superuser" onclick="event.stopPropagation();this.closest('.perm-item').classList.toggle('checked',this.checked)" style="accent-color:var(--g-primary)">
+                <div>
+                  <div class="perm-item-label">Superuser Status</div>
+                  <div class="perm-item-module">Designates that this user has all permissions without explicitly assigning them.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GROUPS -->
+          <div class="form-section">
+            <div class="form-section-label">
+              <span class="material-icons-round">groups</span> Groups
+            </div>
+            <p class="form-hint" style="margin-bottom:10px;">Users in a group inherit all permissions of that group.</p>
+            <div class="perm-grid" id="groupPickerList">
+              {% for g in groups %}
+              <div class="perm-item" onclick="togglePermItem(this)">
+                <input type="checkbox" name="groups" value="{{ g.id }}"
+                  onclick="event.stopPropagation();this.closest('.perm-item').classList.toggle('checked',this.checked)"
+                  style="accent-color:var(--g-primary)">
+                <div>
+                  <div class="perm-item-label">{{ g.name }}</div>
+                  <div class="perm-item-module">{{ g.member_count }} member{{ g.member_count|pluralize }} · {{ g.permissions.count }} permission{{ g.permissions.count|pluralize }}</div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- USER PERMISSIONS -->
+          <div class="form-section" style="margin-bottom:0;">
+            <div class="form-section-label">
+              <span class="material-icons-round">tune</span> User Permissions
+            </div>
+            <p class="form-hint" style="margin-bottom:10px;">Specific permissions for this user beyond their group permissions.</p>
+            <div class="perm-grid" id="permPickerList">
+              {% for p in permissions %}
+              <div class="perm-item" onclick="togglePermItem(this)">
+                <input type="checkbox" name="user_permissions" value="{{ p.id }}"
+                  onclick="event.stopPropagation();this.closest('.perm-item').classList.toggle('checked',this.checked)"
+                  style="accent-color:var(--g-primary)">
+                <div style="flex:1;min-width:0;">
+                  <div class="perm-item-label">{{ p.name }}</div>
+                  <div class="perm-item-module">{{ p.content_type.app_label }} | {{ p.codename }}</div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div><!-- /modal-body -->
+
+        <div class="modal-footer">
+          <div id="userDangerSection" style="display:none;margin-right:auto;">
+            <button type="button" class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="submitDeleteUser()">
+              <span class="material-icons-round">delete_forever</span> Delete User
+            </button>
+          </div>
+          <button type="button" class="btn-ph" onclick="closeModal('userModal')">Cancel</button>
+          <button type="submit" class="btn-ph btn-ph-primary">
+            <span class="material-icons-round">save</span>
+            <span id="saveUserLabel">Add User</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- GROUP MODAL -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="groupModal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle"
+    onclick="if(event.target===this) closeModal('groupModal')">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">
+          <span class="material-icons-round">groups</span>
+          <span id="groupModalTitle">Add Group</span>
+        </div>
+        <button class="modal-close" onclick="closeModal('groupModal')" aria-label="Close">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+
+      <form method="post" action="" id="groupForm">
+        {% csrf_token %}
+        <input type="hidden" id="groupFormId" name="group_id" value="">
+        <input type="hidden" name="form_type" value="group">
+
+        <div class="modal-body">
+          <div class="form-section">
+            <div class="form-section-label">
+              <span class="material-icons-round">label</span> Group Details
+            </div>
+            <div class="form-row full">
+              <div class="form-group">
+                <label class="form-label" for="fieldGroupName">Group Name <span class="req">*</span></label>
+                <input class="form-input" type="text" id="fieldGroupName" name="name" placeholder="e.g. Feedback Reviewers" required>
+              </div>
+            </div>
+          </div>
+          <div class="form-section" style="margin-bottom:0;">
+            <div class="form-section-label">
+              <span class="material-icons-round">tune</span> Group Permissions
+            </div>
+            <p class="form-hint" style="margin-bottom:10px;">All members of this group will inherit these permissions.</p>
+            <div class="perm-grid" id="groupPermPickerList">
+              {% for p in permissions %}
+              <div class="perm-item" onclick="togglePermItem(this)">
+                <input type="checkbox" name="permissions" value="{{ p.id }}"
+                  onclick="event.stopPropagation();this.closest('.perm-item').classList.toggle('checked',this.checked)"
+                  style="accent-color:var(--g-primary)">
+                <div style="flex:1;min-width:0;">
+                  <div class="perm-item-label">{{ p.name }}</div>
+                  <div class="perm-item-module">{{ p.content_type.app_label }} | {{ p.codename }}</div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <div id="groupDangerSection" style="display:none;margin-right:auto;">
+            <button type="button" class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="submitDeleteGroup()">
+              <span class="material-icons-round">delete_forever</span> Delete Group
+            </button>
+          </div>
+          <button type="button" class="btn-ph" onclick="closeModal('groupModal')">Cancel</button>
+          <button type="submit" class="btn-ph btn-ph-primary">
+            <span class="material-icons-round">save</span>
+            <span id="saveGroupLabel">Add Group</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Hidden delete forms (POST-safe) -->
+  <form method="post" id="deleteUserForm" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="form_type" value="delete_user">
+    <input type="hidden" name="user_id" id="deleteUserId">
+  </form>
+  <form method="post" id="deleteGroupForm" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="form_type" value="delete_group">
+    <input type="hidden" name="group_id" id="deleteGroupId">
+  </form>
+
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+/* ── TAB SWITCH ── */
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-users').style.display  = tab === 'users'  ? 'block' : 'none';
+  document.getElementById('panel-groups').style.display = tab === 'groups' ? 'block' : 'none';
+}
+
+/* ── CLIENT-SIDE USER FILTER ── */
+function filterUsers() {
+  const q      = document.getElementById('userSearch').value.toLowerCase();
+  const role   = document.getElementById('roleFilter').value;
+  const status = document.getElementById('statusFilter').value;
+  const rows   = document.querySelectorAll('.user-row');
+  let visible  = 0;
+  rows.forEach(r => {
+    const matchQ = !q
+      || r.dataset.username.includes(q)
+      || r.dataset.email.includes(q)
+      || r.dataset.fullname.includes(q);
+    const matchRole   = !role   || r.dataset.role   === role;
+    const matchStatus = !status || r.dataset.status === status;
+    const show = matchQ && matchRole && matchStatus;
+    r.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  document.getElementById('userTableInfo').textContent = `Showing ${visible} of ${rows.length} user${rows.length !== 1 ? 's' : ''}`;
+}
+
+/* ── MODAL HELPERS ── */
+const CURRENT_USER_ID = {{ request.user.id }};
+
+function openUserModal(userId, username, email, first, last, isActive, isStaff, isSuperuser, groupIds, permIds) {
+  const isEdit = !!userId;
+  const isSelf = userId === CURRENT_USER_ID;
+
+  document.getElementById('userModalTitle').textContent        = isEdit ? 'Edit User' : 'Add User';
+  document.getElementById('saveUserLabel').textContent         = isEdit ? 'Save Changes' : 'Add User';
+  document.getElementById('userDangerSection').style.display   = (isEdit && !isSelf) ? 'block' : 'none';
+  document.getElementById('editPasswordNote').style.display    = isEdit ? 'block' : 'none';
+  document.getElementById('pwRequired').style.display          = isEdit ? 'none' : 'inline';
+  document.getElementById('pw2Required').style.display         = isEdit ? 'none' : 'inline';
+  document.getElementById('userFormUserId').value              = userId || '';
+
+  /* route form to correct URL */
+  document.getElementById('userForm').action = isEdit
+    ? `/dashboard/users/${userId}/edit/`
+    : `/dashboard/users/add/`;
+
+  /* fill fields */
+  document.getElementById('fieldUsername').value  = username  || '';
+  document.getElementById('fieldEmail').value     = email     || '';
+  document.getElementById('fieldFirstName').value = first     || '';
+  document.getElementById('fieldLastName').value  = last      || '';
+  document.getElementById('fieldPassword').value  = '';
+  document.getElementById('fieldPassword2').value = '';
+
+  /* permission rows */
+  setPermItem('permActiveRow',  'chkActive',    isActive     !== false);
+  setPermItem('permStaffRow',   'chkStaff',     !!isStaff);
+  setPermItem('permSuperRow',   'chkSuperuser', !!isSuperuser);
+
+  /* Disable self-deactivation in modal */
+  const chkActive = document.getElementById('chkActive');
+  const permActiveRow = document.getElementById('permActiveRow');
+  if (isSelf) {
+    chkActive.disabled = true;
+    permActiveRow.style.opacity = '0.6';
+    permActiveRow.style.pointerEvents = 'none';
+    permActiveRow.title = "You cannot deactivate your own account.";
+  } else {
+    chkActive.disabled = false;
+    permActiveRow.style.opacity = '1';
+    permActiveRow.style.pointerEvents = 'auto';
+    permActiveRow.title = "";
+  }
+
+  /* group checkboxes */
+  const gIds = groupIds || [];
+  document.querySelectorAll('#groupPickerList .perm-item').forEach(item => {
+    const cb = item.querySelector('input[type="checkbox"]');
+    const checked = gIds.includes(String(cb.value));
+    cb.checked = checked;
+    item.classList.toggle('checked', checked);
+  });
+
+  /* user permission checkboxes */
+  const pIds = permIds || [];
+  document.querySelectorAll('#permPickerList .perm-item').forEach(item => {
+    const cb = item.querySelector('input[type="checkbox"]');
+    const checked = pIds.includes(String(cb.value));
+    cb.checked = checked;
+    item.classList.toggle('checked', checked);
+  });
+
+  document.getElementById('userModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('fieldUsername').focus();
+}
+
+function openGroupModal(groupId, groupName, permIds) {
+  const isEdit = !!groupId;
+  document.getElementById('groupModalTitle').textContent       = isEdit ? 'Edit Group' : 'Add Group';
+  document.getElementById('saveGroupLabel').textContent        = isEdit ? 'Save Changes' : 'Add Group';
+  document.getElementById('groupDangerSection').style.display  = isEdit ? 'block' : 'none';
+  document.getElementById('groupFormId').value                 = groupId || '';
+  document.getElementById('fieldGroupName').value              = groupName || '';
+
+  document.getElementById('groupForm').action = isEdit
+    ? `/dashboard/groups/${groupId}/edit/`
+    : `/dashboard/groups/add/`;
+
+  const pIds = permIds || [];
+  document.querySelectorAll('#groupPermPickerList .perm-item').forEach(item => {
+    const cb = item.querySelector('input[type="checkbox"]');
+    const checked = pIds.includes(String(cb.value));
+    cb.checked = checked;
+    item.classList.toggle('checked', checked);
+  });
+
+  document.getElementById('groupModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('fieldGroupName').focus();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function togglePermItem(el) {
+  const cb = el.querySelector('input[type="checkbox"]');
+  cb.checked = !cb.checked;
+  el.classList.toggle('checked', cb.checked);
+}
+
+function setPermItem(rowId, cbId, checked) {
+  document.getElementById(cbId).checked = checked;
+  document.getElementById(rowId).classList.toggle('checked', checked);
+}
+
+function submitDeleteUser() {
+  const uid = document.getElementById('userFormUserId').value;
+  if (!uid) return;
+  if (!confirm('Delete this user? This action cannot be undone.')) return;
+  document.getElementById('deleteUserId').value = uid;
+  document.getElementById('deleteUserForm').action = `/dashboard/users/${uid}/delete/`;
+  document.getElementById('deleteUserForm').submit();
+}
+
+function submitDeleteGroup() {
+  const gid = document.getElementById('groupFormId').value;
+  if (!gid) return;
+  if (!confirm("Delete this group? Members will lose associated permissions.")) return;
+  document.getElementById('deleteGroupId').value = gid;
+  document.getElementById('deleteGroupForm').action = `/dashboard/groups/${gid}/delete/`;
+  document.getElementById('deleteGroupForm').submit();
+}
+
+function pageInit() { filterUsers(); }
+</script>
+{% endblock %}
