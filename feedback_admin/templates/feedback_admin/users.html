@@ -467,14 +467,12 @@
                     aria-label="Edit {{ g.name }}">
                     <span class="material-icons-round">edit</span>
                   </button>
-                  <form method="post" action="{% url 'group_delete' g.id %}" style="display:inline"
-                    onsubmit="return confirm('Delete group \'{{ g.name }}\'? Members will lose associated permissions.')">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-ph btn-ph-sm"
-                      style="color:var(--red);border-color:var(--red)" aria-label="Delete {{ g.name }}">
-                      <span class="material-icons-round">delete</span>
-                    </button>
-                  </form>
+                  <button type="button" class="btn-ph btn-ph-sm"
+                    style="color:var(--red);border-color:var(--red)" 
+                    onclick="triggerDeleteGroup({{ g.id }}, '{{ g.name }}')"
+                    aria-label="Delete {{ g.name }}">
+                    <span class="material-icons-round">delete</span>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -660,7 +658,7 @@
 
         <div class="modal-footer">
           <div id="userDangerSection" style="display:none;margin-right:auto;">
-            <button type="button" class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="submitDeleteUser()">
+            <button type="button" class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="triggerDeleteUserFromModal()">
               <span class="ph-loader"></span>
               <span class="material-icons-round">delete_forever</span> Delete User
             </button>
@@ -732,7 +730,7 @@
 
         <div class="modal-footer">
           <div id="groupDangerSection" style="display:none;margin-right:auto;">
-            <button type="button" class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="submitDeleteGroup()">
+            <button type="button" class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="triggerDeleteGroupFromModal()">
               <span class="ph-loader"></span>
               <span class="material-icons-round">delete_forever</span> Delete Group
             </button>
@@ -745,6 +743,43 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- DELETE CONFIRMATION MODAL -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="deleteConfirmModal" role="dialog" aria-modal="true" style="z-index: 400;"
+    onclick="if(event.target===this) closeModal('deleteConfirmModal')">
+    <div class="modal-card" style="max-width:400px;margin-top:10vh;" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title" style="color:var(--red)">
+          <span class="material-icons-round">warning</span>
+          Confirm Deletion
+        </div>
+        <button class="modal-close" onclick="closeModal('deleteConfirmModal')">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding:24px;text-align:center;">
+        <div style="width:64px;height:64px;background:var(--red-bg);color:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <span class="material-icons-round" style="font-size:32px;">delete_forever</span>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text-primary)" id="deleteModalTitle">Delete Item?</h3>
+        <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:0;">
+          Are you sure you want to delete <strong id="deleteTargetName">this item</strong>? 
+          This action cannot be undone and all associated data will be permanently removed.
+        </p>
+      </div>
+      <div class="modal-footer" style="background:var(--surface-page);padding:16px;justify-content:center;gap:12px;">
+        <button type="button" class="btn-ph" onclick="closeModal('deleteConfirmModal')" style="min-width:110px;justify-content:center;">
+          <span class="material-icons-round" style="font-size:16px;">close</span> Cancel
+        </button>
+        <button type="button" class="btn-ph" id="confirmDeleteBtn" style="min-width:110px;background:var(--red);border-color:var(--red);color:white;justify-content:center;" onclick="executeGenericDelete()">
+          <span class="ph-loader"></span>
+          <span class="material-icons-round" style="font-size:16px;">delete</span> Confirm Delete
+        </button>
+      </div>
     </div>
   </div>
 
@@ -795,9 +830,8 @@ function filterUsers() {
 /* ═══════════════════════════════════════════════════════════════
    BULK SELECTION & DELETE
 ═══════════════════════════════════════════════════════════════ */
-const selectedUserIds = new Set(); // { id: number, username: string }
-// We store objects; use id as the key
-const selectedUsers   = new Map(); // id → username
+const selectedUsers = new Map(); // id → username
+let currentDeleteAction = { type: '', id: '', name: '' };
 
 function toggleUserSelect(cb) {
   const id       = parseInt(cb.dataset.userid);
@@ -807,24 +841,18 @@ function toggleUserSelect(cb) {
   } else {
     selectedUsers.delete(id);
   }
-  // highlight selected row
   cb.closest('tr').style.background = cb.checked ? 'var(--red-bg)' : '';
   updateUserBulkBar();
   updateUserSelectAll();
 }
 
 function toggleUserSelectAll(masterCb) {
-  // Only act on visible, deletable rows
   const visibleCbs = getVisibleDeletableCbs();
   visibleCbs.forEach(cb => {
     cb.checked = masterCb.checked;
     const id       = parseInt(cb.dataset.userid);
     const username = cb.dataset.username;
-    if (masterCb.checked) {
-      selectedUsers.set(id, username);
-    } else {
-      selectedUsers.delete(id);
-    }
+    if (masterCb.checked) selectedUsers.set(id, username); else selectedUsers.delete(id);
     cb.closest('tr').style.background = masterCb.checked ? 'var(--red-bg)' : '';
   });
   updateUserBulkBar();
@@ -843,17 +871,13 @@ function updateUserSelectAll() {
   const masterCb  = document.getElementById('userSelectAll');
   if (!masterCb) return;
   if (all.length === 0) {
-    masterCb.checked       = false;
-    masterCb.indeterminate = false;
+    masterCb.checked = masterCb.indeterminate = false;
   } else if (checked.length === all.length) {
-    masterCb.checked       = true;
-    masterCb.indeterminate = false;
+    masterCb.checked = true; masterCb.indeterminate = false;
   } else if (checked.length === 0) {
-    masterCb.checked       = false;
-    masterCb.indeterminate = false;
+    masterCb.checked = masterCb.indeterminate = false;
   } else {
-    masterCb.checked       = false;
-    masterCb.indeterminate = true;
+    masterCb.checked = false; masterCb.indeterminate = true;
   }
 }
 
@@ -861,8 +885,7 @@ function updateUserBulkBar() {
   const bar = document.getElementById('userBulkBar');
   if (selectedUsers.size > 0) {
     bar.classList.add('visible');
-    const noun = selectedUsers.size === 1 ? 'user' : 'users';
-    document.getElementById('userBulkCount').textContent = `${selectedUsers.size} ${noun} selected`;
+    document.getElementById('userBulkCount').textContent = `${selectedUsers.size} user(s) selected`;
   } else {
     bar.classList.remove('visible');
   }
@@ -871,249 +894,112 @@ function updateUserBulkBar() {
 function clearUserSelection() {
   selectedUsers.clear();
   document.querySelectorAll('.user-select-cb').forEach(cb => {
-    cb.checked = false;
-    cb.closest('tr').style.background = '';
+    cb.checked = false; cb.closest('tr').style.background = '';
   });
   const masterCb = document.getElementById('userSelectAll');
   if (masterCb) { masterCb.checked = false; masterCb.indeterminate = false; }
   updateUserBulkBar();
 }
 
-async function bulkDeleteUsers() {
-  if (selectedUsers.size === 0) return;
-
-  const names = Array.from(selectedUsers.values()).join(', ');
-  const noun  = selectedUsers.size === 1 ? 'user' : 'users';
-  const msg   = selectedUsers.size === 1
-    ? `Delete user "${names}"? This cannot be undone.`
-    : `Delete ${selectedUsers.size} users (${names})? This cannot be undone.`;
-
-  if (!confirm(msg)) return;
-
-  const ids       = Array.from(selectedUsers.keys());
-  const csrfToken = document.querySelector('#deleteUserForm [name=csrfmiddlewaretoken]').value;
-
-  // Delete sequentially via existing endpoint
-  let successCount = 0;
-  let lastError    = null;
-
-  for (const id of ids) {
-    try {
-      const formData = new FormData();
-      formData.append('csrfmiddlewaretoken', csrfToken);
-      formData.append('form_type', 'delete_user');
-      formData.append('user_id', id);
-
-      const res  = await fetch(`/dashboard/users/${id}/delete/`, {
-        method: 'POST',
-        body: formData,
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      });
-      const json = await res.json();
-      if (json.ok) {
-        successCount++;
-      } else {
-        lastError = json.error;
-      }
-    } catch (e) {
-      lastError = 'Network error during deletion.';
-    }
-  }
-
-  const resultMsg = successCount > 0
-    ? (lastError
-        ? `Deleted ${successCount} of ${ids.length} users. Some could not be deleted.`
-        : `${successCount} ${successCount === 1 ? 'user' : 'users'} deleted successfully.`)
-    : (lastError || 'No users were deleted.');
-
-  _flashSuccessToast(resultMsg, successCount > 0 ? 'success' : 'error');
-}
-
 /* ═══════════════════════════════════════════════════════════════
-   FIELD-LEVEL ERROR HELPERS
+   GENERIC DELETE FLOW
 ═══════════════════════════════════════════════════════════════ */
-const ERROR_FIELD_MAP = [
-  { match: 'username is required',    field: 'fieldUsername',  err: 'errUsername'  },
-  { match: 'username',                field: 'fieldUsername',  err: 'errUsername'  },
-  { match: 'email',                   field: 'fieldEmail',     err: 'errEmail'     },
-  { match: 'passwords do not match',  field: 'fieldPassword2', err: 'errPassword2' },
-  { match: 'password must be',        field: 'fieldPassword',  err: 'errPassword'  },
-  { match: 'password',                field: 'fieldPassword',  err: 'errPassword'  },
-];
-
-function showFieldError(fieldId, errorElId, msg) {
-  const input = document.getElementById(fieldId);
-  const errEl = document.getElementById(errorElId);
-  if (input)  input.classList.add('input-error');
-  if (errEl) {
-    errEl.querySelector('span:last-child').textContent = msg;
-    errEl.classList.add('visible');
-    errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+function triggerDeleteUserFromModal() {
+  const id   = document.getElementById('userFormUserId').value;
+  const name = document.getElementById('fieldUsername').value;
+  if (!id) return;
+  openDeleteConfirm('user', id, name);
 }
 
-function clearFieldError(errorElId) {
-  const errEl = document.getElementById(errorElId);
-  if (!errEl) return;
-  const fieldId = errEl.previousElementSibling
-    ? errEl.previousElementSibling.id
-    : null;
-  if (fieldId) document.getElementById(fieldId)?.classList.remove('input-error');
-  errEl.classList.remove('visible');
+function triggerDeleteGroup(id, name) {
+  openDeleteConfirm('group', id, name);
 }
 
-function clearAllFieldErrors() {
-  ['errUsername','errEmail','errPassword','errPassword2'].forEach(clearFieldError);
-  document.querySelectorAll('#userForm .form-input').forEach(i => i.classList.remove('input-error'));
+function triggerDeleteGroupFromModal() {
+  const id   = document.getElementById('groupFormId').value;
+  const name = document.getElementById('fieldGroupName').value;
+  if (!id) return;
+  openDeleteConfirm('group', id, name);
 }
 
-function routeError(msg) {
-  const lower = msg.toLowerCase();
-  for (const rule of ERROR_FIELD_MAP) {
-    if (lower.includes(rule.match)) {
-      showFieldError(rule.field, rule.err, msg);
+function bulkDeleteUsers() {
+  if (selectedUsers.size === 0) return;
+  const count = selectedUsers.size;
+  const names = Array.from(selectedUsers.values()).slice(0, 3).join(', ');
+  const suffix = count > 3 ? ` and ${count - 3} more` : '';
+  openDeleteConfirm('bulk_user', null, `${count} selected users (${names}${suffix})`);
+}
+
+function openDeleteConfirm(type, id, name) {
+  currentDeleteAction = { type, id, name };
+  document.getElementById('deleteModalTitle').textContent = type.includes('user') ? 'Delete User?' : 'Delete Group?';
+  document.getElementById('deleteTargetName').textContent = name;
+  document.getElementById('deleteConfirmModal').classList.add('open');
+}
+
+async function executeGenericDelete() {
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.classList.add('is-loading');
+
+  const { type, id, name } = currentDeleteAction;
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  try {
+    if (type === 'bulk_user') {
+      const ids = Array.from(selectedUsers.keys());
+      let successCount = 0;
+      let lastError    = null;
+
+      for (const uid of ids) {
+        const fd = new FormData();
+        fd.append('csrfmiddlewaretoken', csrfToken);
+        fd.append('form_type', 'delete_user');
+        fd.append('user_id', uid);
+        const res = await fetch(`/dashboard/users/${uid}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const json = await res.json();
+        if (json.ok) successCount++; else lastError = json.error;
+      }
+      closeModal('deleteConfirmModal');
+      _flashSuccessToast(successCount > 0 ? `${successCount} user(s) deleted.` : (lastError || 'Failed.'), successCount > 0 ? 'success' : 'error');
       return;
     }
-  }
-  showFieldError('fieldUsername', 'errUsername', msg);
-}
 
-/* ═══════════════════════════════════════════════════════════════
-   TOAST HELPER
-   - type: 'success' (default) | 'error'
-   - Reloads ONLY after the toast fully hides (hidden.bs.toast event)
-   - If reload === false, skip the page reload (e.g. bulk partial)
-═══════════════════════════════════════════════════════════════ */
-function _flashSuccessToast(msg, type, reloadAfter) {
-  const isError   = type === 'error';
-  const toastColor = isError ? 'var(--red)' : 'var(--g-primary)';
-  const icon       = isError ? 'error'       : 'check_circle';
-  const shouldReload = reloadAfter !== false; // default true
-
-  const div = document.createElement('div');
-  div.className = 'toast ph-toast fade align-items-center border-0';
-  div.setAttribute('role', 'alert');
-  div.setAttribute('aria-live', 'assertive');
-  div.setAttribute('aria-atomic', 'true');
-  div.setAttribute('data-bs-delay', '5000');
-  div.style.setProperty('--toast-color', toastColor);
-  div.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body d-flex align-items-center gap-3 py-3"
-        style="color:var(--text-primary);font-size:13px;font-weight:600;">
-        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>
-        ${msg}
-      </div>
-      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size:10px;"></button>
-    </div>
-    <div class="ph-toast-progress"></div>`;
-
-  document.getElementById('toastContainer').appendChild(div);
-  const toastInstance = new bootstrap.Toast(div);
-
-  // ── KEY FIX: Reload/implement immediately, keep toast visible as notification ──
-  if (shouldReload) {
-    location.reload();
-  } else {
-    // No reload — just clean up the element when hidden
-    div.addEventListener('hidden.bs.toast', () => div.remove());
-  }
-
-  toastInstance.show();
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   AJAX USER FORM SUBMIT
-═══════════════════════════════════════════════════════════════ */
-async function submitUserForm() {
-  clearAllFieldErrors();
-  const form = document.getElementById('userForm');
-  const btn  = form.querySelector('.btn-ph-primary');
-  
-  btn.classList.add('is-loading');
-  
-  const data = new FormData(form);
-  try {
-    const res  = await fetch(form.action, {
-      method: 'POST',
-      body: data,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    });
-    const json = await res.json();
-    if (json.ok) {
-      closeModal('userModal');
-      _flashSuccessToast(json.message, 'success');
-    } else {
-      routeError(json.error);
-      btn.classList.remove('is-loading');
+    if (type === 'user') {
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', csrfToken);
+      fd.append('form_type', 'delete_user');
+      fd.append('user_id', id);
+      const res = await fetch(`/dashboard/users/${id}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const json = await res.json();
+      if (json.ok) {
+        closeModal('deleteConfirmModal');
+        closeModal('userModal');
+        _flashSuccessToast(json.message, 'success');
+      } else {
+        throw new Error(json.error);
+      }
+      return;
     }
-  } catch (e) {
-    showFieldError('fieldUsername', 'errUsername', 'An unexpected error occurred. Please try again.');
-    btn.classList.remove('is-loading');
-  }
-}
 
-/* ═══════════════════════════════════════════════════════════════
-   AJAX GROUP FORM SUBMIT
-═══════════════════════════════════════════════════════════════ */
-async function submitGroupForm() {
-  const form = document.getElementById('groupForm');
-  const btn  = form.querySelector('.btn-ph-primary');
-  
-  btn.classList.add('is-loading');
-  
-  const data = new FormData(form);
-  try {
-    const res  = await fetch(form.action, {
-      method: 'POST',
-      body: data,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    });
-    const json = await res.json();
-    if (json.ok) {
-      closeModal('groupModal');
-      _flashSuccessToast(json.message, 'success');
-    } else {
-      alert(json.error);
-      btn.classList.remove('is-loading');
+    if (type === 'group') {
+      const fd = new FormData();
+      fd.append('csrfmiddlewaretoken', csrfToken);
+      fd.append('form_type', 'delete_group');
+      fd.append('group_id', id);
+      const res = await fetch(`/dashboard/groups/${id}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const json = await res.json();
+      if (json.ok) {
+        closeModal('deleteConfirmModal');
+        if (document.getElementById('groupModal').classList.contains('open')) closeModal('groupModal');
+        _flashSuccessToast(json.message, 'success');
+      } else {
+        throw new Error(json.error);
+      }
+      return;
     }
-  } catch (e) {
-    alert('An unexpected error occurred.');
-    btn.classList.remove('is-loading');
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   AJAX DELETE SINGLE USER (from modal)
-═══════════════════════════════════════════════════════════════ */
-async function submitDeleteUser() {
-  const uid = document.getElementById('userFormUserId').value;
-  if (!uid) return;
-  if (!confirm('Delete this user? This action cannot be undone.')) return;
-  
-  const btn = document.querySelector('#userDangerSection .btn-ph');
-  btn.classList.add('is-loading');
-
-  const form = document.getElementById('deleteUserForm');
-  document.getElementById('deleteUserId').value = uid;
-  form.action = `/dashboard/users/${uid}/delete/`;
-  const data  = new FormData(form);
-  try {
-    const res  = await fetch(form.action, {
-      method: 'POST',
-      body: data,
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-    });
-    const json = await res.json();
-    if (json.ok) {
-      closeModal('userModal');
-      _flashSuccessToast(json.message, 'success');
-    } else {
-      showFieldError('fieldUsername', 'errUsername', json.error);
-      btn.classList.remove('is-loading');
-    }
-  } catch (e) {
-    showFieldError('fieldUsername', 'errUsername', 'An unexpected error occurred.');
+  } catch (err) {
+    closeModal('deleteConfirmModal');
+    _flashSuccessToast(err.message || 'An error occurred.', 'error', false);
     btn.classList.remove('is-loading');
   }
 }
@@ -1227,17 +1113,86 @@ function setPermItem(rowId, cbId, checked) {
   document.getElementById(rowId).classList.toggle('checked', checked);
 }
 
-function submitDeleteGroup() {
-  const gid = document.getElementById('groupFormId').value;
-  if (!gid) return;
-  if (!confirm("Delete this group? Members will lose associated permissions.")) return;
-  
-  const btn = document.querySelector('#groupDangerSection .btn-ph');
-  btn.classList.add('is-loading');
+/* ═══════════════════════════════════════════════════════════════
+   FIELD-LEVEL ERROR HELPERS
+═══════════════════════════════════════════════════════════════ */
+const ERROR_FIELD_MAP = [
+  { match: 'username is required',    field: 'fieldUsername',  err: 'errUsername'  },
+  { match: 'username',                field: 'fieldUsername',  err: 'errUsername'  },
+  { match: 'email',                   field: 'fieldEmail',     err: 'errEmail'     },
+  { match: 'passwords do not match',  field: 'fieldPassword2', err: 'errPassword2' },
+  { match: 'password must be',        field: 'fieldPassword',  err: 'errPassword'  },
+  { match: 'password',                field: 'fieldPassword',  err: 'errPassword'  },
+];
 
-  document.getElementById('deleteGroupId').value = gid;
-  document.getElementById('deleteGroupForm').action = `/dashboard/groups/${gid}/delete/`;
-  document.getElementById('deleteGroupForm').submit();
+function showFieldError(fieldId, errorElId, msg) {
+  const input = document.getElementById(fieldId);
+  const errEl = document.getElementById(errorElId);
+  if (input)  input.classList.add('input-error');
+  if (errEl) {
+    errEl.querySelector('span:last-child').textContent = msg;
+    errEl.classList.add('visible');
+    errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function clearFieldError(errorElId) {
+  const errEl = document.getElementById(errorElId);
+  if (!errEl) return;
+  const fieldId = errEl.previousElementSibling ? errEl.previousElementSibling.id : null;
+  if (fieldId) document.getElementById(fieldId)?.classList.remove('input-error');
+  errEl.classList.remove('visible');
+}
+
+function clearAllFieldErrors() {
+  ['errUsername','errEmail','errPassword','errPassword2'].forEach(clearFieldError);
+  document.querySelectorAll('#userForm .form-input').forEach(i => i.classList.remove('input-error'));
+}
+
+function routeError(msg) {
+  const lower = msg.toLowerCase();
+  for (const rule of ERROR_FIELD_MAP) {
+    if (lower.includes(rule.match)) {
+      showFieldError(rule.field, rule.err, msg);
+      return;
+    }
+  }
+  showFieldError('fieldUsername', 'errUsername', msg);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOAST HELPER
+═══════════════════════════════════════════════════════════════ */
+function _flashSuccessToast(msg, type, reloadAfter) {
+  const isError   = type === 'error';
+  const toastColor = isError ? 'var(--red)' : 'var(--g-primary)';
+  const icon       = isError ? 'error'       : 'check_circle';
+  const shouldReload = reloadAfter !== false;
+
+  const div = document.createElement('div');
+  div.className = 'toast ph-toast fade align-items-center border-0';
+  div.setAttribute('role', 'alert'); div.setAttribute('aria-live', 'assertive');
+  div.setAttribute('aria-atomic', 'true'); div.setAttribute('data-bs-delay', '5000');
+  div.style.setProperty('--toast-color', toastColor);
+  div.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-3 py-3" style="color:var(--text-primary);font-size:13px;font-weight:600;">
+        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>
+        ${msg}
+      </div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size:10px;"></button>
+    </div>
+    <div class="ph-toast-progress"></div>`;
+
+  document.getElementById('toastContainer').appendChild(div);
+  const toastInstance = new bootstrap.Toast(div);
+
+  if (shouldReload) {
+    location.reload();
+  } else {
+    div.addEventListener('hidden.bs.toast', () => div.remove());
+  }
+  toastInstance.show();
 }
 
 function pageInit() { filterUsers(); }
