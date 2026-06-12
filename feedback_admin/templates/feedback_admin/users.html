@@ -56,6 +56,16 @@
 [data-theme="dark"] .chip-super    { background: rgba(184,147,58,0.12); color: #d4a840; border-color: rgba(184,147,58,0.25); }
 [data-theme="dark"] .chip-staff    { background: rgba(59,130,246,0.12); color: #93c5fd; border-color: rgba(59,130,246,0.25); }
 
+/* ── BULK BAR ── */
+.user-bulk-bar {
+  display: none; align-items: center; gap: 10px; padding: 9px 16px;
+  background: var(--red-bg); border-bottom: 1px solid #fca5a5;
+  font-size: 12px; font-weight: 600; color: #7a0011;
+}
+[data-theme="dark"] .user-bulk-bar { background: rgba(192,0,26,0.08); border-color: rgba(192,0,26,0.2); color: #f06070; }
+.user-bulk-bar.visible { display: flex; flex-wrap: wrap; gap: 8px; }
+.user-bulk-bar .material-icons-round { font-size: 16px; }
+
 .modal-backdrop {
   display: none; position: fixed; inset: 0; z-index: 300;
   background: rgba(10,26,4,0.5); backdrop-filter: blur(3px);
@@ -235,6 +245,8 @@
   <!-- ── USERS TAB ── -->
   <div id="panel-users">
     <div class="card-block">
+
+      <!-- TABLE CONTROLS -->
       <div class="table-controls">
         <div class="search-box">
           <span class="material-icons-round">search</span>
@@ -256,10 +268,30 @@
         </div>
       </div>
 
+      <!-- BULK DELETE BAR -->
+      <div class="user-bulk-bar" id="userBulkBar">
+        <span class="material-icons-round">delete_sweep</span>
+        <span id="userBulkCount">0 selected</span>
+        <button class="btn-ph btn-ph-sm" onclick="clearUserSelection()" style="border-color:rgba(192,0,26,0.4);color:inherit;">
+          <span class="material-icons-round">close</span> Deselect all
+        </button>
+        <button class="btn-ph btn-ph-sm" onclick="bulkDeleteUsers()"
+          style="background:var(--red);border-color:var(--red);color:var(--white);">
+          <span class="material-icons-round">delete_forever</span>
+          Delete selected
+        </button>
+      </div>
+
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table class="ph-table" aria-label="Admin users">
           <thead>
             <tr>
+              <!-- Select-all checkbox — only selects deletable rows (not current user) -->
+              <th style="width:36px;padding:10px 8px 10px 16px;">
+                <input type="checkbox" id="userSelectAll" onchange="toggleUserSelectAll(this)"
+                  aria-label="Select all deletable users"
+                  style="cursor:pointer;accent-color:var(--g-primary)">
+              </th>
               <th style="min-width:190px;">Username</th>
               <th style="min-width:210px;">Email Address</th>
               <th style="min-width:130px;">Full Name</th>
@@ -273,18 +305,36 @@
           <tbody id="usersTableBody">
             {% for u in users %}
             <tr class="user-row"
+              data-userid="{{ u.id }}"
               data-username="{{ u.username|lower }}"
               data-email="{{ u.email|lower }}"
               data-fullname="{{ u.get_full_name|lower }}"
               data-role="{% if u.is_superuser %}superuser{% elif u.is_staff %}staff{% else %}user{% endif %}"
-              data-status="{% if u.is_active %}active{% else %}inactive{% endif %}">
+              data-status="{% if u.is_active %}active{% else %}inactive{% endif %}"
+              data-isself="{% if u.id == request.user.id %}true{% else %}false{% endif %}">
+
+              <!-- Checkbox cell -->
+              <td style="padding:13px 8px 13px 16px;">
+                {% if u.id != request.user.id %}
+                <input type="checkbox" class="user-select-cb"
+                  data-userid="{{ u.id }}"
+                  data-username="{{ u.username }}"
+                  onchange="toggleUserSelect(this)"
+                  aria-label="Select {{ u.username }}"
+                  style="cursor:pointer;accent-color:var(--red)">
+                {% else %}
+                <!-- current user: no checkbox, show lock icon -->
+                <span class="material-icons-round" style="font-size:14px;color:var(--text-muted);opacity:0.4;" title="Cannot delete your own account">lock</span>
+                {% endif %}
+              </td>
+
               <td>
                 <div style="display:flex;align-items:center;gap:10px;">
                   <div class="user-avatar {% if u.is_superuser %}avatar-superuser{% elif u.is_staff %}avatar-staff{% else %}avatar-user{% endif %}">
                     {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}{% if not u.first_name and not u.last_name %}{{ u.username|slice:":2"|upper }}{% endif %}
                   </div>
                   <div>
-                    <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ u.username }}</div>
+                    <div style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ u.username }}{% if u.id == request.user.id %} <span style="font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:var(--g-xlight);color:var(--g-forest);padding:2px 6px;margin-left:4px;">You</span>{% endif %}</div>
                     {% if u.groups.all %}
                     <div style="font-size:10px;color:var(--text-muted);font-family:var(--mono)">
                       {% for g in u.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
@@ -345,7 +395,7 @@
               </td>
             </tr>
             {% empty %}
-            <tr><td colspan="8">
+            <tr><td colspan="9">
               <div class="empty-state">
                 <span class="material-icons-round">manage_accounts</span>
                 <div class="empty-state-title">No users yet</div>
@@ -735,12 +785,149 @@ function filterUsers() {
   });
   document.getElementById('userTableInfo').textContent =
     `Showing ${visible} of ${rows.length} user${rows.length !== 1 ? 's' : ''}`;
+  updateUserSelectAll();
 }
 
-/* ── FIELD-LEVEL ERROR HELPERS ── */
+/* ═══════════════════════════════════════════════════════════════
+   BULK SELECTION & DELETE
+═══════════════════════════════════════════════════════════════ */
+const selectedUserIds = new Set(); // { id: number, username: string }
+// We store objects; use id as the key
+const selectedUsers   = new Map(); // id → username
 
-// Map of server error keywords → { fieldId, errorElId }
-// The server returns plain English messages; we match substrings.
+function toggleUserSelect(cb) {
+  const id       = parseInt(cb.dataset.userid);
+  const username = cb.dataset.username;
+  if (cb.checked) {
+    selectedUsers.set(id, username);
+  } else {
+    selectedUsers.delete(id);
+  }
+  // highlight selected row
+  cb.closest('tr').style.background = cb.checked ? 'var(--red-bg)' : '';
+  updateUserBulkBar();
+  updateUserSelectAll();
+}
+
+function toggleUserSelectAll(masterCb) {
+  // Only act on visible, deletable rows
+  const visibleCbs = getVisibleDeletableCbs();
+  visibleCbs.forEach(cb => {
+    cb.checked = masterCb.checked;
+    const id       = parseInt(cb.dataset.userid);
+    const username = cb.dataset.username;
+    if (masterCb.checked) {
+      selectedUsers.set(id, username);
+    } else {
+      selectedUsers.delete(id);
+    }
+    cb.closest('tr').style.background = masterCb.checked ? 'var(--red-bg)' : '';
+  });
+  updateUserBulkBar();
+}
+
+function getVisibleDeletableCbs() {
+  return Array.from(document.querySelectorAll('.user-select-cb')).filter(cb => {
+    const row = cb.closest('tr');
+    return row && row.style.display !== 'none';
+  });
+}
+
+function updateUserSelectAll() {
+  const all       = getVisibleDeletableCbs();
+  const checked   = all.filter(cb => cb.checked);
+  const masterCb  = document.getElementById('userSelectAll');
+  if (!masterCb) return;
+  if (all.length === 0) {
+    masterCb.checked       = false;
+    masterCb.indeterminate = false;
+  } else if (checked.length === all.length) {
+    masterCb.checked       = true;
+    masterCb.indeterminate = false;
+  } else if (checked.length === 0) {
+    masterCb.checked       = false;
+    masterCb.indeterminate = false;
+  } else {
+    masterCb.checked       = false;
+    masterCb.indeterminate = true;
+  }
+}
+
+function updateUserBulkBar() {
+  const bar = document.getElementById('userBulkBar');
+  if (selectedUsers.size > 0) {
+    bar.classList.add('visible');
+    const noun = selectedUsers.size === 1 ? 'user' : 'users';
+    document.getElementById('userBulkCount').textContent = `${selectedUsers.size} ${noun} selected`;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function clearUserSelection() {
+  selectedUsers.clear();
+  document.querySelectorAll('.user-select-cb').forEach(cb => {
+    cb.checked = false;
+    cb.closest('tr').style.background = '';
+  });
+  const masterCb = document.getElementById('userSelectAll');
+  if (masterCb) { masterCb.checked = false; masterCb.indeterminate = false; }
+  updateUserBulkBar();
+}
+
+async function bulkDeleteUsers() {
+  if (selectedUsers.size === 0) return;
+
+  const names = Array.from(selectedUsers.values()).join(', ');
+  const noun  = selectedUsers.size === 1 ? 'user' : 'users';
+  const msg   = selectedUsers.size === 1
+    ? `Delete user "${names}"? This cannot be undone.`
+    : `Delete ${selectedUsers.size} users (${names})? This cannot be undone.`;
+
+  if (!confirm(msg)) return;
+
+  const ids       = Array.from(selectedUsers.keys());
+  const csrfToken = document.querySelector('#deleteUserForm [name=csrfmiddlewaretoken]').value;
+
+  // Delete sequentially via existing endpoint
+  let successCount = 0;
+  let lastError    = null;
+
+  for (const id of ids) {
+    try {
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', csrfToken);
+      formData.append('form_type', 'delete_user');
+      formData.append('user_id', id);
+
+      const res  = await fetch(`/dashboard/users/${id}/delete/`, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      const json = await res.json();
+      if (json.ok) {
+        successCount++;
+      } else {
+        lastError = json.error;
+      }
+    } catch (e) {
+      lastError = 'Network error during deletion.';
+    }
+  }
+
+  const resultMsg = successCount > 0
+    ? (lastError
+        ? `Deleted ${successCount} of ${ids.length} users. Some could not be deleted.`
+        : `${successCount} ${successCount === 1 ? 'user' : 'users'} deleted successfully.`)
+    : (lastError || 'No users were deleted.');
+
+  _flashSuccessToast(resultMsg, successCount > 0 ? 'success' : 'error');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIELD-LEVEL ERROR HELPERS
+═══════════════════════════════════════════════════════════════ */
 const ERROR_FIELD_MAP = [
   { match: 'username is required',    field: 'fieldUsername',  err: 'errUsername'  },
   { match: 'username',                field: 'fieldUsername',  err: 'errUsername'  },
@@ -764,7 +951,6 @@ function showFieldError(fieldId, errorElId, msg) {
 function clearFieldError(errorElId) {
   const errEl = document.getElementById(errorElId);
   if (!errEl) return;
-  // derive the input id from the error id (errUsername -> fieldUsername etc.)
   const fieldId = errEl.previousElementSibling
     ? errEl.previousElementSibling.id
     : null;
@@ -774,7 +960,6 @@ function clearFieldError(errorElId) {
 
 function clearAllFieldErrors() {
   ['errUsername','errEmail','errPassword','errPassword2'].forEach(clearFieldError);
-  // also remove .input-error from all inputs just in case
   document.querySelectorAll('#userForm .form-input').forEach(i => i.classList.remove('input-error'));
 }
 
@@ -786,11 +971,56 @@ function routeError(msg) {
       return;
     }
   }
-  // fallback: show under username as a generic spot
   showFieldError('fieldUsername', 'errUsername', msg);
 }
 
-/* ── AJAX USER FORM SUBMIT ── */
+/* ═══════════════════════════════════════════════════════════════
+   TOAST HELPER
+   - type: 'success' (default) | 'error'
+   - Reloads ONLY after the toast fully hides (hidden.bs.toast event)
+   - If reload === false, skip the page reload (e.g. bulk partial)
+═══════════════════════════════════════════════════════════════ */
+function _flashSuccessToast(msg, type, reloadAfter) {
+  const isError   = type === 'error';
+  const toastColor = isError ? 'var(--red)' : 'var(--g-primary)';
+  const icon       = isError ? 'error'       : 'check_circle';
+  const shouldReload = reloadAfter !== false; // default true
+
+  const div = document.createElement('div');
+  div.className = 'toast ph-toast fade align-items-center border-0';
+  div.setAttribute('role', 'alert');
+  div.setAttribute('aria-live', 'assertive');
+  div.setAttribute('aria-atomic', 'true');
+  div.setAttribute('data-bs-delay', '5000');
+  div.style.setProperty('--toast-color', toastColor);
+  div.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-3 py-3"
+        style="color:var(--text-primary);font-size:13px;font-weight:600;">
+        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>
+        ${msg}
+      </div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size:10px;"></button>
+    </div>
+    <div class="ph-toast-progress"></div>`;
+
+  document.getElementById('toastContainer').appendChild(div);
+  const toastInstance = new bootstrap.Toast(div);
+
+  // ── KEY FIX: wait for the toast to fully hide, THEN reload ──
+  if (shouldReload) {
+    div.addEventListener('hidden.bs.toast', () => location.reload());
+  } else {
+    // No reload — just clean up the element when hidden
+    div.addEventListener('hidden.bs.toast', () => div.remove());
+  }
+
+  toastInstance.show();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AJAX USER FORM SUBMIT
+═══════════════════════════════════════════════════════════════ */
 async function submitUserForm() {
   clearAllFieldErrors();
   const form = document.getElementById('userForm');
@@ -804,9 +1034,7 @@ async function submitUserForm() {
     const json = await res.json();
     if (json.ok) {
       closeModal('userModal');
-      _flashSuccessToast(json.message);
-      // Wait for toast to show, then reload after a short delay
-      setTimeout(() => location.reload(), 1500);
+      _flashSuccessToast(json.message, 'success');
     } else {
       routeError(json.error);
     }
@@ -815,7 +1043,9 @@ async function submitUserForm() {
   }
 }
 
-/* ── AJAX DELETE USER ── */
+/* ═══════════════════════════════════════════════════════════════
+   AJAX DELETE SINGLE USER (from modal)
+═══════════════════════════════════════════════════════════════ */
 async function submitDeleteUser() {
   const uid = document.getElementById('userFormUserId').value;
   if (!uid) return;
@@ -833,10 +1063,8 @@ async function submitDeleteUser() {
     const json = await res.json();
     if (json.ok) {
       closeModal('userModal');
-      _flashSuccessToast(json.message);
-      setTimeout(() => location.reload(), 1500);
+      _flashSuccessToast(json.message, 'success');
     } else {
-      // delete errors are rare (self-delete guard) — show under username
       showFieldError('fieldUsername', 'errUsername', json.error);
     }
   } catch (e) {
@@ -844,31 +1072,9 @@ async function submitDeleteUser() {
   }
 }
 
-/* ── SUCCESS TOAST ── */
-function _flashSuccessToast(msg) {
-  const div = document.createElement('div');
-  div.className = 'toast ph-toast fade align-items-center border-0';
-  div.setAttribute('role', 'alert');
-  div.setAttribute('aria-live', 'assertive');
-  div.setAttribute('aria-atomic', 'true');
-  div.setAttribute('data-bs-delay', '5000');
-  div.style.setProperty('--toast-color', 'var(--g-primary)');
-  div.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body d-flex align-items-center gap-3 py-3"
-        style="color:var(--text-primary);font-size:13px;font-weight:600;">
-        <span class="material-icons-round" style="font-size:20px;color:var(--g-primary)">check_circle</span>
-        ${msg}
-      </div>
-      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size: 10px;"></button>
-    </div>
-    <div class="ph-toast-progress"></div>`;
-  document.getElementById('toastContainer').appendChild(div);
-  const toast = new bootstrap.Toast(div);
-  toast.show();
-}
-
-/* ── MODAL HELPERS ── */
+/* ═══════════════════════════════════════════════════════════════
+   MODAL HELPERS
+═══════════════════════════════════════════════════════════════ */
 const CURRENT_USER_ID = {{ request.user.id }};
 
 function openUserModal(userId, username, email, first, last, isActive, isStaff, isSuperuser, groupIds, permIds) {
