@@ -633,8 +633,12 @@ function toggleTheme() {
 /* ── CLOCK ── */
 function tickClock() {
   const now     = new Date();
-  const dateStr = now.toLocaleDateString('en-PH', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
-  const timeStr = now.toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  const options = { timeZone: 'Asia/Manila', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+  const timeOptions = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+  
+  const dateStr = now.toLocaleDateString('en-PH', options);
+  const timeStr = now.toLocaleTimeString('en-PH', timeOptions);
+  
   const dateBadge = document.getElementById('currentDate');
   if (dateBadge) dateBadge.textContent = `${dateStr}  ${timeStr}`;
   const clk = document.getElementById('topbarClock');
