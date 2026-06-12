@@ -111,7 +111,14 @@
   transition: border-color 120ms;
 }
 .form-input:focus { border-color: var(--g-primary); }
+.form-input.input-error { border-color: var(--red) !important; background: var(--red-bg); }
 .form-hint { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.field-error {
+  display: none; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: var(--red); line-height: 1.4;
+}
+.field-error.visible { display: flex; }
+.field-error .material-icons-round { font-size: 13px; flex-shrink: 0; }
 
 .perm-grid { display: flex; flex-direction: column; gap: 5px; max-height: 180px; overflow-y: auto; padding-right: 4px; }
 .perm-grid::-webkit-scrollbar { width: 4px; }
@@ -462,7 +469,7 @@
         </button>
       </div>
 
-      <form method="post" action="" id="userForm">
+      <form id="userForm" onsubmit="return false;">
         {% csrf_token %}
         <input type="hidden" id="userFormUserId" name="user_id" value="">
         <input type="hidden" name="form_type" value="user">
@@ -477,12 +484,14 @@
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="fieldUsername">Username <span class="req">*</span></label>
-                <input class="form-input" type="text" id="fieldUsername" name="username" placeholder="e.g. juan.dela_cruz" autocomplete="off" required>
+                <input class="form-input" type="text" id="fieldUsername" name="username" placeholder="e.g. juan.dela_cruz" autocomplete="off" required oninput="clearFieldError('errUsername')">
+                <span class="field-error" id="errUsername"><span class="material-icons-round">error</span><span></span></span>
                 <span class="form-hint">Required. 150 chars max. Letters, digits, and @/./+/-/_ only.</span>
               </div>
               <div class="form-group">
                 <label class="form-label" for="fieldEmail">Email Address</label>
-                <input class="form-input" type="email" id="fieldEmail" name="email" placeholder="user@philhealth.gov.ph">
+                <input class="form-input" type="email" id="fieldEmail" name="email" placeholder="user@philhealth.gov.ph" oninput="clearFieldError('errEmail')">
+                <span class="field-error" id="errEmail"><span class="material-icons-round">error</span><span></span></span>
               </div>
             </div>
             <div class="form-row">
@@ -505,12 +514,14 @@
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label" for="fieldPassword">Password <span class="req" id="pwRequired">*</span></label>
-                <input class="form-input" type="password" id="fieldPassword" name="password1" placeholder="••••••••" autocomplete="new-password">
+                <input class="form-input" type="password" id="fieldPassword" name="password1" placeholder="••••••••" autocomplete="new-password" oninput="clearFieldError('errPassword')">
+                <span class="field-error" id="errPassword"><span class="material-icons-round">error</span><span></span></span>
                 <span class="form-hint">Min. 8 chars. Not too common. Not entirely numeric.</span>
               </div>
               <div class="form-group">
                 <label class="form-label" for="fieldPassword2">Confirm Password <span class="req" id="pw2Required">*</span></label>
-                <input class="form-input" type="password" id="fieldPassword2" name="password2" placeholder="••••••••" autocomplete="new-password">
+                <input class="form-input" type="password" id="fieldPassword2" name="password2" placeholder="••••••••" autocomplete="new-password" oninput="clearFieldError('errPassword2')">
+                <span class="field-error" id="errPassword2"><span class="material-icons-round">error</span><span></span></span>
               </div>
             </div>
             <div id="editPasswordNote" style="display:none;font-size:12px;color:var(--text-muted);padding:10px 12px;border:1px solid var(--border);background:var(--surface-page);">
@@ -604,7 +615,7 @@
             </button>
           </div>
           <button type="button" class="btn-ph" onclick="closeModal('userModal')">Cancel</button>
-          <button type="submit" class="btn-ph btn-ph-primary">
+          <button type="button" class="btn-ph btn-ph-primary" onclick="submitUserForm()">
             <span class="material-icons-round">save</span>
             <span id="saveUserLabel">Add User</span>
           </button>
@@ -715,23 +726,153 @@ function filterUsers() {
   const rows   = document.querySelectorAll('.user-row');
   let visible  = 0;
   rows.forEach(r => {
-    const matchQ = !q
-      || r.dataset.username.includes(q)
-      || r.dataset.email.includes(q)
-      || r.dataset.fullname.includes(q);
+    const matchQ      = !q || r.dataset.username.includes(q) || r.dataset.email.includes(q) || r.dataset.fullname.includes(q);
     const matchRole   = !role   || r.dataset.role   === role;
     const matchStatus = !status || r.dataset.status === status;
     const show = matchQ && matchRole && matchStatus;
     r.style.display = show ? '' : 'none';
     if (show) visible++;
   });
-  document.getElementById('userTableInfo').textContent = `Showing ${visible} of ${rows.length} user${rows.length !== 1 ? 's' : ''}`;
+  document.getElementById('userTableInfo').textContent =
+    `Showing ${visible} of ${rows.length} user${rows.length !== 1 ? 's' : ''}`;
+}
+
+/* ── FIELD-LEVEL ERROR HELPERS ── */
+
+// Map of server error keywords → { fieldId, errorElId }
+// The server returns plain English messages; we match substrings.
+const ERROR_FIELD_MAP = [
+  { match: 'username is required',    field: 'fieldUsername',  err: 'errUsername'  },
+  { match: 'username',                field: 'fieldUsername',  err: 'errUsername'  },
+  { match: 'email',                   field: 'fieldEmail',     err: 'errEmail'     },
+  { match: 'passwords do not match',  field: 'fieldPassword2', err: 'errPassword2' },
+  { match: 'password must be',        field: 'fieldPassword',  err: 'errPassword'  },
+  { match: 'password',                field: 'fieldPassword',  err: 'errPassword'  },
+];
+
+function showFieldError(fieldId, errorElId, msg) {
+  const input = document.getElementById(fieldId);
+  const errEl = document.getElementById(errorElId);
+  if (input)  input.classList.add('input-error');
+  if (errEl) {
+    errEl.querySelector('span:last-child').textContent = msg;
+    errEl.classList.add('visible');
+    errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function clearFieldError(errorElId) {
+  const errEl = document.getElementById(errorElId);
+  if (!errEl) return;
+  // derive the input id from the error id (errUsername -> fieldUsername etc.)
+  const fieldId = errEl.previousElementSibling
+    ? errEl.previousElementSibling.id
+    : null;
+  if (fieldId) document.getElementById(fieldId)?.classList.remove('input-error');
+  errEl.classList.remove('visible');
+}
+
+function clearAllFieldErrors() {
+  ['errUsername','errEmail','errPassword','errPassword2'].forEach(clearFieldError);
+  // also remove .input-error from all inputs just in case
+  document.querySelectorAll('#userForm .form-input').forEach(i => i.classList.remove('input-error'));
+}
+
+function routeError(msg) {
+  const lower = msg.toLowerCase();
+  for (const rule of ERROR_FIELD_MAP) {
+    if (lower.includes(rule.match)) {
+      showFieldError(rule.field, rule.err, msg);
+      return;
+    }
+  }
+  // fallback: show under username as a generic spot
+  showFieldError('fieldUsername', 'errUsername', msg);
+}
+
+/* ── AJAX USER FORM SUBMIT ── */
+async function submitUserForm() {
+  clearAllFieldErrors();
+  const form = document.getElementById('userForm');
+  const data = new FormData(form);
+  try {
+    const res  = await fetch(form.action, {
+      method: 'POST',
+      body: data,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    const json = await res.json();
+    if (json.ok) {
+      closeModal('userModal');
+      _flashSuccessToast(json.message);
+      // Wait for toast to show, then reload after a short delay
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      routeError(json.error);
+    }
+  } catch (e) {
+    showFieldError('fieldUsername', 'errUsername', 'An unexpected error occurred. Please try again.');
+  }
+}
+
+/* ── AJAX DELETE USER ── */
+async function submitDeleteUser() {
+  const uid = document.getElementById('userFormUserId').value;
+  if (!uid) return;
+  if (!confirm('Delete this user? This action cannot be undone.')) return;
+  const form = document.getElementById('deleteUserForm');
+  document.getElementById('deleteUserId').value = uid;
+  form.action = `/dashboard/users/${uid}/delete/`;
+  const data  = new FormData(form);
+  try {
+    const res  = await fetch(form.action, {
+      method: 'POST',
+      body: data,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    const json = await res.json();
+    if (json.ok) {
+      closeModal('userModal');
+      _flashSuccessToast(json.message);
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      // delete errors are rare (self-delete guard) — show under username
+      showFieldError('fieldUsername', 'errUsername', json.error);
+    }
+  } catch (e) {
+    showFieldError('fieldUsername', 'errUsername', 'An unexpected error occurred.');
+  }
+}
+
+/* ── SUCCESS TOAST ── */
+function _flashSuccessToast(msg) {
+  const div = document.createElement('div');
+  div.className = 'toast ph-toast fade align-items-center border-0';
+  div.setAttribute('role', 'alert');
+  div.setAttribute('aria-live', 'assertive');
+  div.setAttribute('aria-atomic', 'true');
+  div.setAttribute('data-bs-delay', '5000');
+  div.style.setProperty('--toast-color', 'var(--g-primary)');
+  div.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-3 py-3"
+        style="color:var(--text-primary);font-size:13px;font-weight:600;">
+        <span class="material-icons-round" style="font-size:20px;color:var(--g-primary)">check_circle</span>
+        ${msg}
+      </div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size: 10px;"></button>
+    </div>
+    <div class="ph-toast-progress"></div>`;
+  document.getElementById('toastContainer').appendChild(div);
+  const toast = new bootstrap.Toast(div);
+  toast.show();
 }
 
 /* ── MODAL HELPERS ── */
 const CURRENT_USER_ID = {{ request.user.id }};
 
 function openUserModal(userId, username, email, first, last, isActive, isStaff, isSuperuser, groupIds, permIds) {
+  clearAllFieldErrors();
   const isEdit = !!userId;
   const isSelf = userId === CURRENT_USER_ID;
 
@@ -743,12 +884,10 @@ function openUserModal(userId, username, email, first, last, isActive, isStaff, 
   document.getElementById('pw2Required').style.display         = isEdit ? 'none' : 'inline';
   document.getElementById('userFormUserId').value              = userId || '';
 
-  /* route form to correct URL */
   document.getElementById('userForm').action = isEdit
     ? `/dashboard/users/${userId}/edit/`
     : `/dashboard/users/add/`;
 
-  /* fill fields */
   document.getElementById('fieldUsername').value  = username  || '';
   document.getElementById('fieldEmail').value     = email     || '';
   document.getElementById('fieldFirstName').value = first     || '';
@@ -756,41 +895,37 @@ function openUserModal(userId, username, email, first, last, isActive, isStaff, 
   document.getElementById('fieldPassword').value  = '';
   document.getElementById('fieldPassword2').value = '';
 
-  /* permission rows */
   setPermItem('permActiveRow',  'chkActive',    isActive     !== false);
   setPermItem('permStaffRow',   'chkStaff',     !!isStaff);
   setPermItem('permSuperRow',   'chkSuperuser', !!isSuperuser);
 
-  /* Disable self-deactivation in modal */
-  const chkActive = document.getElementById('chkActive');
+  const chkActive     = document.getElementById('chkActive');
   const permActiveRow = document.getElementById('permActiveRow');
   if (isSelf) {
-    chkActive.disabled = true;
-    permActiveRow.style.opacity = '0.6';
+    chkActive.disabled                = true;
+    permActiveRow.style.opacity       = '0.6';
     permActiveRow.style.pointerEvents = 'none';
-    permActiveRow.title = "You cannot deactivate your own account.";
+    permActiveRow.title               = 'You cannot deactivate your own account.';
   } else {
-    chkActive.disabled = false;
-    permActiveRow.style.opacity = '1';
+    chkActive.disabled                = false;
+    permActiveRow.style.opacity       = '1';
     permActiveRow.style.pointerEvents = 'auto';
-    permActiveRow.title = "";
+    permActiveRow.title               = '';
   }
 
-  /* group checkboxes */
   const gIds = groupIds || [];
   document.querySelectorAll('#groupPickerList .perm-item').forEach(item => {
-    const cb = item.querySelector('input[type="checkbox"]');
+    const cb      = item.querySelector('input[type="checkbox"]');
     const checked = gIds.includes(String(cb.value));
-    cb.checked = checked;
+    cb.checked    = checked;
     item.classList.toggle('checked', checked);
   });
 
-  /* user permission checkboxes */
   const pIds = permIds || [];
   document.querySelectorAll('#permPickerList .perm-item').forEach(item => {
-    const cb = item.querySelector('input[type="checkbox"]');
+    const cb      = item.querySelector('input[type="checkbox"]');
     const checked = pIds.includes(String(cb.value));
-    cb.checked = checked;
+    cb.checked    = checked;
     item.classList.toggle('checked', checked);
   });
 
@@ -813,9 +948,9 @@ function openGroupModal(groupId, groupName, permIds) {
 
   const pIds = permIds || [];
   document.querySelectorAll('#groupPermPickerList .perm-item').forEach(item => {
-    const cb = item.querySelector('input[type="checkbox"]');
+    const cb      = item.querySelector('input[type="checkbox"]');
     const checked = pIds.includes(String(cb.value));
-    cb.checked = checked;
+    cb.checked    = checked;
     item.classList.toggle('checked', checked);
   });
 
@@ -830,7 +965,7 @@ function closeModal(id) {
 }
 
 function togglePermItem(el) {
-  const cb = el.querySelector('input[type="checkbox"]');
+  const cb   = el.querySelector('input[type="checkbox"]');
   cb.checked = !cb.checked;
   el.classList.toggle('checked', cb.checked);
 }
@@ -838,15 +973,6 @@ function togglePermItem(el) {
 function setPermItem(rowId, cbId, checked) {
   document.getElementById(cbId).checked = checked;
   document.getElementById(rowId).classList.toggle('checked', checked);
-}
-
-function submitDeleteUser() {
-  const uid = document.getElementById('userFormUserId').value;
-  if (!uid) return;
-  if (!confirm('Delete this user? This action cannot be undone.')) return;
-  document.getElementById('deleteUserId').value = uid;
-  document.getElementById('deleteUserForm').action = `/dashboard/users/${uid}/delete/`;
-  document.getElementById('deleteUserForm').submit();
 }
 
 function submitDeleteGroup() {
