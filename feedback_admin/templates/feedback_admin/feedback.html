@@ -1,0 +1,559 @@
+{% extends 'feedback_admin/base.html' %}
+{% load static %}
+
+{% block title %}Feedback — PhilHealth Cauayan City{% endblock %}
+
+{% block nav_feedback %}active{% endblock %}
+
+{% block extra_styles %}
+/* ── FEEDBACK PAGE EXTRAS ──────────────────────────────────────────── */
+.category-tab-bar {
+  display: flex; gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.category-tab {
+  padding: 10px 18px; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border: none; border-bottom: 2px solid transparent;
+  background: transparent; color: var(--text-muted);
+  cursor: pointer; font-family: var(--font);
+  margin-bottom: -2px; transition: color 120ms, border-color 120ms;
+  display: flex; align-items: center; gap: 7px; white-space: nowrap;
+}
+.category-tab:hover { color: var(--text-primary); }
+.category-tab.active { color: var(--g-primary); border-bottom-color: var(--g-primary); }
+.category-tab .material-icons-round { font-size: 16px; }
+.cat-badge {
+  font-size: 9px; font-weight: 700; padding: 2px 6px;
+  background: var(--border); color: var(--text-muted); font-family: var(--mono);
+}
+.category-tab.active .cat-badge { background: var(--g-xlight); color: var(--g-forest); }
+
+/* ── CATEGORY CHIPS ── */
+.cat-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; padding: 3px 8px; white-space: nowrap;
+}
+.cat-chip .material-icons-round { font-size: 12px; }
+.chip-complaint   { background: var(--red-bg);    color: var(--red); }
+.chip-suggestion  { background: var(--g-xlight);  color: var(--g-forest); }
+.chip-compliment  { background: #fffbeb;           color: #7a5500; }
+.chip-concern     { background: #eff6ff;           color: #1d4ed8; }
+[data-theme="dark"] .chip-complaint  { background: rgba(192,0,26,0.12);  color: #f06070; }
+[data-theme="dark"] .chip-suggestion { background: rgba(35,164,85,0.12); color: #5fcf8a; }
+[data-theme="dark"] .chip-compliment { background: rgba(184,147,58,0.12);color: #d4a840; }
+[data-theme="dark"] .chip-concern    { background: rgba(59,130,246,0.12); color: #93c5fd; }
+
+/* ── FEEDBACK CARD ── */
+.feedback-card {
+  background: var(--surface-card); border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  padding: 16px 18px; margin-bottom: 10px;
+  transition: border-color 150ms, box-shadow 150ms; cursor: pointer;
+}
+.feedback-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.feedback-card.cat-complaint  { border-left-color: var(--red); }
+.feedback-card.cat-suggestion { border-left-color: var(--g-primary); }
+.feedback-card.cat-compliment { border-left-color: var(--gold); }
+.feedback-card.cat-concern    { border-left-color: #3b82f6; }
+
+.feedback-card-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.feedback-card-meta {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.feedback-card-date {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  font-family: var(--mono);
+}
+.feedback-card-body {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.7;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.feedback-card.expanded .feedback-card-body {
+  display: block; -webkit-line-clamp: unset;
+}
+
+/* ── NOTES SECTION ── */
+.action-notes {
+  display: none; margin-top: 14px; padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+.feedback-card.expanded .action-notes { display: block; }
+.notes-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.notes-label .material-icons-round { font-size: 14px; color: var(--g-primary); }
+.notes-input {
+  width: 100%; padding: 10px 12px; font-size: 13px;
+  font-family: var(--font); border: 1.5px solid var(--border);
+  background: var(--surface-page); color: var(--text-primary);
+  outline: none; resize: vertical; min-height: 72px;
+  line-height: 1.6; border-radius: 0; transition: border-color 120ms;
+}
+.notes-input:focus { border-color: var(--g-primary); }
+.notes-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+
+/* ── EXISTING NOTE ── */
+.existing-note {
+  background: var(--g-xlight); border: 1px solid var(--g-light);
+  border-left: 3px solid var(--g-primary);
+  padding: 10px 14px; font-size: 12px; color: var(--g-forest);
+  line-height: 1.65; margin-bottom: 10px;
+}
+[data-theme="dark"] .existing-note {
+  background: rgba(35,164,85,0.08); border-color: rgba(35,164,85,0.2);
+  color: #5fcf8a;
+}
+.existing-note-meta {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--g-primary); margin-bottom: 5px;
+  display: flex; align-items: center; gap: 5px;
+}
+.existing-note-meta .material-icons-round { font-size: 13px; }
+
+/* ── SENTIMENT MINI CHIP ── */
+.sent-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700; padding: 2px 6px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.sent-pos { background: var(--g-xlight); color: var(--g-forest); }
+.sent-neu { background: var(--gold-light); color: #7a5500; }
+.sent-neg { background: var(--red-bg); color: var(--red); }
+.sent-chip .material-icons-round { font-size: 12px; }
+[data-theme="dark"] .sent-pos { background: rgba(35,164,85,0.15); color: #5fcf8a; }
+[data-theme="dark"] .sent-neu { background: rgba(184,147,58,0.15); color: #d4a840; }
+[data-theme="dark"] .sent-neg { background: rgba(192,0,26,0.15); color: #f06070; }
+
+/* ── FILTER PANEL ── */
+.filter-panel {
+  background: var(--surface-card); border: 1px solid var(--border);
+  padding: 16px 18px; margin-bottom: 16px;
+}
+.filter-panel-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.date-range-inputs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.date-input {
+  height: 34px; padding: 0 10px; font-size: 12px; font-family: var(--font);
+  border: 1.5px solid var(--border); background: var(--surface-page);
+  color: var(--text-primary); outline: none; border-radius: 0;
+  transition: border-color 120ms;
+}
+.date-input:focus { border-color: var(--g-primary); }
+.filter-sep { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; padding: 64px 20px;
+  color: var(--text-muted);
+}
+.empty-state .material-icons-round { font-size: 48px; opacity: 0.25; }
+.empty-state-title { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.empty-state-sub   { font-size: 12px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 575px) {
+  .category-tab { padding: 9px 10px; font-size: 9px; }
+  .filter-panel-row { flex-direction: column; align-items: stretch; }
+  .date-range-inputs { width: 100%; }
+  .date-input { flex: 1; min-width: 0; }
+  .feedback-card { padding: 12px 14px; }
+}
+{% endblock %}
+
+{% block page_content %}
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-row">
+      <div>
+        <div class="page-eyebrow">
+          <span class="material-icons-round">chat_bubble_outline</span>
+          Comments &amp; Suggestions
+        </div>
+        <h1 class="page-title">Feedback</h1>
+        <p class="page-subtitle">Detailed view of all citizen comments, suggestions, complaints, and compliments.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <div class="date-badge">
+          <span class="material-icons-round">today</span>
+          <span id="currentDate">—</span>
+        </div>
+        <button class="btn-ph btn-ph-primary" onclick="exportFeedbackCSV()">
+          <span class="material-icons-round">download</span> Export CSV
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-sm-3">
+      <div class="stat-card" style="border-top-color:var(--red)">
+        <div class="stat-card-icon" style="background:var(--red-bg)"><span class="material-icons-round" style="color:var(--red)">report_problem</span></div>
+        <div class="stat-value" id="countComplaint">12</div>
+        <div class="stat-label">Complaints</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">report_problem</span></div>
+      </div>
+    </div>
+    <div class="col-6 col-sm-3">
+      <div class="stat-card card-vsat">
+        <div class="stat-card-icon"><span class="material-icons-round">lightbulb</span></div>
+        <div class="stat-value" id="countSuggestion">19</div>
+        <div class="stat-label">Suggestions</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">lightbulb</span></div>
+      </div>
+    </div>
+    <div class="col-6 col-sm-3">
+      <div class="stat-card card-neu">
+        <div class="stat-card-icon"><span class="material-icons-round">thumb_up</span></div>
+        <div class="stat-value" id="countCompliment">24</div>
+        <div class="stat-label">Compliments</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">thumb_up</span></div>
+      </div>
+    </div>
+    <div class="col-6 col-sm-3">
+      <div class="stat-card" style="border-top-color:#3b82f6">
+        <div class="stat-card-icon" style="background:#eff6ff"><span class="material-icons-round" style="color:#1d4ed8">info</span></div>
+        <div class="stat-value" id="countConcern">8</div>
+        <div class="stat-label">Service Concerns</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">info</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-panel">
+    <div class="filter-panel-row">
+      <!-- Search -->
+      <div class="search-box" style="max-width:280px;flex:1 1 200px;">
+        <span class="material-icons-round">search</span>
+        <input type="text" id="fbSearch" placeholder="Search feedback…" oninput="applyFbFilters()" aria-label="Search feedback">
+      </div>
+      <!-- Date range -->
+      <div class="date-range-inputs">
+        <span class="filter-sep">From</span>
+        <input type="date" class="date-input" id="dateFrom" onchange="applyFbFilters()" aria-label="From date">
+        <span class="filter-sep">to</span>
+        <input type="date" class="date-input" id="dateTo" onchange="applyFbFilters()" aria-label="To date">
+        <button class="btn-ph btn-ph-sm" onclick="clearDates()" title="Clear dates">
+          <span class="material-icons-round">clear</span>
+        </button>
+      </div>
+      <!-- Sentiment filter -->
+      <select class="btn-ph" id="sentimentFilter" onchange="applyFbFilters()" aria-label="Filter by sentiment">
+        <option value="">All Sentiments</option>
+        <option value="pos">Very Satisfactory</option>
+        <option value="neu">Satisfactory</option>
+        <option value="neg">Unsatisfactory</option>
+      </select>
+      <!-- Sort -->
+      <select class="btn-ph" id="sortFilter" onchange="applyFbFilters()" aria-label="Sort order">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="category">By Category</option>
+      </select>
+      <span class="table-info" id="fbInfo" style="margin-left:auto;">—</span>
+    </div>
+  </div>
+
+  <!-- CATEGORY TABS -->
+  <div class="category-tab-bar" id="categoryTabs">
+    <button class="category-tab active" onclick="setCategoryTab(this, '')" data-cat="">
+      <span class="material-icons-round">list</span>
+      All Feedback
+      <span class="cat-badge" id="tabCountAll">63</span>
+    </button>
+    <button class="category-tab" onclick="setCategoryTab(this, 'complaint')" data-cat="complaint">
+      <span class="material-icons-round">report_problem</span>
+      Complaints
+      <span class="cat-badge" id="tabCountComplaint">12</span>
+    </button>
+    <button class="category-tab" onclick="setCategoryTab(this, 'suggestion')" data-cat="suggestion">
+      <span class="material-icons-round">lightbulb</span>
+      Suggestions
+      <span class="cat-badge" id="tabCountSuggestion">19</span>
+    </button>
+    <button class="category-tab" onclick="setCategoryTab(this, 'compliment')" data-cat="compliment">
+      <span class="material-icons-round">thumb_up</span>
+      Compliments
+      <span class="cat-badge" id="tabCountCompliment">24</span>
+    </button>
+    <button class="category-tab" onclick="setCategoryTab(this, 'concern')" data-cat="concern">
+      <span class="material-icons-round">info</span>
+      Service Concerns
+      <span class="cat-badge" id="tabCountConcern">8</span>
+    </button>
+  </div>
+
+  <!-- FEEDBACK LIST -->
+  <div id="feedbackList"></div>
+
+  <!-- PAGINATION -->
+  <div class="pagination-row" id="fbPaginationRow" style="background:var(--surface-card);border:1px solid var(--border);border-top:none;">
+    <span class="table-info" id="fbPageInfo">—</span>
+    <div class="pg-btns" id="fbPgBtns"></div>
+  </div>
+
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+/* ── FEEDBACK DATA ── */
+const ALL_FEEDBACK = [
+  { id:1,  date:'2026-06-11', time:'14:32', category:'suggestion',  sentiment:'pos', comment:'Magdagdag ng upuan sa waiting area dahil maraming nakatayo lalo na sa umaga.',             note:'' },
+  { id:2,  date:'2026-06-11', time:'13:15', category:'complaint',   sentiment:'neg', comment:'Mabagal ang proseso ng claims. Naghintay ako ng dalawang oras para sa simpleng inquiry.', note:'Nire-review ng management ang queue system. Target na mabawasan ang wait time sa loob ng 2 linggo.' },
+  { id:3,  date:'2026-06-11', time:'12:48', category:'compliment',  sentiment:'pos', comment:'Napaka-accommodating ng staff. Lahat ng aking mga katanungan ay nasagot nang maayos.',   note:'' },
+  { id:4,  date:'2026-06-10', time:'16:20', category:'concern',     sentiment:'neu', comment:'Hindi malinaw ang signage para sa mga bagong bisita. Nahirapan akong hanapin ang tamang counter.', note:'Nakatakda nang mag-update ng signage sa susunod na linggo.' },
+  { id:5,  date:'2026-06-10', time:'15:05', category:'suggestion',  sentiment:'pos', comment:'Sana mayroon online submission ng mga dokumento para hindi na kailangan pang pumunta ng personal.', note:'' },
+  { id:6,  date:'2026-06-10', time:'14:40', category:'compliment',  sentiment:'pos', comment:'Napabilis ng bagong numbering system ang serbisyo. Salamat sa pagbabago.',                note:'' },
+  { id:7,  date:'2026-06-10', time:'13:22', category:'complaint',   sentiment:'neg', comment:'Bastos ang isang staff member nang tanungin ko ang status ng aking claim.',               note:'' },
+  { id:8,  date:'2026-06-09', time:'15:44', category:'suggestion',  sentiment:'neu', comment:'Sana ma-available online ang mga forms para makatipid ng oras sa pagpunta.',               note:'' },
+  { id:9,  date:'2026-06-09', time:'14:30', category:'compliment',  sentiment:'pos', comment:'Pinag-aayos ng staff ang aking mga dokumento nang may pasensya at malasakit.',             note:'' },
+  { id:10, date:'2026-06-09', time:'13:05', category:'compliment',  sentiment:'pos', comment:'Napaka-organisado ng opisina. Natapos ang aking transaksyon sa loob ng 20 minuto.',        note:'' },
+  { id:11, date:'2026-06-09', time:'11:50', category:'concern',     sentiment:'neu', comment:'Walang nagbibigay ng update kung gaano katagal pa ang paghihintay.',                       note:'' },
+  { id:12, date:'2026-06-09', time:'10:25', category:'complaint',   sentiment:'neg', comment:'Hindi gumagana ang air conditioning. NapakaInit sa loob ng opisina.',                     note:'Naiulat na sa facilities team. Naghihintay ng technician.' },
+  { id:13, date:'2026-06-08', time:'16:10', category:'compliment',  sentiment:'pos', comment:'Ang staff na nag-assist sa akin ay napaka-mapagpasensya at malinaw ang paliwanag.',        note:'' },
+  { id:14, date:'2026-06-08', time:'15:00', category:'compliment',  sentiment:'pos', comment:'Excellent na front-desk service. Salamat sa lahat.',                                       note:'' },
+  { id:15, date:'2026-06-08', time:'13:30', category:'suggestion',  sentiment:'neu', comment:'Ang waiting area ay kailangan ng mas maraming upuan at maayos na climate control.',        note:'' },
+  { id:16, date:'2026-06-08', time:'11:15', category:'compliment',  sentiment:'pos', comment:'Natapos ang transaksyon sa oras. Lubos kong inirerekomenda ang online pre-registration.',  note:'' },
+  { id:17, date:'2026-06-08', time:'10:00', category:'complaint',   sentiment:'neg', comment:'Hindi nig-honor ang aking appointment. Naghintay ng dalawang oras kahit may schedule.',    note:'' },
+  { id:18, date:'2026-06-07', time:'14:55', category:'compliment',  sentiment:'pos', comment:'Napaka-informative ng staff. Tinulungan nila akong maintindihan ang aking mga benepisyo.', note:'' },
+  { id:19, date:'2026-06-07', time:'13:40', category:'concern',     sentiment:'neu', comment:'Minsan may kasamang maling impormasyon ang mga requirements na sinasabi ng iba\'t ibang staff.', note:'' },
+  { id:20, date:'2026-06-06', time:'16:30', category:'suggestion',  sentiment:'pos', comment:'Magdagdag ng self-service kiosk para sa mga simpleng inquiry para mapabilis ang linya.',   note:'' },
+  { id:21, date:'2026-06-06', time:'15:20', category:'complaint',   sentiment:'neg', comment:'Binigyan ako ng maling impormasyon tungkol sa requirements. Nasayang ang aking biyahe.',   note:'' },
+  { id:22, date:'2026-06-05', time:'14:10', category:'concern',     sentiment:'neu', comment:'Ang online portal ay madalas may error lalo na sa oras ng peak.',                          note:'' },
+  { id:23, date:'2026-06-05', time:'11:00', category:'compliment',  sentiment:'pos', comment:'Napaka-malinis ng opisina at maayos na ayos ang lahat.',                                   note:'' },
+  { id:24, date:'2026-06-04', time:'15:30', category:'complaint',   sentiment:'neg', comment:'Tatlong beses na akong pumunta bago nareresolba ang aking concern.',                       note:'Isinasalang sa case review ang insidenteng ito.' },
+  { id:25, date:'2026-06-04', time:'10:20', category:'compliment',  sentiment:'pos', comment:'Naaalala pa ng staff ang aking pangalan mula sa nakaraang biyahe. Personal na serbisyo.',  note:'' },
+  { id:26, date:'2026-06-03', time:'13:50', category:'suggestion',  sentiment:'neu', comment:'Sana mas mabilis ang online portal at mas mababa ang error rate.',                        note:'' },
+  { id:27, date:'2026-06-03', time:'11:00', category:'concern',     sentiment:'neu', comment:'Hindi clear ang proseso para sa mga bagong miyembro ng PhilHealth.',                      note:'' },
+  { id:28, date:'2026-06-02', time:'14:00', category:'suggestion',  sentiment:'pos', comment:'Magdagdag ng chat support sa website para sa mga tanong na hindi kailangan ng personal na pagpunta.', note:'' },
+  { id:29, date:'2026-06-02', time:'10:30', category:'compliment',  sentiment:'pos', comment:'Napabilis ng bagong appointment system ang serbisyo. Mas organisado na.',                  note:'' },
+  { id:30, date:'2026-06-01', time:'09:45', category:'concern',     sentiment:'neu', comment:'Kulang ang parking sa labas ng opisina. Nahirapan ang mga matatanda at may kapansanan.',  note:'' },
+];
+
+const CAT_CONFIG = {
+  complaint:  { cls:'cat-complaint',  chipCls:'chip-complaint',  icon:'report_problem', label:'Complaint' },
+  suggestion: { cls:'cat-suggestion', chipCls:'chip-suggestion', icon:'lightbulb',       label:'Suggestion' },
+  compliment: { cls:'cat-compliment', chipCls:'chip-compliment', icon:'thumb_up',        label:'Compliment' },
+  concern:    { cls:'cat-concern',    chipCls:'chip-concern',    icon:'info',             label:'Service Concern' },
+};
+const SENT_CONFIG = {
+  pos: { cls:'sent-pos', icon:'sentiment_satisfied_alt', label:'Very Satisfactory' },
+  neu: { cls:'sent-neu', icon:'sentiment_neutral',       label:'Satisfactory' },
+  neg: { cls:'sent-neg', icon:'sentiment_dissatisfied',  label:'Unsatisfactory' },
+};
+
+/* ── STATE ── */
+let filteredFb   = [...ALL_FEEDBACK];
+let fbPage       = 1;
+const FB_PAGE_SZ = 10;
+let activeCategory = '';
+
+/* ── UTILS ── */
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ── FILTERS ── */
+function setCategoryTab(btn, cat) {
+  document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  activeCategory = cat;
+  applyFbFilters();
+}
+
+function clearDates() {
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value = '';
+  applyFbFilters();
+}
+
+function applyFbFilters() {
+  const q      = document.getElementById('fbSearch').value.toLowerCase();
+  const from   = document.getElementById('dateFrom').value;
+  const to     = document.getElementById('dateTo').value;
+  const sent   = document.getElementById('sentimentFilter').value;
+  const sort   = document.getElementById('sortFilter').value;
+
+  filteredFb = ALL_FEEDBACK.filter(f => {
+    const matchCat  = !activeCategory || f.category === activeCategory;
+    const matchQ    = !q || f.comment.toLowerCase().includes(q);
+    const matchSent = !sent || f.sentiment === sent;
+    const matchFrom = !from || f.date >= from;
+    const matchTo   = !to   || f.date <= to;
+    return matchCat && matchQ && matchSent && matchFrom && matchTo;
+  });
+
+  if (sort === 'newest')   filteredFb.sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time));
+  if (sort === 'oldest')   filteredFb.sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  if (sort === 'category') filteredFb.sort((a,b) => a.category.localeCompare(b.category));
+
+  fbPage = 1;
+  renderFeedbackList();
+  updateTabCounts();
+}
+
+function updateTabCounts() {
+  const counts = { complaint:0, suggestion:0, compliment:0, concern:0 };
+  ALL_FEEDBACK.forEach(f => counts[f.category]++);
+  document.getElementById('tabCountAll').textContent       = ALL_FEEDBACK.length;
+  document.getElementById('tabCountComplaint').textContent = counts.complaint;
+  document.getElementById('tabCountSuggestion').textContent= counts.suggestion;
+  document.getElementById('tabCountCompliment').textContent= counts.compliment;
+  document.getElementById('tabCountConcern').textContent   = counts.concern;
+  document.getElementById('countComplaint').textContent    = counts.complaint;
+  document.getElementById('countSuggestion').textContent   = counts.suggestion;
+  document.getElementById('countCompliment').textContent   = counts.compliment;
+  document.getElementById('countConcern').textContent      = counts.concern;
+}
+
+/* ── EXPAND / COLLAPSE ── */
+function toggleFbCard(id) {
+  const card = document.getElementById('fbcard-' + id);
+  if (!card) return;
+  card.classList.toggle('expanded');
+  const btn  = card.querySelector('.fb-expand-btn');
+  if (btn) btn.querySelector('.material-icons-round').textContent =
+    card.classList.contains('expanded') ? 'expand_less' : 'expand_more';
+}
+
+/* ── SAVE NOTE ── */
+function saveNote(id) {
+  const ta  = document.getElementById('note-input-' + id);
+  const val = ta ? ta.value.trim() : '';
+  const idx = ALL_FEEDBACK.findIndex(f => f.id === id);
+  if (idx !== -1 && val) {
+    ALL_FEEDBACK[idx].note = val;
+    renderFeedbackList();
+  }
+}
+
+/* ── RENDER ── */
+function renderFeedbackList() {
+  const start = (fbPage - 1) * FB_PAGE_SZ;
+  const end   = Math.min(start + FB_PAGE_SZ, filteredFb.length);
+  const rows  = filteredFb.slice(start, end);
+  const list  = document.getElementById('feedbackList');
+
+  document.getElementById('fbInfo').textContent =
+    filteredFb.length === 0 ? 'No results' :
+    `Showing ${start+1}–${end} of ${filteredFb.length} feedback`;
+
+  if (rows.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <span class="material-icons-round">chat_bubble_outline</span>
+      <div class="empty-state-title">No feedback found</div>
+      <div class="empty-state-sub">Try adjusting your search or filters.</div>
+    </div>`;
+    document.getElementById('fbPaginationRow').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('fbPaginationRow').style.display = 'flex';
+  list.innerHTML = rows.map(f => {
+    const cat  = CAT_CONFIG[f.category];
+    const sent = SENT_CONFIG[f.sentiment];
+    const dateStr = new Date(f.date).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+    const noteSection = f.note
+      ? `<div class="existing-note">
+          <div class="existing-note-meta"><span class="material-icons-round">task_alt</span>Action / Reply on Record</div>
+          ${escHtml(f.note)}
+        </div>`
+      : '';
+    return `<div class="feedback-card ${cat.cls}" id="fbcard-${f.id}">
+      <div class="feedback-card-header">
+        <div class="feedback-card-meta">
+          <span class="cat-chip ${cat.chipCls}"><span class="material-icons-round">${cat.icon}</span>${cat.label}</span>
+          <span class="sent-chip ${sent.cls}"><span class="material-icons-round">${sent.icon}</span>${sent.label}</span>
+          <span class="feedback-card-date">${dateStr} · ${f.time}</span>
+        </div>
+        <button class="expand-btn fb-expand-btn" onclick="toggleFbCard(${f.id})" aria-label="Expand feedback" title="View full comment">
+          <span class="material-icons-round">expand_more</span>
+        </button>
+      </div>
+      <div class="feedback-card-body">${escHtml(f.comment)}</div>
+      <div class="action-notes">
+        ${noteSection}
+        <div class="notes-label"><span class="material-icons-round">edit_note</span>Action Taken / Reply Note</div>
+        <textarea class="notes-input" id="note-input-${f.id}" placeholder="Enter action taken or reply note here…">${escHtml(f.note)}</textarea>
+        <div class="notes-actions">
+          <button class="btn-ph btn-ph-primary" onclick="saveNote(${f.id})">
+            <span class="material-icons-round">save</span> Save Note
+          </button>
+          <button class="btn-ph" onclick="toggleFbCard(${f.id})">
+            <span class="material-icons-round">close</span> Collapse
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  renderFbPagination();
+}
+
+function renderFbPagination() {
+  const total = Math.ceil(filteredFb.length / FB_PAGE_SZ);
+  const start = (fbPage - 1) * FB_PAGE_SZ;
+  const end   = Math.min(start + FB_PAGE_SZ, filteredFb.length);
+  document.getElementById('fbPageInfo').textContent = `Page ${fbPage} of ${Math.max(total,1)}`;
+  const cont = document.getElementById('fbPgBtns');
+  let html = `<button class="pg-btn" onclick="fbGoPage(${fbPage-1})" ${fbPage<=1?'disabled':''} aria-label="Previous">
+    <span class="material-icons-round" style="font-size:16px">chevron_left</span></button>`;
+  const pages = [];
+  if (total <= 7) { for (let i=1;i<=total;i++) pages.push(i); }
+  else {
+    pages.push(1);
+    if (fbPage > 3) pages.push('…');
+    for (let i=Math.max(2,fbPage-1);i<=Math.min(total-1,fbPage+1);i++) pages.push(i);
+    if (fbPage < total-2) pages.push('…');
+    pages.push(total);
+  }
+  pages.forEach(p => {
+    html += p==='…'
+      ? `<button class="pg-btn" disabled style="cursor:default">…</button>`
+      : `<button class="pg-btn ${p===fbPage?'active':''}" onclick="fbGoPage(${p})">${p}</button>`;
+  });
+  html += `<button class="pg-btn" onclick="fbGoPage(${fbPage+1})" ${fbPage>=total?'disabled':''} aria-label="Next">
+    <span class="material-icons-round" style="font-size:16px">chevron_right</span></button>`;
+  cont.innerHTML = html;
+}
+
+function fbGoPage(p) {
+  const total = Math.ceil(filteredFb.length / FB_PAGE_SZ);
+  if (p<1||p>total) return;
+  fbPage = p;
+  renderFeedbackList();
+  window.scrollTo({ top: 0, behavior:'smooth' });
+}
+
+/* ── EXPORT ── */
+function exportFeedbackCSV() {
+  const header = ['ID','Date','Time','Category','Sentiment','Comment','Action Note'];
+  const rows   = [header, ...filteredFb.map(f => [
+    f.id, f.date, f.time, f.category, f.sentiment,
+    `"${f.comment.replace(/"/g,'""')}"`,
+    `"${(f.note||'').replace(/"/g,'""')}"`
+  ])];
+  const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob), download: 'philhealth-feedback.csv'
+  });
+  a.click();
+}
+
+function pageInit() {
+  applyFbFilters();
+  updateTabCounts();
+}
+</script>
+{% endblock %}
