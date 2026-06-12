@@ -23,4 +23,8 @@ urlpatterns = [
     path('groups/add/',                   views.group_add,    name='group_add'),
     path('groups/<int:group_id>/edit/',   views.group_edit,   name='group_edit'),
     path('groups/<int:group_id>/delete/', views.group_delete, name='group_delete'),
+
+    # ── Management ──────────────────────────────────────────────
+    path('feedback/', views.feedback_detail, name='feedback_detail'),
+    path('settings/', views.settings_page, name='settings_page'),
 ]

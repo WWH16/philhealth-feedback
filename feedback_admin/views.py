@@ -417,3 +417,55 @@ def admin_logout(request):
     logout(request)
     messages.success(request, 'You have been signed out.')
     return redirect('admin_login')
+
+@login_required
+def feedback_detail(request):
+    """
+    Feedback detail view.
+
+    Replace the dummy context below with a real queryset once the
+    Feedback model is in place:
+
+        from feedback.models import FeedbackEntry
+
+        entry = get_object_or_404(FeedbackEntry, pk=entry_id)
+        context = {
+            'entry': entry,
+            # Add any additional context needed for the detail view
+        }
+    """
+    context = {
+        'entry': {
+            'id': 123,
+            'rating': 'pos',
+            'comment': 'Great service!',
+            'created_at': '2024-01-01 12:34:56',
+            # Add any additional fields needed for the template
+        }
+    }
+    return render(request, 'feedback_admin/feedback.html', context)
+
+@login_required
+def settings_page(request):
+    """
+    Settings page view.
+
+    Replace the dummy context below with real settings data once you have
+    defined what settings are needed for your application:
+
+        # Example: load settings from a model or config file
+        from .models import AdminSetting
+
+        settings = AdminSetting.objects.first()
+        context = {
+            'setting1': settings.setting1,
+            'setting2': settings.setting2,
+            # Add any additional settings needed for the template
+        }
+    """
+    context = {
+        'setting1': 'Value 1',
+        'setting2': 'Value 2',
+        # Add any additional dummy settings needed for the template
+    }
+    return render(request, 'feedback_admin/settings.html', context)
