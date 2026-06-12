@@ -4,12 +4,15 @@ from django.contrib.auth.hashers import make_password
 from django.db.models import Count
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required  # uncomment when ready
 
 # When backend is integrated, import your Feedback model here, e.g.:
 # from feedback.models import FeedbackEntry
 
 
-# @login_required
+@login_required
 def dashboard(request):
     """
     Admin dashboard view.
@@ -37,7 +40,7 @@ def dashboard(request):
     return render(request, 'feedback_admin/dashboard.html', context)
 
 
-# @login_required
+@login_required
 def responses(request):
     """
     Full responses list view.
@@ -64,6 +67,7 @@ def responses(request):
     }
     return render(request, 'feedback_admin/responses.html', context)
 
+@login_required
 def sentiment_analysis(request):
     """
     Sentiment analysis view.
@@ -96,6 +100,7 @@ def sentiment_analysis(request):
     }
     return render(request, 'feedback_admin/sentiment_analysis.html', context)
 
+@login_required
 def reports(request):
     """
     Reports view with multiple report types.
@@ -158,7 +163,7 @@ def reports(request):
 
 # ── user management ───────────────────────────────────────────────────
 
-# @login_required
+@login_required
 def users(request):
     all_users = User.objects.all().order_by('-date_joined').prefetch_related('groups', 'user_permissions')
     all_groups = Group.objects.annotate(member_count=Count('user')).prefetch_related('permissions')
@@ -176,7 +181,7 @@ def users(request):
     return render(request, 'feedback_admin/users.html', context)
 
 
-# @login_required
+@login_required
 @require_POST
 def user_add(request):
     username = request.POST.get('username', '').strip()
@@ -220,7 +225,7 @@ def user_add(request):
     return redirect('users')
 
 
-# @login_required
+@login_required
 @require_POST
 def user_edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
@@ -268,7 +273,7 @@ def user_edit(request, user_id):
     return redirect('users')
 
 
-# @login_required
+@login_required
 @require_POST
 def user_delete(request, user_id):
     user = get_object_or_404(User, pk=user_id)
@@ -281,7 +286,7 @@ def user_delete(request, user_id):
     return redirect('users')
 
 
-# @login_required
+@login_required
 @require_POST
 def user_toggle_active(request, user_id):
     user = get_object_or_404(User, pk=user_id)
@@ -295,7 +300,7 @@ def user_toggle_active(request, user_id):
     return redirect('users')
 
 
-# @login_required
+@login_required
 @require_POST
 def group_add(request):
     name = request.POST.get('name', '').strip()
@@ -316,7 +321,7 @@ def group_add(request):
     return redirect('users')
 
 
-# @login_required
+@login_required
 @require_POST
 def group_edit(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
@@ -337,7 +342,7 @@ def group_edit(request, group_id):
     return redirect('users')
 
 
-# @login_required
+@login_required
 @require_POST
 def group_delete(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
@@ -345,3 +350,42 @@ def group_delete(request, group_id):
     group.delete()
     messages.success(request, f'Group "{name}" deleted.')
     return redirect('users')
+
+
+# ── LOGIN ─────────────────────────────────────────────────────────────
+def admin_login(request):
+    """
+    Custom login view for the feedback admin panel.
+    GET  → render login form.
+    POST → validate credentials, redirect to dashboard on success.
+    """
+    # Already logged in? Go straight to dashboard.
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    form = AuthenticationForm(request, data=request.POST or None)
+
+    if request.method == 'POST':
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            next_url = request.POST.get('next') or request.GET.get('next') or 'dashboard'
+            return redirect(next_url)
+        # Form errors render automatically via {{ form.errors }} in the template.
+
+    return render(request, 'feedback_admin/login.html', {
+        'form': form,
+        'next': request.GET.get('next', ''),
+    })
+
+
+# ── LOGOUT ────────────────────────────────────────────────────────────
+@require_POST
+def admin_logout(request):
+    """
+    POST-only logout to prevent CSRF-free logouts via GET.
+    Redirects to the login page after clearing the session.
+    """
+    logout(request)
+    messages.success(request, 'You have been signed out.')
+    return redirect('admin_login')

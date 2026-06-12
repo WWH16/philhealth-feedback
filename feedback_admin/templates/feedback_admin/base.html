@@ -391,6 +391,110 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
   opacity: 0.4;
 }
 
+/* ── LOGOUT MODAL ─────────────────────────────────────────────────────── */
+.logout-modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(10, 26, 4, 0.55);
+  backdrop-filter: blur(3px);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.logout-modal-backdrop.open { display: flex; }
+
+.logout-modal {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--red);
+  width: 100%;
+  max-width: 380px;
+  position: relative;
+}
+
+.logout-modal-head {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logout-modal-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--red-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.logout-modal-icon .material-icons-round { font-size: 20px; color: var(--red); }
+.logout-modal-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.logout-modal-body {
+  padding: 18px 24px 20px;
+}
+.logout-modal-body p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.logout-modal-footer {
+  padding: 0 24px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.btn-logout-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  cursor: pointer;
+  font-family: var(--font);
+  border-radius: 0;
+  transition: border-color 120ms, color 120ms;
+}
+.btn-logout-cancel:hover { border-color: var(--ink4); color: var(--text-primary); }
+.btn-logout-cancel .material-icons-round { font-size: 14px; }
+
+.btn-logout-confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid var(--red);
+  background: var(--red);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  cursor: pointer;
+  font-family: var(--font);
+  border-radius: 0;
+  transition: background 120ms, border-color 120ms;
+}
+.btn-logout-confirm:hover { background: #a00015; border-color: #a00015; }
+.btn-logout-confirm .material-icons-round { font-size: 14px; }
+
 /* ── RESPONSIVE ───────────────────────────────────────────────────────── */
 @media (max-width: 991px) {
   .sidebar { transform: translateX(-100%); width: var(--sidebar-w) !important; }
@@ -448,6 +552,10 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
   .pie-legend-value { font-size: 11px; }
   .mini-stat-label { font-size: 10px; min-width: 54px; }
   .btn-ph { padding: 6px 9px; font-size: 9px; }
+  .logout-modal { max-width: 100%; }
+  .logout-modal-head { padding: 16px 18px 14px; }
+  .logout-modal-body { padding: 14px 18px 16px; }
+  .logout-modal-footer { padding: 0 18px 18px; }
 }
 
 {% block extra_styles %}{% endblock %}
@@ -494,10 +602,22 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
       </a>
     </nav>
     <div class="sidebar-footer">
-      <a href="#" class="nav-item" style="color:rgba(255,255,255,0.45)">
+      <!-- Logout triggers the confirmation modal, NOT the form directly -->
+      <button
+        type="button"
+        class="nav-item"
+        style="color:rgba(255,255,255,0.45);width:100%;cursor:pointer;border:none;background:transparent;"
+        onclick="openLogoutModal()"
+        aria-label="Logout"
+      >
         <span class="material-icons-round">logout</span>
         <span class="nav-item-label">Logout</span>
-      </a>
+      </button>
+
+      <!-- Hidden form — submitted only on modal confirmation -->
+      <form method="post" action="{% url 'admin_logout' %}" id="logoutForm">
+        {% csrf_token %}
+      </form>
     </div>
   </aside>
 
@@ -565,6 +685,38 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
     {% endif %}
   </div>
 
+  <!-- ── LOGOUT CONFIRMATION MODAL ── -->
+  <div
+    class="logout-modal-backdrop"
+    id="logoutModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="logoutModalTitle"
+    onclick="if(event.target===this) closeLogoutModal()"
+  >
+    <div class="logout-modal" onclick="event.stopPropagation()">
+      <div class="logout-modal-head">
+        <div class="logout-modal-icon" aria-hidden="true">
+          <span class="material-icons-round">logout</span>
+        </div>
+        <div class="logout-modal-title" id="logoutModalTitle">Sign Out</div>
+      </div>
+      <div class="logout-modal-body">
+        <p>Are you sure you want to sign out?</p>
+      </div>
+      <div class="logout-modal-footer">
+        <button type="button" class="btn-logout-cancel" onclick="closeLogoutModal()">
+          <span class="material-icons-round">close</span>
+          Cancel
+        </button>
+        <button type="button" class="btn-logout-confirm" onclick="document.getElementById('logoutForm').submit()">
+          <span class="material-icons-round">logout</span>
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -588,7 +740,6 @@ function adjustToastPosition() {
 document.addEventListener('DOMContentLoaded', () => {
   adjustToastPosition();
   window.addEventListener('resize', adjustToastPosition);
-  
   const toastElList = [].slice.call(document.querySelectorAll('.toast'));
   toastElList.map(function (toastEl) {
     const toast = new bootstrap.Toast(toastEl);
@@ -597,8 +748,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ── SIDEBAR ── */
-const sidebar      = document.getElementById('sidebar');
-const mainContent  = document.getElementById('mainContent');
+const sidebar     = document.getElementById('sidebar');
+const mainContent = document.getElementById('mainContent');
 let sidebarCollapsed = false;
 
 function toggleSidebar() {
@@ -632,14 +783,12 @@ function toggleTheme() {
 
 /* ── CLOCK ── */
 function tickClock() {
-  const now     = new Date();
-  const options = { timeZone: 'Asia/Manila', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+  const now         = new Date();
+  const options     = { timeZone: 'Asia/Manila', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
   const timeOptions = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-  
-  const dateStr = now.toLocaleDateString('en-PH', options);
-  const timeStr = now.toLocaleTimeString('en-PH', timeOptions);
-  
-  const dateBadge = document.getElementById('currentDate');
+  const dateStr     = now.toLocaleDateString('en-PH', options);
+  const timeStr     = now.toLocaleTimeString('en-PH', timeOptions);
+  const dateBadge   = document.getElementById('currentDate');
   if (dateBadge) dateBadge.textContent = `${dateStr}  ${timeStr}`;
   const clk = document.getElementById('topbarClock');
   if (clk) clk.textContent = timeStr;
@@ -647,17 +796,31 @@ function tickClock() {
 
 /* ── ANIMATE COUNT ── */
 function animateCount(id, target) {
-  const el    = document.getElementById(id);
+  const el = document.getElementById(id);
   if (!el) return;
   const start = parseInt(el.textContent.replace(/,/g,'')) || 0;
-  const dur   = 400, t0 = performance.now();
-  const step  = t => {
+  const dur = 400, t0 = performance.now();
+  const step = t => {
     const p = Math.min((t - t0) / dur, 1);
-    el.textContent = Math.round(start + (target - start) * (1 - Math.pow(1-p, 3))).toLocaleString();
+    el.textContent = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3))).toLocaleString();
     if (p < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
 }
+
+/* ── LOGOUT MODAL ── */
+function openLogoutModal() {
+  document.getElementById('logoutModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLogoutModal() {
+  document.getElementById('logoutModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+/* Close on Escape key */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLogoutModal();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   tickClock();
