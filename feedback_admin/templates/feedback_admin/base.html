@@ -637,7 +637,7 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
     <div class="topbar-right">
       <div class="topbar-welcome">
         <span class="topbar-welcome-label">Welcome,</span>
-        <span class="topbar-welcome-name">Admin User</span>
+        <span class="topbar-welcome-name">{{ request.user.get_full_name|default:request.user.username }}</span>
       </div>
       <div class="topbar-clock" id="topbarClock">—</div>
       <div class="topbar-actions">
