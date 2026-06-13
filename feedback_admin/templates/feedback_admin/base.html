@@ -705,10 +705,11 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
     </div>
   </main>
 
-  <!-- TOAST CONTAINER -->
-  <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050; margin-top: 60px;">
-    {% if messages %}
-      {% for message in messages %}
+<!-- TOAST CONTAINER -->
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1050; margin-top: 60px;">
+  {% if messages %}
+    {% for message in messages %}
+      {% if 'pw_field' not in message.extra_tags %}
         <div class="toast ph-toast fade align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000"
              style="--toast-color: {% if message.tags == 'success' %}var(--g-primary){% elif message.tags == 'error' %}var(--red){% elif message.tags == 'warning' %}var(--gold){% else %}var(--ink5){% endif %};">
           <div class="d-flex">
@@ -725,9 +726,10 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
           </div>
           <div class="ph-toast-progress"></div>
         </div>
-      {% endfor %}
-    {% endif %}
-  </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+</div>
 
   <!-- ── LOGOUT CONFIRMATION MODAL ── -->
   <div

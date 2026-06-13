@@ -4,13 +4,13 @@ from django.contrib.auth.hashers import make_password
 from django.db.models import Count
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.decorators import login_required  # uncomment when ready
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.contrib.auth.forms import PasswordChangeForm
 
 # When backend is integrated, import your Feedback model here, e.g.:
 # from feedback.models import FeedbackEntry
@@ -513,24 +513,24 @@ def settings_page(request):
 @require_POST
 def change_password(request):
     current_password = request.POST.get('current_password', '')
-    new_password1 = request.POST.get('new_password1', '')
-    new_password2 = request.POST.get('new_password2', '')
+    new_password1    = request.POST.get('new_password1', '')
+    new_password2    = request.POST.get('new_password2', '')
 
     if not request.user.check_password(current_password):
-        messages.error(request, 'Current password is incorrect.')
+        messages.error(request, 'current_password|Current password is incorrect.', extra_tags='pw_field')
         return redirect('settings_page')
     if new_password1 != new_password2:
-        messages.error(request, 'New passwords do not match.')
+        messages.error(request, 'new_password2|New passwords do not match.', extra_tags='pw_field')
         return redirect('settings_page')
 
     try:
         validate_password(new_password1, user=request.user)
     except ValidationError as e:
-        messages.error(request, ' '.join(e.messages))
+        messages.error(request, 'new_password1|' + ' '.join(e.messages), extra_tags='pw_field')
         return redirect('settings_page')
 
     request.user.set_password(new_password1)
     request.user.save()
     update_session_auth_hash(request, request.user)
-    messages.success(request, 'Password updated successfully.')
+    messages.success(request, 'Password updated successfully.', extra_tags='pw_field')
     return redirect('settings_page')

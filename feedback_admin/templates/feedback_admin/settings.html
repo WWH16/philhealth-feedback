@@ -6,6 +6,7 @@
 {% block nav_settings %}active{% endblock %}
 
 {% block extra_styles %}
+#changePwForm .settings-input { min-width: 0; width: 100%; }
 .settings-nav {
   display: flex; flex-direction: column; gap: 2px;
   position: sticky; top: calc(var(--topbar-h) + 20px);
@@ -188,22 +189,19 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
     <div class="col-12 col-lg-3">
       <div class="settings-nav" id="settingsNav">
         <div class="settings-nav-group-label">Users</div>
-        <button class="settings-nav-item active" onclick="showPanel('user-management', this)">
+        <button class="settings-nav-item active" onclick="showPanelNav('user-management', this)">
           <span class="material-icons-round">manage_accounts</span> User Management
         </button>
-        <div class="settings-nav-group-label">Survey</div>
-        <button class="settings-nav-item" onclick="showPanel('survey-settings', this)">
+        <button class="settings-nav-item" onclick="showPanelNav('survey-settings', this)">
           <span class="material-icons-round">quiz</span> Survey Settings
         </button>
-        <div class="settings-nav-group-label">Sentiment</div>
-        <button class="settings-nav-item" onclick="showPanel('sentiment-settings', this)">
+        <button class="settings-nav-item" onclick="showPanelNav('sentiment-settings', this)">
           <span class="material-icons-round">psychology</span> Sentiment Analysis
         </button>
-        <div class="settings-nav-group-label">System</div>
-        <button class="settings-nav-item" onclick="showPanel('system-settings', this)">
+        <button class="settings-nav-item" onclick="showPanelNav('system-settings', this)">
           <span class="material-icons-round">settings</span> System Settings
         </button>
-        <button class="settings-nav-item" onclick="showPanel('notifications', this)">
+        <button class="settings-nav-item" onclick="showPanelNav('notifications', this)">
           <span class="material-icons-round">notifications</span> Notifications
         </button>
       </div>
@@ -361,17 +359,29 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
             <form id="changePwForm" method="post" action="{% url 'change_password' %}">
               {% csrf_token %}
               <div class="row g-3">
-                <div class="col-12 col-sm-4">
+                <div class="col-12 col-md-4">
                   <label class="form-label" for="curPw">Current Password</label>
-                  <input class="settings-input w-100" type="password" id="curPw" name="current_password" placeholder="Current password" autocomplete="current-password">
+                  <input class="settings-input w-100" type="password" id="curPw" name="current_password"
+                    placeholder="Current password" autocomplete="current-password">
+                  <p class="settings-field-err" id="err-current_password" style="display:none">
+                    <span class="material-icons-round">error</span><span></span>
+                  </p>
                 </div>
-                <div class="col-12 col-sm-4">
+                <div class="col-12 col-md-4">
                   <label class="form-label" for="changePw1">New Password</label>
-                  <input class="settings-input w-100" type="password" id="changePw1" name="new_password1" placeholder="Min. 8 characters" autocomplete="new-password">
+                  <input class="settings-input w-100" type="password" id="changePw1" name="new_password1"
+                    placeholder="Min. 8 characters" autocomplete="new-password">
+                  <p class="settings-field-err" id="err-new_password1" style="display:none">
+                    <span class="material-icons-round">error</span><span></span>
+                  </p>
                 </div>
-                <div class="col-12 col-sm-4">
+                <div class="col-12 col-md-4">
                   <label class="form-label" for="changePw2">Confirm New</label>
-                  <input class="settings-input w-100" type="password" id="changePw2" name="new_password2" placeholder="Repeat new password" autocomplete="new-password">
+                  <input class="settings-input w-100" type="password" id="changePw2" name="new_password2"
+                    placeholder="Repeat new password" autocomplete="new-password">
+                  <p class="settings-field-err" id="err-new_password2" style="display:none">
+                    <span class="material-icons-round">error</span><span></span>
+                  </p>
                 </div>
                 <div class="col-12">
                   <button type="button" class="btn-ph btn-ph-primary" id="changePwBtn" onclick="submitChangePw()">
@@ -381,16 +391,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 </div>
               </div>
             </form>
-
-            {# Success / error messages from Django after redirect #}
-            {% for message in messages %}
-              {% if 'password' in message|lower %}
-                <div class="settings-field-err" style="margin-top:12px;{% if message.tags == 'success' %}color:var(--g-primary){% endif %}">
-                  <span class="material-icons-round">{% if message.tags == 'success' %}check_circle{% else %}error{% endif %}</span>
-                  {{ message }}
-                </div>
-              {% endif %}
-            {% endfor %}
           </div>
         </div>
 
@@ -920,7 +920,7 @@ function showFieldErr(inputId, msg) {
   err.className = 'settings-field-err';
   err.innerHTML = `<span class="material-icons-round">error</span>${escHtml(msg)}`;
   input.after(err);
-  input.focus();
+  input.focus({ preventScroll: true });
   input.addEventListener('input', function clear() {
     input.classList.remove('field-error');
     err.remove();
@@ -935,19 +935,57 @@ function clearFieldErr(inputId) {
   input.parentElement.querySelectorAll('.settings-field-err').forEach(e => e.remove());
 }
 
+/* ── PASSWORD FIELD ERROR (uses static placeholder elements) ── */
+function showPwFieldErr(field, text, scroll) {
+  const INPUT_MAP = {
+    'current_password': { input: 'curPw',     err: 'err-current_password' },
+    'new_password1':    { input: 'changePw1', err: 'err-new_password1'    },
+    'new_password2':    { input: 'changePw2', err: 'err-new_password2'    },
+  };
+  const map = INPUT_MAP[field];
+  if (!map) return;
+
+  const input = document.getElementById(map.input);
+  const errEl = document.getElementById(map.err);
+  if (input) {
+    input.classList.add('field-error');
+    if (scroll) {
+      /* Scroll the error into view without jumping to top */
+      setTimeout(() => {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    }
+  }
+  if (errEl) {
+    errEl.querySelector('span:last-child').textContent = text;
+    errEl.style.display = 'flex';
+    input.addEventListener('input', function clear() {
+      input.classList.remove('field-error');
+      errEl.style.display = 'none';
+      errEl.querySelector('span:last-child').textContent = '';
+      input.removeEventListener('input', clear);
+    }, { once: true });
+  }
+}
+
 /* ── PANEL SWITCHING ── */
 function showPanel(id, btn) {
   document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');
   btn.classList.add('active');
+}
+
+/* called only on manual nav click */
+function showPanelNav(id, btn) {
+  showPanel(id, btn);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ── AUTO-OPEN PANEL FROM URL HASH ── */
 function openPanelFromHash() {
   const map = {
-    '#user-management': 'user-management',
+    '#user-management':    'user-management',
     '#survey-settings':    'survey-settings',
     '#sentiment-settings': 'sentiment-settings',
     '#system-settings':    'system-settings',
@@ -970,24 +1008,11 @@ function submitAddAdmin() {
   clearFieldErr('newPw');
   clearFieldErr('newPw2');
 
-  if (!u) {
-    showFieldErr('newUsername', 'Username is required.');
-    return;
-  }
-  if (!/^[\w.@+-]+$/.test(u)) {
-    showFieldErr('newUsername', 'Letters, digits and @/./+/-/_ only.');
-    return;
-  }
-  if (p1.length < 8) {
-    showFieldErr('newPw', 'Password must be at least 8 characters.');
-    return;
-  }
-  if (p1 !== p2) {
-    showFieldErr('newPw2', 'Passwords do not match.');
-    return;
-  }
+  if (!u) { showFieldErr('newUsername', 'Username is required.'); return; }
+  if (!/^[\w.@+-]+$/.test(u)) { showFieldErr('newUsername', 'Letters, digits and @/./+/-/_ only.'); return; }
+  if (p1.length < 8) { showFieldErr('newPw', 'Password must be at least 8 characters.'); return; }
+  if (p1 !== p2) { showFieldErr('newPw2', 'Passwords do not match.'); return; }
 
-  /* Copy visible values into the hidden form and submit it */
   document.getElementById('fa-username').value = u;
   document.getElementById('fa-email').value    = document.getElementById('newEmail').value.trim();
   document.getElementById('fa-first').value    = document.getElementById('newFirst').value.trim();
@@ -995,9 +1020,7 @@ function submitAddAdmin() {
   document.getElementById('fa-pw1').value      = p1;
   document.getElementById('fa-pw2').value      = p2;
 
-  const btn = document.getElementById('addAdminBtn');
-  btn.classList.add('is-loading');
-
+  document.getElementById('addAdminBtn').classList.add('is-loading');
   document.getElementById('addAdminForm').submit();
 }
 
@@ -1007,26 +1030,21 @@ function submitChangePw() {
   const p1  = document.getElementById('changePw1').value;
   const p2  = document.getElementById('changePw2').value;
 
-  clearFieldErr('curPw');
-  clearFieldErr('changePw1');
-  clearFieldErr('changePw2');
+  /* Clear previous errors */
+  ['curPw', 'changePw1', 'changePw2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('field-error');
+  });
+  ['err-current_password', 'err-new_password1', 'err-new_password2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.display = 'none'; el.querySelector('span:last-child').textContent = ''; }
+  });
 
-  if (!cur) {
-    showFieldErr('curPw', 'Please enter your current password.');
-    return;
-  }
-  if (p1.length < 8) {
-    showFieldErr('changePw1', 'New password must be at least 8 characters.');
-    return;
-  }
-  if (p1 !== p2) {
-    showFieldErr('changePw2', 'Passwords do not match.');
-    return;
-  }
+  if (!cur) { showPwFieldErr('current_password', 'Please enter your current password.', false); return; }
+  if (p1.length < 8) { showPwFieldErr('new_password1', 'New password must be at least 8 characters.', false); return; }
+  if (p1 !== p2) { showPwFieldErr('new_password2', 'Passwords do not match.', false); return; }
 
-  const btn = document.getElementById('changePwBtn');
-  btn.classList.add('is-loading');
-
+  document.getElementById('changePwBtn').classList.add('is-loading');
   document.getElementById('changePwForm').submit();
 }
 
@@ -1067,8 +1085,8 @@ function showToast(msg, type) {
   const icon       = isError ? 'error' : 'check_circle';
   const div        = document.createElement('div');
   div.className    = 'toast ph-toast fade align-items-center border-0';
-  div.setAttribute('role','alert');
-  div.setAttribute('data-bs-delay','4000');
+  div.setAttribute('role', 'alert');
+  div.setAttribute('data-bs-delay', '4000');
   div.style.setProperty('--toast-color', toastColor);
   div.innerHTML = `
     <div class="d-flex">
@@ -1079,29 +1097,36 @@ function showToast(msg, type) {
     </div>
     <div class="ph-toast-progress"></div>`;
   document.getElementById('toastContainer').appendChild(div);
-  const t = new bootstrap.Toast(div);
-
-  // If success, reload immediately so changes are "implemented" right away
-  if (type === 'success') {
-    location.reload();
-  } else {
-    div.addEventListener('hidden.bs.toast', () => div.remove());
-  }
-  
-  t.show();
+  new bootstrap.Toast(div).show();
+  div.addEventListener('hidden.bs.toast', () => div.remove());
 }
 
 /* ── INIT ── */
 function pageInit() {
   openPanelFromHash();
 
-  /* Auto-show success/error toasts from Django messages for non-user-mgmt panels */
   {% for message in messages %}
-    {% if message.tags == 'success' and 'password' not in message.message|lower and 'user' not in message.message|lower %}
-      showToast('{{ message|escapejs }}', 'success');
-    {% elif message.tags == 'error' and 'password' not in message.message|lower and 'user' not in message.message|lower %}
-      showToast('{{ message|escapejs }}', 'error');
-    {% endif %}
+    (function() {
+      const raw  = "{{ message|escapejs }}";
+      const tags = "{{ message.extra_tags|default:'' }}";
+
+      if (tags !== 'pw_field') {
+        showToast(raw, "{{ message.tags }}".includes('error') ? 'error' : 'success');
+        return;
+      }
+
+      if (!raw.includes('|')) {
+        /* Success — toast */
+        showToast(raw, 'success');
+        return;
+      }
+
+      /* Field error — inline + smooth scroll to field, no jump to top */
+      const sep   = raw.indexOf('|');
+      const field = raw.slice(0, sep);
+      const text  = raw.slice(sep + 1);
+      showPwFieldErr(field, text, true);
+    })();
   {% endfor %}
 }
 </script>
