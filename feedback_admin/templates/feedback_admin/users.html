@@ -145,6 +145,15 @@
 .perm-item-label { font-size: 12px; font-weight: 600; color: var(--text-primary); }
 .perm-item-module { font-size: 10px; color: var(--text-muted); font-family: var(--mono); }
 
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px; padding: 64px 20px;
+  color: var(--text-muted);
+}
+.empty-state .material-icons-round { font-size: 48px; opacity: 0.25; }
+.empty-state-title { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.empty-state-sub   { font-size: 12px; }
+
 @media (max-width: 575px) {
   .form-row { grid-template-columns: 1fr; gap: 10px; }
   .modal-backdrop { padding: 0; align-items: flex-end; }
@@ -286,7 +295,6 @@
         <table class="ph-table" aria-label="Admin users">
           <thead>
             <tr>
-              <!-- Select-all checkbox — only selects deletable rows (not current user) -->
               <th style="width:36px;padding:10px 8px 10px 16px;">
                 <input type="checkbox" id="userSelectAll" onchange="toggleUserSelectAll(this)"
                   aria-label="Select all deletable users"
@@ -313,7 +321,6 @@
               data-status="{% if u.is_active %}active{% else %}inactive{% endif %}"
               data-isself="{% if u.id == request.user.id %}true{% else %}false{% endif %}">
 
-              <!-- Checkbox cell -->
               <td style="padding:13px 8px 13px 16px;">
                 {% if u.id != request.user.id %}
                 <input type="checkbox" class="user-select-cb"
@@ -323,7 +330,6 @@
                   aria-label="Select {{ u.username }}"
                   style="cursor:pointer;accent-color:var(--red)">
                 {% else %}
-                <!-- current user: no checkbox, show lock icon -->
                 <span class="material-icons-round" style="font-size:14px;color:var(--text-muted);opacity:0.4;" title="Cannot delete your own account">lock</span>
                 {% endif %}
               </td>
@@ -468,7 +474,7 @@
                     <span class="material-icons-round">edit</span>
                   </button>
                   <button type="button" class="btn-ph btn-ph-sm"
-                    style="color:var(--red);border-color:var(--red)" 
+                    style="color:var(--red);border-color:var(--red)"
                     onclick="triggerDeleteGroup({{ g.id }}, '{{ g.name }}')"
                     aria-label="Delete {{ g.name }}">
                     <span class="material-icons-round">delete</span>
@@ -501,9 +507,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- USER MODAL -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
   <div class="modal-backdrop" id="userModal" role="dialog" aria-modal="true" aria-labelledby="userModalTitle"
     onclick="if(event.target===this) closeModal('userModal')">
     <div class="modal-card" onclick="event.stopPropagation()">
@@ -524,7 +528,6 @@
 
         <div class="modal-body">
 
-          <!-- PERSONAL INFO -->
           <div class="form-section">
             <div class="form-section-label">
               <span class="material-icons-round">badge</span> Personal Information
@@ -554,7 +557,6 @@
             </div>
           </div>
 
-          <!-- CREDENTIALS -->
           <div class="form-section">
             <div class="form-section-label">
               <span class="material-icons-round">lock</span> Credentials
@@ -578,7 +580,6 @@
             </div>
           </div>
 
-          <!-- PERMISSIONS -->
           <div class="form-section">
             <div class="form-section-label">
               <span class="material-icons-round">security</span> Permissions
@@ -612,7 +613,6 @@
             </div>
           </div>
 
-          <!-- GROUPS -->
           <div class="form-section">
             <div class="form-section-label">
               <span class="material-icons-round">groups</span> Groups
@@ -633,7 +633,6 @@
             </div>
           </div>
 
-          <!-- USER PERMISSIONS -->
           <div class="form-section" style="margin-bottom:0;">
             <div class="form-section-label">
               <span class="material-icons-round">tune</span> User Permissions
@@ -674,9 +673,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- GROUP MODAL -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
   <div class="modal-backdrop" id="groupModal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle"
     onclick="if(event.target===this) closeModal('groupModal')">
     <div class="modal-card" onclick="event.stopPropagation()">
@@ -703,7 +700,7 @@
             <div class="form-row full">
               <div class="form-group">
                 <label class="form-label" for="fieldGroupName">Group Name <span class="req">*</span></label>
-                <input class="form-input" type="text" id="fieldGroupName" name="name" placeholder="e.g. Feedback Reviewers" required>
+                <input class="form-input" type="text" id="fieldGroupName" name="name" placeholder="e.g. Feedback Reviewers" required oninput="this.classList.remove('input-error')">
               </div>
             </div>
           </div>
@@ -746,9 +743,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════ -->
   <!-- DELETE CONFIRMATION MODAL -->
-  <!-- ═══════════════════════════════════════════════════════════════ -->
   <div class="modal-backdrop" id="deleteConfirmModal" role="dialog" aria-modal="true" style="z-index: 400;"
     onclick="if(event.target===this) closeModal('deleteConfirmModal')">
     <div class="modal-card" style="max-width:400px;margin-top:10vh;" onclick="event.stopPropagation()">
@@ -767,7 +762,7 @@
         </div>
         <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text-primary)" id="deleteModalTitle">Delete Item?</h3>
         <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:0;">
-          Are you sure you want to delete <strong id="deleteTargetName">this item</strong>? 
+          Are you sure you want to delete <strong id="deleteTargetName">this item</strong>?
           This action cannot be undone and all associated data will be permanently removed.
         </p>
       </div>
@@ -783,7 +778,7 @@
     </div>
   </div>
 
-  <!-- Hidden delete forms (POST-safe) -->
+  <!-- Hidden delete forms -->
   <form method="post" id="deleteUserForm" style="display:none;">
     {% csrf_token %}
     <input type="hidden" name="form_type" value="delete_user">
@@ -827,20 +822,14 @@ function filterUsers() {
   updateUserSelectAll();
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BULK SELECTION & DELETE
-═══════════════════════════════════════════════════════════════ */
-const selectedUsers = new Map(); // id → username
+/* ── BULK SELECTION & DELETE ── */
+const selectedUsers = new Map();
 let currentDeleteAction = { type: '', id: '', name: '' };
 
 function toggleUserSelect(cb) {
   const id       = parseInt(cb.dataset.userid);
   const username = cb.dataset.username;
-  if (cb.checked) {
-    selectedUsers.set(id, username);
-  } else {
-    selectedUsers.delete(id);
-  }
+  if (cb.checked) selectedUsers.set(id, username); else selectedUsers.delete(id);
   cb.closest('tr').style.background = cb.checked ? 'var(--red-bg)' : '';
   updateUserBulkBar();
   updateUserSelectAll();
@@ -866,9 +855,9 @@ function getVisibleDeletableCbs() {
 }
 
 function updateUserSelectAll() {
-  const all       = getVisibleDeletableCbs();
-  const checked   = all.filter(cb => cb.checked);
-  const masterCb  = document.getElementById('userSelectAll');
+  const all      = getVisibleDeletableCbs();
+  const checked  = all.filter(cb => cb.checked);
+  const masterCb = document.getElementById('userSelectAll');
   if (!masterCb) return;
   if (all.length === 0) {
     masterCb.checked = masterCb.indeterminate = false;
@@ -901,9 +890,7 @@ function clearUserSelection() {
   updateUserBulkBar();
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   GENERIC DELETE FLOW
-═══════════════════════════════════════════════════════════════ */
+/* ── DELETE FLOWS ── */
 function triggerDeleteUserFromModal() {
   const id   = document.getElementById('userFormUserId').value;
   const name = document.getElementById('fieldUsername').value;
@@ -924,8 +911,8 @@ function triggerDeleteGroupFromModal() {
 
 function bulkDeleteUsers() {
   if (selectedUsers.size === 0) return;
-  const count = selectedUsers.size;
-  const names = Array.from(selectedUsers.values()).slice(0, 3).join(', ');
+  const count  = selectedUsers.size;
+  const names  = Array.from(selectedUsers.values()).slice(0, 3).join(', ');
   const suffix = count > 3 ? ` and ${count - 3} more` : '';
   openDeleteConfirm('bulk_user', null, `${count} selected users (${names}${suffix})`);
 }
@@ -940,22 +927,18 @@ function openDeleteConfirm(type, id, name) {
 async function executeGenericDelete() {
   const btn = document.getElementById('confirmDeleteBtn');
   btn.classList.add('is-loading');
-
-  const { type, id, name } = currentDeleteAction;
+  const { type, id } = currentDeleteAction;
   const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
   try {
     if (type === 'bulk_user') {
       const ids = Array.from(selectedUsers.keys());
-      let successCount = 0;
-      let lastError    = null;
-
+      let successCount = 0, lastError = null;
       for (const uid of ids) {
         const fd = new FormData();
         fd.append('csrfmiddlewaretoken', csrfToken);
         fd.append('form_type', 'delete_user');
         fd.append('user_id', uid);
-        const res = await fetch(`/dashboard/users/${uid}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const res  = await fetch(`/dashboard/users/${uid}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
         const json = await res.json();
         if (json.ok) successCount++; else lastError = json.error;
       }
@@ -963,38 +946,26 @@ async function executeGenericDelete() {
       _flashSuccessToast(successCount > 0 ? `${successCount} user(s) deleted.` : (lastError || 'Failed.'), successCount > 0 ? 'success' : 'error');
       return;
     }
-
     if (type === 'user') {
       const fd = new FormData();
       fd.append('csrfmiddlewaretoken', csrfToken);
       fd.append('form_type', 'delete_user');
       fd.append('user_id', id);
-      const res = await fetch(`/dashboard/users/${id}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const res  = await fetch(`/dashboard/users/${id}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const json = await res.json();
-      if (json.ok) {
-        closeModal('deleteConfirmModal');
-        closeModal('userModal');
-        _flashSuccessToast(json.message, 'success');
-      } else {
-        throw new Error(json.error);
-      }
+      if (json.ok) { closeModal('deleteConfirmModal'); closeModal('userModal'); _flashSuccessToast(json.message, 'success'); }
+      else throw new Error(json.error);
       return;
     }
-
     if (type === 'group') {
       const fd = new FormData();
       fd.append('csrfmiddlewaretoken', csrfToken);
       fd.append('form_type', 'delete_group');
       fd.append('group_id', id);
-      const res = await fetch(`/dashboard/groups/${id}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const res  = await fetch(`/dashboard/groups/${id}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       const json = await res.json();
-      if (json.ok) {
-        closeModal('deleteConfirmModal');
-        if (document.getElementById('groupModal').classList.contains('open')) closeModal('groupModal');
-        _flashSuccessToast(json.message, 'success');
-      } else {
-        throw new Error(json.error);
-      }
+      if (json.ok) { closeModal('deleteConfirmModal'); if (document.getElementById('groupModal').classList.contains('open')) closeModal('groupModal'); _flashSuccessToast(json.message, 'success'); }
+      else throw new Error(json.error);
       return;
     }
   } catch (err) {
@@ -1004,9 +975,7 @@ async function executeGenericDelete() {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   MODAL HELPERS
-═══════════════════════════════════════════════════════════════ */
+/* ── MODAL HELPERS ── */
 const CURRENT_USER_ID = {{ request.user.id }};
 
 function openUserModal(userId, username, email, first, last, isActive, isStaff, isSuperuser, groupIds, permIds) {
@@ -1014,13 +983,13 @@ function openUserModal(userId, username, email, first, last, isActive, isStaff, 
   const isEdit = !!userId;
   const isSelf = userId === CURRENT_USER_ID;
 
-  document.getElementById('userModalTitle').textContent        = isEdit ? 'Edit User' : 'Add User';
-  document.getElementById('saveUserLabel').textContent         = isEdit ? 'Save Changes' : 'Add User';
-  document.getElementById('userDangerSection').style.display   = (isEdit && !isSelf) ? 'block' : 'none';
-  document.getElementById('editPasswordNote').style.display    = isEdit ? 'block' : 'none';
-  document.getElementById('pwRequired').style.display          = isEdit ? 'none' : 'inline';
-  document.getElementById('pw2Required').style.display         = isEdit ? 'none' : 'inline';
-  document.getElementById('userFormUserId').value              = userId || '';
+  document.getElementById('userModalTitle').textContent      = isEdit ? 'Edit User' : 'Add User';
+  document.getElementById('saveUserLabel').textContent       = isEdit ? 'Save Changes' : 'Add User';
+  document.getElementById('userDangerSection').style.display = (isEdit && !isSelf) ? 'block' : 'none';
+  document.getElementById('editPasswordNote').style.display  = isEdit ? 'block' : 'none';
+  document.getElementById('pwRequired').style.display        = isEdit ? 'none' : 'inline';
+  document.getElementById('pw2Required').style.display       = isEdit ? 'none' : 'inline';
+  document.getElementById('userFormUserId').value            = userId || '';
 
   document.getElementById('userForm').action = isEdit
     ? `/dashboard/users/${userId}/edit/`
@@ -1033,37 +1002,37 @@ function openUserModal(userId, username, email, first, last, isActive, isStaff, 
   document.getElementById('fieldPassword').value  = '';
   document.getElementById('fieldPassword2').value = '';
 
-  setPermItem('permActiveRow',  'chkActive',    isActive     !== false);
+  setPermItem('permActiveRow',  'chkActive',    isActive    !== false);
   setPermItem('permStaffRow',   'chkStaff',     !!isStaff);
   setPermItem('permSuperRow',   'chkSuperuser', !!isSuperuser);
 
   const chkActive     = document.getElementById('chkActive');
   const permActiveRow = document.getElementById('permActiveRow');
   if (isSelf) {
-    chkActive.disabled                = true;
-    permActiveRow.style.opacity       = '0.6';
+    chkActive.disabled = true;
+    permActiveRow.style.opacity = '0.6';
     permActiveRow.style.pointerEvents = 'none';
-    permActiveRow.title               = 'You cannot deactivate your own account.';
+    permActiveRow.title = 'You cannot deactivate your own account.';
   } else {
-    chkActive.disabled                = false;
-    permActiveRow.style.opacity       = '1';
+    chkActive.disabled = false;
+    permActiveRow.style.opacity = '1';
     permActiveRow.style.pointerEvents = 'auto';
-    permActiveRow.title               = '';
+    permActiveRow.title = '';
   }
 
   const gIds = groupIds || [];
   document.querySelectorAll('#groupPickerList .perm-item').forEach(item => {
-    const cb      = item.querySelector('input[type="checkbox"]');
+    const cb = item.querySelector('input[type="checkbox"]');
     const checked = gIds.includes(String(cb.value));
-    cb.checked    = checked;
+    cb.checked = checked;
     item.classList.toggle('checked', checked);
   });
 
   const pIds = permIds || [];
   document.querySelectorAll('#permPickerList .perm-item').forEach(item => {
-    const cb      = item.querySelector('input[type="checkbox"]');
+    const cb = item.querySelector('input[type="checkbox"]');
     const checked = pIds.includes(String(cb.value));
-    cb.checked    = checked;
+    cb.checked = checked;
     item.classList.toggle('checked', checked);
   });
 
@@ -1074,11 +1043,11 @@ function openUserModal(userId, username, email, first, last, isActive, isStaff, 
 
 function openGroupModal(groupId, groupName, permIds) {
   const isEdit = !!groupId;
-  document.getElementById('groupModalTitle').textContent       = isEdit ? 'Edit Group' : 'Add Group';
-  document.getElementById('saveGroupLabel').textContent        = isEdit ? 'Save Changes' : 'Add Group';
-  document.getElementById('groupDangerSection').style.display  = isEdit ? 'block' : 'none';
-  document.getElementById('groupFormId').value                 = groupId || '';
-  document.getElementById('fieldGroupName').value              = groupName || '';
+  document.getElementById('groupModalTitle').textContent      = isEdit ? 'Edit Group' : 'Add Group';
+  document.getElementById('saveGroupLabel').textContent       = isEdit ? 'Save Changes' : 'Add Group';
+  document.getElementById('groupDangerSection').style.display = isEdit ? 'block' : 'none';
+  document.getElementById('groupFormId').value                = groupId || '';
+  document.getElementById('fieldGroupName').value             = groupName || '';
 
   document.getElementById('groupForm').action = isEdit
     ? `/dashboard/groups/${groupId}/edit/`
@@ -1086,9 +1055,9 @@ function openGroupModal(groupId, groupName, permIds) {
 
   const pIds = permIds || [];
   document.querySelectorAll('#groupPermPickerList .perm-item').forEach(item => {
-    const cb      = item.querySelector('input[type="checkbox"]');
+    const cb = item.querySelector('input[type="checkbox"]');
     const checked = pIds.includes(String(cb.value));
-    cb.checked    = checked;
+    cb.checked = checked;
     item.classList.toggle('checked', checked);
   });
 
@@ -1103,7 +1072,7 @@ function closeModal(id) {
 }
 
 function togglePermItem(el) {
-  const cb   = el.querySelector('input[type="checkbox"]');
+  const cb = el.querySelector('input[type="checkbox"]');
   cb.checked = !cb.checked;
   el.classList.toggle('checked', cb.checked);
 }
@@ -1113,16 +1082,14 @@ function setPermItem(rowId, cbId, checked) {
   document.getElementById(rowId).classList.toggle('checked', checked);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   FIELD-LEVEL ERROR HELPERS
-═══════════════════════════════════════════════════════════════ */
+/* ── FIELD ERROR HELPERS ── */
 const ERROR_FIELD_MAP = [
-  { match: 'username is required',    field: 'fieldUsername',  err: 'errUsername'  },
-  { match: 'username',                field: 'fieldUsername',  err: 'errUsername'  },
-  { match: 'email',                   field: 'fieldEmail',     err: 'errEmail'     },
-  { match: 'passwords do not match',  field: 'fieldPassword2', err: 'errPassword2' },
-  { match: 'password must be',        field: 'fieldPassword',  err: 'errPassword'  },
-  { match: 'password',                field: 'fieldPassword',  err: 'errPassword'  },
+  { match: 'username is required',   field: 'fieldUsername',  err: 'errUsername'  },
+  { match: 'username',               field: 'fieldUsername',  err: 'errUsername'  },
+  { match: 'email',                  field: 'fieldEmail',     err: 'errEmail'     },
+  { match: 'passwords do not match', field: 'fieldPassword2', err: 'errPassword2' },
+  { match: 'password must be',       field: 'fieldPassword',  err: 'errPassword'  },
+  { match: 'password',               field: 'fieldPassword',  err: 'errPassword'  },
 ];
 
 function showFieldError(fieldId, errorElId, msg) {
@@ -1139,9 +1106,9 @@ function showFieldError(fieldId, errorElId, msg) {
 function clearFieldError(errorElId) {
   const errEl = document.getElementById(errorElId);
   if (!errEl) return;
-  const fieldId = errEl.previousElementSibling ? errEl.previousElementSibling.id : null;
-  if (fieldId) document.getElementById(fieldId)?.classList.remove('input-error');
   errEl.classList.remove('visible');
+  const input = errEl.previousElementSibling;
+  if (input && input.tagName === 'INPUT') input.classList.remove('input-error');
 }
 
 function clearAllFieldErrors() {
@@ -1152,46 +1119,104 @@ function clearAllFieldErrors() {
 function routeError(msg) {
   const lower = msg.toLowerCase();
   for (const rule of ERROR_FIELD_MAP) {
-    if (lower.includes(rule.match)) {
-      showFieldError(rule.field, rule.err, msg);
-      return;
-    }
+    if (lower.includes(rule.match)) { showFieldError(rule.field, rule.err, msg); return; }
   }
   showFieldError('fieldUsername', 'errUsername', msg);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   TOAST HELPER
-═══════════════════════════════════════════════════════════════ */
-function _flashSuccessToast(msg, type, reloadAfter) {
-  const isError   = type === 'error';
-  const toastColor = isError ? 'var(--red)' : 'var(--g-primary)';
-  const icon       = isError ? 'error'       : 'check_circle';
-  const shouldReload = reloadAfter !== false;
+/* ── SUBMIT USER FORM ── */
+function submitUserForm() {
+  clearAllFieldErrors();
+  const isEdit   = !!document.getElementById('userFormUserId').value;
+  const username = document.getElementById('fieldUsername').value.trim();
+  const pw1      = document.getElementById('fieldPassword').value;
+  const pw2      = document.getElementById('fieldPassword2').value;
 
+  if (!username) { showFieldError('fieldUsername', 'errUsername', 'Username is required.'); return; }
+  if (!/^[\w.@+\-]+$/.test(username)) { showFieldError('fieldUsername', 'errUsername', 'Letters, digits and @/./+/-/_ only.'); return; }
+  if (!isEdit && pw1.length < 8) { showFieldError('fieldPassword', 'errPassword', 'Password must be at least 8 characters.'); return; }
+  if (!isEdit && pw1 !== pw2)    { showFieldError('fieldPassword2', 'errPassword2', 'Passwords do not match.'); return; }
+  if (isEdit && pw1 && pw1.length < 8) { showFieldError('fieldPassword', 'errPassword', 'Password must be at least 8 characters.'); return; }
+  if (isEdit && pw1 && pw1 !== pw2)    { showFieldError('fieldPassword2', 'errPassword2', 'Passwords do not match.'); return; }
+
+  const saveBtn = document.querySelector('#userModal .btn-ph-primary');
+  saveBtn.classList.add('is-loading');
+
+  const form = document.getElementById('userForm');
+  const fd   = new FormData(form);
+
+  fetch(form.action, {
+    method: 'POST',
+    body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(json => {
+      saveBtn.classList.remove('is-loading');
+      if (json.ok) { closeModal('userModal'); _flashSuccessToast(json.message, 'success'); }
+      else routeError(json.error || 'An error occurred.');
+    })
+    .catch(() => {
+      saveBtn.classList.remove('is-loading');
+      routeError('Network error. Please try again.');
+    });
+}
+
+/* ── SUBMIT GROUP FORM ── */
+function submitGroupForm() {
+  const nameInput = document.getElementById('fieldGroupName');
+  const name = nameInput.value.trim();
+  if (!name) {
+    nameInput.classList.add('input-error');
+    nameInput.focus();
+    return;
+  }
+
+  const saveBtn = document.querySelector('#groupModal .btn-ph-primary');
+  saveBtn.classList.add('is-loading');
+
+  const form = document.getElementById('groupForm');
+  const fd   = new FormData(form);
+
+  fetch(form.action, {
+    method: 'POST',
+    body: fd,
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(json => {
+      saveBtn.classList.remove('is-loading');
+      if (json.ok) { closeModal('groupModal'); _flashSuccessToast(json.message, 'success'); }
+      else { nameInput.classList.add('input-error'); nameInput.focus(); _flashSuccessToast(json.error || 'An error occurred.', 'error', false); }
+    })
+    .catch(() => {
+      saveBtn.classList.remove('is-loading');
+      _flashSuccessToast('Network error. Please try again.', 'error', false);
+    });
+}
+
+/* ── TOAST ── */
+function _flashSuccessToast(msg, type, reloadAfter) {
+  const isError    = type === 'error';
+  const toastColor = isError ? 'var(--red)' : 'var(--g-primary)';
+  const icon       = isError ? 'error' : 'check_circle';
+  const shouldReload = reloadAfter !== false;
   const div = document.createElement('div');
   div.className = 'toast ph-toast fade align-items-center border-0';
-  div.setAttribute('role', 'alert'); div.setAttribute('aria-live', 'assertive');
-  div.setAttribute('aria-atomic', 'true'); div.setAttribute('data-bs-delay', '5000');
+  div.setAttribute('role', 'alert');
+  div.setAttribute('data-bs-delay', '5000');
   div.style.setProperty('--toast-color', toastColor);
   div.innerHTML = `
     <div class="d-flex">
       <div class="toast-body d-flex align-items-center gap-3 py-3" style="color:var(--text-primary);font-size:13px;font-weight:600;">
-        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>
-        ${msg}
+        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>${msg}
       </div>
       <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size:10px;"></button>
     </div>
     <div class="ph-toast-progress"></div>`;
-
   document.getElementById('toastContainer').appendChild(div);
   const toastInstance = new bootstrap.Toast(div);
-
-  if (shouldReload) {
-    location.reload();
-  } else {
-    div.addEventListener('hidden.bs.toast', () => div.remove());
-  }
+  if (shouldReload) { location.reload(); } else { div.addEventListener('hidden.bs.toast', () => div.remove()); }
   toastInstance.show();
 }
 
