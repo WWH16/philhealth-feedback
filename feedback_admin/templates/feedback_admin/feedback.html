@@ -169,6 +169,28 @@
   .date-input { flex: 1; min-width: 0; }
   .feedback-card { padding: 12px 14px; }
 }
+
+/* ── EXPAND BUTTON ── */
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-muted);
+  transition: color 120ms;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.expand-btn:hover {
+  color: var(--g-primary);
+}
+
+.expand-btn .material-icons-round {
+  font-size: 18px;
+}
+
 {% endblock %}
 
 {% block page_content %}
