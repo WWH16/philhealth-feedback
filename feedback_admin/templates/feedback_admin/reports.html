@@ -8,19 +8,6 @@
 {% endblock %}
 
 {% block extra_styles %}
-/* ── REPORTS PAGE EXTRAS ───────────────────────────────────────────── */
-.report-period-btn {
-  padding: 10px 18px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
-  text-transform: uppercase; border: 1.5px solid var(--border);
-  background: transparent; color: var(--text-secondary);
-  cursor: pointer; transition: all 120ms; font-family: var(--font);
-  border-radius: 0;
-}
-.report-period-btn:hover { border-color: var(--g-primary); color: var(--g-primary); }
-.report-period-btn.active {
-  background: var(--g-forest); border-color: var(--g-forest); color: var(--white);
-}
-
 .metric-tile {
   display: flex; flex-direction: column; gap: 12px;
   padding: 18px; background: var(--surface-card);
@@ -52,17 +39,6 @@
   display: flex; gap: 8px; flex-wrap: wrap;
 }
 
-.suggestion-list {
-  list-style: none; padding: 0; margin: 0;
-}
-.suggestion-item {
-  padding: 12px 14px; background: var(--surface-page); border-left: 3px solid var(--g-primary);
-  margin-bottom: 8px; font-size: 12px; line-height: 1.6; color: var(--text-secondary);
-}
-.suggestion-item strong { color: var(--text-primary); font-weight: 600; }
-.suggestion-item.concern { border-left-color: var(--red); }
-.suggestion-item.concern strong { color: var(--red); }
-
 .performance-bar-row {
   display: flex; align-items: center; gap: 12px; padding: 10px 0;
 }
@@ -70,6 +46,13 @@
 .performance-bar { flex: 1; height: 8px; background: var(--border); position: relative; border-radius: 4px; overflow: hidden; }
 .performance-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--g-primary); border-radius: 4px; }
 .performance-value { font-size: 11px; font-weight: 700; color: var(--text-primary); font-family: var(--mono); min-width: 36px; text-align: right; }
+
+.performance-caption {
+  font-size: 11px; color: var(--text-muted); line-height: 1.6;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px;
+}
+.performance-caption .material-icons-round { font-size: 14px; color: var(--g-primary); flex-shrink: 0; }
 {% endblock %}
 
 {% block nav_reports %}active{% endblock %}
@@ -95,14 +78,13 @@
 </div>
 
 <!-- REPORT PERIOD SELECTOR -->
-<div style="margin-bottom: 24px;">
-  <p style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;">Select Report Period</p>
-  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-    <button class="report-period-btn active" onclick="setReportPeriod(this, 'daily')">Daily</button>
-    <button class="report-period-btn" onclick="setReportPeriod(this, 'weekly')">Weekly</button>
-    <button class="report-period-btn" onclick="setReportPeriod(this, 'monthly')">Monthly</button>
-    <button class="report-period-btn" onclick="setReportPeriod(this, 'quarterly')">Quarterly</button>
-    <button class="report-period-btn" onclick="setReportPeriod(this, 'annual')">Annual</button>
+<div style="margin-bottom: 20px;">
+  <div class="filter-tabs" style="display:inline-flex;max-width:560px;width:100%">
+    <button class="filter-tab active" onclick="setReportPeriod(this, 'daily')">Daily</button>
+    <button class="filter-tab" onclick="setReportPeriod(this, 'weekly')">Weekly</button>
+    <button class="filter-tab" onclick="setReportPeriod(this, 'monthly')">Monthly</button>
+    <button class="filter-tab" onclick="setReportPeriod(this, 'quarterly')">Quarterly</button>
+    <button class="filter-tab" onclick="setReportPeriod(this, 'annual')">Annual</button>
   </div>
 </div>
 
@@ -180,7 +162,7 @@
     </div>
   </div>
 
-  <!-- SERVICE PERFORMANCE -->
+  <!-- SERVICE PERFORMANCE RATING -->
   <div class="col-12 col-lg-7">
     <div class="card-block h-100">
       <div class="card-block-head">
@@ -191,29 +173,29 @@
       </div>
       <div class="card-block-body">
         <div class="performance-bar-row">
-          <span class="performance-label">Staff Conduct</span>
-          <div class="performance-bar"><div class="performance-fill" style="width: 92%"></div></div>
-          <span class="performance-value">92%</span>
+          <span class="performance-label">Compliments</span>
+          <div class="performance-bar"><div class="performance-fill" style="width: 0%; background: var(--g-primary);"></div></div>
+          <span class="performance-value">0%</span>
         </div>
         <div class="performance-bar-row">
-          <span class="performance-label">Service Speed</span>
-          <div class="performance-bar"><div class="performance-fill" style="width: 78%"></div></div>
-          <span class="performance-value">78%</span>
+          <span class="performance-label">Suggestions</span>
+          <div class="performance-bar"><div class="performance-fill" style="width: 0%; background: var(--gold);"></div></div>
+          <span class="performance-value">0%</span>
         </div>
         <div class="performance-bar-row">
-          <span class="performance-label">Facility Quality</span>
-          <div class="performance-bar"><div class="performance-fill" style="width: 85%"></div></div>
-          <span class="performance-value">85%</span>
+          <span class="performance-label">Complaints</span>
+          <div class="performance-bar"><div class="performance-fill" style="width: 0%; background: var(--red);"></div></div>
+          <span class="performance-value">0%</span>
         </div>
         <div class="performance-bar-row">
-          <span class="performance-label">Process Clarity</span>
-          <div class="performance-bar"><div class="performance-fill" style="width: 81%"></div></div>
-          <span class="performance-value">81%</span>
+          <span class="performance-label">Service Concerns</span>
+          <div class="performance-bar"><div class="performance-fill" style="width: 0%; background: #3b82f6;"></div></div>
+          <span class="performance-value">0%</span>
         </div>
-        <div class="performance-bar-row">
-          <span class="performance-label">Overall Experience</span>
-          <div class="performance-bar"><div class="performance-fill" style="width: 83%; background: var(--g-deep);"></div></div>
-          <span class="performance-value">83%</span>
+
+        <div class="performance-caption" id="performanceCaption">
+          <span class="material-icons-round">info</span>
+          <span>Based on 0 of 0 total responses reviewed and categorized by admin staff.</span>
         </div>
       </div>
     </div>
@@ -282,53 +264,6 @@
 
 </div><!-- /row 2 -->
 
-<!-- COMMON SUGGESTIONS & CONCERNS -->
-<div class="row g-3 mb-4">
-
-  <!-- TOP SUGGESTIONS -->
-  <div class="col-12 col-lg-6">
-    <div class="card-block h-100">
-      <div class="card-block-head">
-        <h2 class="card-block-title">
-          <span class="material-icons-round">lightbulb</span>
-          Common Suggestions
-        </h2>
-      </div>
-      <div class="card-block-body">
-        <ul class="suggestion-list" id="suggestionsList">
-          <li class="suggestion-item"><strong>Streamline the appointment booking system</strong> — Multiple users mentioned the online system could be more intuitive.</li>
-          <li class="suggestion-item"><strong>Reduce waiting time</strong> — Consider adding more staff during peak hours (12–2 PM).</li>
-          <li class="suggestion-item"><strong>Provide more information signage</strong> — First-time visitors found it difficult to navigate the office.</li>
-          <li class="suggestion-item"><strong>Improve facility comfort</strong> — Requests for better seating and climate control in waiting areas.</li>
-          <li class="suggestion-item"><strong>Expand documentation services</strong> — Several users asked for document scanning and digital submission options.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOP CONCERNS -->
-  <div class="col-12 col-lg-6">
-    <div class="card-block h-100">
-      <div class="card-block-head">
-        <h2 class="card-block-title">
-          <span class="material-icons-round">warning</span>
-          Key Concerns
-        </h2>
-      </div>
-      <div class="card-block-body">
-        <ul class="suggestion-list" id="concernsList">
-          <li class="suggestion-item concern"><strong>Excessive waiting time</strong> — 68% of negative feedback mentions queue delays and overcrowding.</li>
-          <li class="suggestion-item concern"><strong>Staff availability</strong> — Some users reported difficulty reaching staff for inquiry assistance.</li>
-          <li class="suggestion-item concern"><strong>Facility maintenance</strong> — Climate control and seating comfort issues noted in multiple feedback entries.</li>
-          <li class="suggestion-item concern"><strong>Process clarity</strong> — Customers occasionally received incomplete or conflicting information about requirements.</li>
-          <li class="suggestion-item concern"><strong>Appointment no-shows</strong> — A few instances where scheduled appointments were not honored.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /row 3 -->
-
 <!-- EXPORT SECTION -->
 <div class="row g-3 mb-4">
   <div class="col-12">
@@ -368,39 +303,49 @@
 
 {% block page_scripts %}
 <script>
-/* ── REPORT DATA ── */
+/* ── REPORT DATA ──
+   `categories` reflects feedback that admins have manually flagged into
+   complaint / suggestion / compliment / concern (see feedback.html tabs).
+   `categorized` = total entries that have been tagged so far (may be
+   total, since tagging is manual and ongoing).
+*/
 const REPORT_DATA = {
   daily: {
     total: 18, vsat: 11, sat: 5, neg: 2,
     satisfaction: 83,
     trendData: [2, 3, 4, 5, 3, 1], trendLabels: ['8am', '10am', '12pm', '2pm', '4pm', '5pm'],
-    performance: { staff: 92, speed: 78, facility: 85, process: 81, overall: 83 }
+    categorized: 15,
+    categories: { compliment: 9, suggestion: 3, complaint: 2, concern: 1 }
   },
   weekly: {
     total: 84, vsat: 52, sat: 22, neg: 10,
     satisfaction: 81,
     trendData: [12, 18, 14, 22, 16, 2], trendLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    performance: { staff: 89, speed: 76, facility: 82, process: 79, overall: 81 }
+    categorized: 70,
+    categories: { compliment: 38, suggestion: 16, complaint: 11, concern: 5 }
   },
   monthly: {
     total: 248, vsat: 149, sat: 64, neg: 35,
     satisfaction: 82,
     trendData: [30, 35, 28, 42, 38, 45, 50, 40, 35, 38, 32, 32],
     trendLabels: ['1–3', '4–7', '8–11', '12–14', '15–18', '19–21', '22–24', '25–26', '27–29', '30–31'],
-    performance: { staff: 88, speed: 75, facility: 81, process: 78, overall: 82 }
+    categorized: 63,
+    categories: { compliment: 24, suggestion: 19, complaint: 12, concern: 8 }
   },
   quarterly: {
     total: 756, vsat: 453, sat: 204, neg: 99,
     satisfaction: 79,
     trendData: [82, 80, 76], trendLabels: ['April', 'May', 'June'],
-    performance: { staff: 86, speed: 72, facility: 78, process: 74, overall: 79 }
+    categorized: 190,
+    categories: { compliment: 78, suggestion: 52, complaint: 38, concern: 22 }
   },
   annual: {
     total: 3021, vsat: 1813, sat: 809, neg: 399,
     satisfaction: 77,
     trendData: [75, 74, 76, 77, 78, 77, 79, 78, 77, 79, 78, 77],
     trendLabels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    performance: { staff: 84, speed: 70, facility: 76, process: 72, overall: 77 }
+    categorized: 712,
+    categories: { compliment: 298, suggestion: 201, complaint: 142, concern: 71 }
   }
 };
 
@@ -408,7 +353,7 @@ let currentPeriod = 'daily';
 let reportPieChart, reportTrendChart;
 
 function setReportPeriod(btn, period) {
-  document.querySelectorAll('.report-period-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentPeriod = period;
   updateReport();
@@ -442,18 +387,23 @@ function updateReport() {
   document.getElementById('summaryNeg').textContent = data.neg.toLocaleString() + ' responses';
   document.getElementById('summaryScore').textContent = data.satisfaction + '/100';
 
-  // Update performance bars
+  // Update Service Performance Rating (category breakdown of admin-flagged feedback)
+  const cats = data.categories;
+  const categorized = data.categorized || 0;
+  const order = ['compliment', 'suggestion', 'complaint', 'concern'];
+
   document.querySelectorAll('.performance-bar-row').forEach((row, idx) => {
-    const labels = ['Staff Conduct', 'Service Speed', 'Facility Quality', 'Process Clarity', 'Overall Experience'];
-    const values = ['staff', 'speed', 'facility', 'process', 'overall'];
-    if (idx < 5) {
-      const val = data.performance[values[idx]];
-      const fill = row.querySelector('.performance-fill');
-      const valSpan = row.querySelector('.performance-value');
-      fill.style.width = val + '%';
-      valSpan.textContent = val + '%';
-    }
+    const key = order[idx];
+    const count = cats[key] || 0;
+    const pct = categorized > 0 ? Math.round((count / categorized) * 100) : 0;
+    const fill = row.querySelector('.performance-fill');
+    const valSpan = row.querySelector('.performance-value');
+    fill.style.width = pct + '%';
+    valSpan.textContent = pct + '%';
   });
+
+  document.getElementById('performanceCaption').querySelector('span:last-child').textContent =
+    `Based on ${categorized.toLocaleString()} of ${data.total.toLocaleString()} total responses reviewed and categorized by admin staff.`;
 
   // Update charts
   initReportPieChart(data);
