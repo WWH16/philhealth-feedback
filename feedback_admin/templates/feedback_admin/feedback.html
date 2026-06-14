@@ -6,7 +6,10 @@
 {% block nav_feedback %}active{% endblock %}
 
 {% block extra_styles %}
-/* ── FEEDBACK PAGE EXTRAS ──────────────────────────────────────────── */
+
+/* ── FEEDBACK TABLE PAGE ─────────────────────────────────────────────── */
+
+/* ── CATEGORY TAB BAR ── */
 .category-tab-bar {
   display: flex; gap: 0;
   border-bottom: 2px solid var(--border);
@@ -30,105 +33,31 @@
 }
 .category-tab.active .cat-badge { background: var(--g-xlight); color: var(--g-forest); }
 
-/* ── CATEGORY CHIPS ── */
+/* ── CATEGORY + SENTIMENT CHIPS ── */
 .cat-chip {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
   text-transform: uppercase; padding: 3px 8px; white-space: nowrap;
 }
 .cat-chip .material-icons-round { font-size: 12px; }
-.chip-complaint   { background: var(--red-bg);    color: var(--red); }
-.chip-suggestion  { background: var(--g-xlight);  color: var(--g-forest); }
-.chip-compliment  { background: #fffbeb;           color: #7a5500; }
-.chip-concern     { background: #eff6ff;           color: #1d4ed8; }
+.chip-complaint  { background: var(--red-bg);   color: var(--red); }
+.chip-suggestion { background: var(--g-xlight); color: var(--g-forest); }
+.chip-compliment { background: #fffbeb;          color: #7a5500; }
+.chip-concern    { background: #eff6ff;          color: #1d4ed8; }
 [data-theme="dark"] .chip-complaint  { background: rgba(192,0,26,0.12);  color: #f06070; }
 [data-theme="dark"] .chip-suggestion { background: rgba(35,164,85,0.12); color: #5fcf8a; }
 [data-theme="dark"] .chip-compliment { background: rgba(184,147,58,0.12);color: #d4a840; }
 [data-theme="dark"] .chip-concern    { background: rgba(59,130,246,0.12); color: #93c5fd; }
 
-/* ── FEEDBACK CARD ── */
-.feedback-card {
-  background: var(--surface-card); border: 1px solid var(--border);
-  border-left: 3px solid var(--border);
-  padding: 16px 18px; margin-bottom: 10px;
-  transition: border-color 150ms, box-shadow 150ms; cursor: pointer;
-}
-.feedback-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-.feedback-card.cat-complaint  { border-left-color: var(--red); }
-.feedback-card.cat-suggestion { border-left-color: var(--g-primary); }
-.feedback-card.cat-compliment { border-left-color: var(--gold); }
-.feedback-card.cat-concern    { border-left-color: #3b82f6; }
-
-.feedback-card-header {
-  display: flex; align-items: flex-start;
-  justify-content: space-between; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;
-}
-.feedback-card-meta {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-}
-.feedback-card-date {
-  font-size: 11px; font-weight: 600; color: var(--text-muted);
-  font-family: var(--mono);
-}
-.feedback-card-body {
-  font-size: 13px; color: var(--text-secondary); line-height: 1.7;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.feedback-card.expanded .feedback-card-body {
-  display: block; -webkit-line-clamp: unset;
-}
-
-/* ── NOTES SECTION ── */
-.action-notes {
-  display: none; margin-top: 14px; padding-top: 14px;
-  border-top: 1px dashed var(--border);
-}
-.feedback-card.expanded .action-notes { display: block; }
-.notes-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
-  display: flex; align-items: center; gap: 6px;
-}
-.notes-label .material-icons-round { font-size: 14px; color: var(--g-primary); }
-.notes-input {
-  width: 100%; padding: 10px 12px; font-size: 13px;
-  font-family: var(--font); border: 1.5px solid var(--border);
-  background: var(--surface-page); color: var(--text-primary);
-  outline: none; resize: vertical; min-height: 72px;
-  line-height: 1.6; border-radius: 0; transition: border-color 120ms;
-}
-.notes-input:focus { border-color: var(--g-primary); }
-.notes-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-
-/* ── EXISTING NOTE ── */
-.existing-note {
-  background: var(--g-xlight); border: 1px solid var(--g-light);
-  border-left: 3px solid var(--g-primary);
-  padding: 10px 14px; font-size: 12px; color: var(--g-forest);
-  line-height: 1.65; margin-bottom: 10px;
-}
-[data-theme="dark"] .existing-note {
-  background: rgba(35,164,85,0.08); border-color: rgba(35,164,85,0.2);
-  color: #5fcf8a;
-}
-.existing-note-meta {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--g-primary); margin-bottom: 5px;
-  display: flex; align-items: center; gap: 5px;
-}
-.existing-note-meta .material-icons-round { font-size: 13px; }
-
-/* ── SENTIMENT MINI CHIP ── */
 .sent-chip {
   display: inline-flex; align-items: center; gap: 3px;
   font-size: 10px; font-weight: 700; padding: 2px 6px;
-  text-transform: uppercase; letter-spacing: 0.04em;
+  text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
 }
+.sent-chip .material-icons-round { font-size: 11px; }
 .sent-pos { background: var(--g-xlight); color: var(--g-forest); }
 .sent-neu { background: var(--gold-light); color: #7a5500; }
 .sent-neg { background: var(--red-bg); color: var(--red); }
-.sent-chip .material-icons-round { font-size: 12px; }
 [data-theme="dark"] .sent-pos { background: rgba(35,164,85,0.15); color: #5fcf8a; }
 [data-theme="dark"] .sent-neu { background: rgba(184,147,58,0.15); color: #d4a840; }
 [data-theme="dark"] .sent-neg { background: rgba(192,0,26,0.15); color: #f06070; }
@@ -136,7 +65,7 @@
 /* ── FILTER PANEL ── */
 .filter-panel {
   background: var(--surface-card); border: 1px solid var(--border);
-  padding: 16px 18px; margin-bottom: 16px;
+  padding: 14px 16px; margin-bottom: 16px;
 }
 .filter-panel-row {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -151,44 +80,210 @@
 .date-input:focus { border-color: var(--g-primary); }
 .filter-sep { font-size: 11px; color: var(--text-muted); font-weight: 600; }
 
+/* ── FEEDBACK TABLE ── */
+.fb-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+}
+
+table.fb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+table.fb-table thead th {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted);
+  background: var(--surface-page);
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--border);
+  border-top: 1px solid var(--border);
+  white-space: nowrap; text-align: left;
+  user-select: none;
+}
+
+table.fb-table thead th.sortable { cursor: pointer; }
+table.fb-table thead th.sortable:hover { color: var(--text-primary); }
+
+table.fb-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 100ms;
+}
+table.fb-table tbody tr:last-child { border-bottom: none; }
+table.fb-table tbody tr:hover { background: var(--surface-page); }
+table.fb-table tbody tr.fb-row-expanded { background: var(--surface-page); }
+
+table.fb-table td {
+  padding: 16px;
+  vertical-align: top;
+  color: var(--text-primary);
+}
+
+/* Column widths */
+.fb-col-date     { width: 120px; }
+.fb-col-category { width: 150px; }
+.fb-col-sent     { width: 140px; }
+.fb-col-comment  { /* flex */ }
+.fb-col-expand   { width: 50px; text-align: center !important; }
+
+/* Date cell */
+.fb-date { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.fb-time { font-size: 10px; color: var(--text-muted); font-family: var(--mono); margin-top: 2px; }
+
+/* Comment preview */
+.fb-comment-preview {
+  font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; max-width: 100%;
+  word-break: break-word;
+}
+.fb-row-expanded .fb-comment-preview {
+  display: block; -webkit-line-clamp: unset; overflow: visible;
+}
+.fb-no-comment {
+  font-size: 11px; font-style: italic; color: var(--text-muted);
+}
+
+/* Expand button */
+.fb-expand-btn {
+  background: none; border: 1.5px solid var(--border); cursor: pointer; padding: 6px;
+  color: var(--text-muted); transition: all 120ms;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+}
+.fb-expand-btn:hover { color: var(--g-primary); border-color: var(--g-primary); background: var(--g-xlight); }
+.fb-expand-btn .material-icons-round { font-size: 18px; }
+
+/* Note inline area */
+.fb-note-row td {
+  padding: 0 !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.fb-note-inner {
+  padding: 20px 24px 24px 60px;
+  position: relative;
+  background: var(--surface-page);
+}
+.fb-note-inner::before {
+  content: ''; position: absolute; left: 32px; top: 0; bottom: 0;
+  width: 2px; background: var(--border);
+}
+[data-theme="dark"] .fb-note-inner { background: rgba(255,255,255,0.01); }
+
+.note-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.note-label .material-icons-round { font-size: 16px; color: var(--g-primary); }
+
+.existing-note {
+  background: var(--g-xlight); border: 1px solid var(--g-light);
+  border-left: 3px solid var(--g-primary);
+  padding: 10px 14px; font-size: 12px; color: var(--g-forest);
+  line-height: 1.65; margin-bottom: 10px;
+}
+[data-theme="dark"] .existing-note {
+  background: rgba(35,164,85,0.08); border-color: rgba(35,164,85,0.2); color: #5fcf8a;
+}
+.existing-note-meta {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--g-primary); margin-bottom: 5px;
+  display: flex; align-items: center; gap: 5px;
+}
+.existing-note-meta .material-icons-round { font-size: 13px; }
+
+.notes-input {
+  width: 100%; padding: 10px 12px; font-size: 13px;
+  font-family: var(--font); border: 1.5px solid var(--border);
+  background: var(--surface-card); color: var(--text-primary);
+  outline: none; resize: vertical; min-height: 68px;
+  line-height: 1.6; border-radius: 0; transition: border-color 120ms;
+}
+.notes-input:focus { border-color: var(--g-primary); }
+.notes-actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+
 /* ── EMPTY STATE ── */
-.empty-state {
+.fb-empty {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 12px; padding: 64px 20px;
   color: var(--text-muted);
 }
-.empty-state .material-icons-round { font-size: 48px; opacity: 0.25; }
-.empty-state-title { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.empty-state-sub   { font-size: 12px; }
+.fb-empty .material-icons-round { font-size: 48px; opacity: 0.25; }
+.fb-empty-title { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.fb-empty-sub   { font-size: 12px; }
 
-/* ── RESPONSIVE ── */
+/* ── MOBILE CARD MODE (≤ 640px) ── */
+@media (max-width: 640px) {
+  .fb-table-wrap { border: none; background: transparent; overflow: visible; }
+  table.fb-table,
+  table.fb-table thead,
+  table.fb-table tbody,
+  table.fb-table th,
+  table.fb-table td,
+  table.fb-table tr { display: block; }
+
+  table.fb-table thead { display: none; }
+
+  table.fb-table tbody tr {
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border) !important;
+    position: relative;
+  }
+  table.fb-table tbody tr:hover { background: var(--surface-card); }
+  table.fb-table tbody tr.fb-row-expanded { background: var(--surface-card); }
+
+  table.fb-table td {
+    padding: 0; border: none !important;
+  }
+
+  /* Mobile card layout using a grid inside each row */
+  table.fb-table tbody tr.fb-data-row {
+    padding: 12px 14px 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto auto;
+    column-gap: 10px;
+    row-gap: 8px;
+  }
+
+  table.fb-table td.fb-col-date {
+    grid-column: 1; grid-row: 1;
+    display: flex; align-items: center; gap: 8px;
+  }
+  table.fb-table td.fb-col-expand {
+    grid-column: 2; grid-row: 1 / 4;
+    display: flex; align-items: flex-start; justify-content: flex-end;
+    padding: 0 !important;
+  }
+  table.fb-table td.fb-col-category {
+    grid-column: 1; grid-row: 2;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  table.fb-table td.fb-col-comment {
+    grid-column: 1; grid-row: 3;
+  }
+
+  /* Sent chip next to category on mobile */
+  table.fb-table td.fb-col-sent {
+    display: none; /* hidden; sent chip is injected into category cell on mobile */
+  }
+
+  .fb-note-inner { margin-left: 0; padding: 12px 14px 14px; }
+  .fb-note-row td { padding: 0 !important; }
+}
+
+/* ── STAT CARDS ── */
 @media (max-width: 575px) {
   .category-tab { padding: 9px 10px; font-size: 9px; }
   .filter-panel-row { flex-direction: column; align-items: stretch; }
   .date-range-inputs { width: 100%; }
   .date-input { flex: 1; min-width: 0; }
-  .feedback-card { padding: 12px 14px; }
-}
-
-/* ── EXPAND BUTTON ── */
-.expand-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  color: var(--text-muted);
-  transition: color 120ms;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-}
-
-.expand-btn:hover {
-  color: var(--g-primary);
-}
-
-.expand-btn .material-icons-round {
-  font-size: 18px;
 }
 
 {% endblock %}
@@ -257,12 +352,10 @@
   <!-- FILTERS -->
   <div class="filter-panel">
     <div class="filter-panel-row">
-      <!-- Search -->
       <div class="search-box" style="max-width:280px;flex:1 1 200px;">
         <span class="material-icons-round">search</span>
         <input type="text" id="fbSearch" placeholder="Search feedback…" oninput="applyFbFilters()" aria-label="Search feedback">
       </div>
-      <!-- Date range -->
       <div class="date-range-inputs">
         <span class="filter-sep">From</span>
         <input type="date" class="date-input" id="dateFrom" onchange="applyFbFilters()" aria-label="From date">
@@ -272,14 +365,12 @@
           <span class="material-icons-round">clear</span>
         </button>
       </div>
-      <!-- Sentiment filter -->
       <select class="btn-ph" id="sentimentFilter" onchange="applyFbFilters()" aria-label="Filter by sentiment">
         <option value="">All Sentiments</option>
-        <option value="pos">Very Satisfactory</option>
-        <option value="neu">Satisfactory</option>
-        <option value="neg">Unsatisfactory</option>
+        <option value="pos">Positive</option>
+        <option value="neu">Neutral</option>
+        <option value="neg">Negative</option>
       </select>
-      <!-- Sort -->
       <select class="btn-ph" id="sortFilter" onchange="applyFbFilters()" aria-label="Sort order">
         <option value="newest">Newest First</option>
         <option value="oldest">Oldest First</option>
@@ -293,7 +384,7 @@
   <div class="category-tab-bar" id="categoryTabs">
     <button class="category-tab active" onclick="setCategoryTab(this, '')" data-cat="">
       <span class="material-icons-round">list</span>
-      All Feedback
+      All
       <span class="cat-badge" id="tabCountAll">63</span>
     </button>
     <button class="category-tab" onclick="setCategoryTab(this, 'complaint')" data-cat="complaint">
@@ -313,17 +404,47 @@
     </button>
     <button class="category-tab" onclick="setCategoryTab(this, 'concern')" data-cat="concern">
       <span class="material-icons-round">info</span>
-      Service Concerns
+      Concerns
       <span class="cat-badge" id="tabCountConcern">8</span>
     </button>
   </div>
 
-  <!-- FEEDBACK LIST -->
-  <div id="feedbackList"></div>
+  <!-- FEEDBACK TABLE -->
+  <div class="fb-table-wrap">
+    <table class="fb-table" id="fbTable" aria-label="Feedback submissions">
+      <thead>
+        <tr>
+          <th class="fb-col-date sortable" onclick="sortFb('date')">
+            Date <span class="material-icons-round sort-icon" id="sort-date" style="font-size:11px;vertical-align:middle;opacity:0.4">arrow_downward</span>
+          </th>
+          <th class="fb-col-category">Category</th>
+          <th class="fb-col-sent">Sentiment</th>
+          <th class="fb-col-comment">Comment</th>
+          <th class="fb-col-expand" aria-label="Expand"></th>
+        </tr>
+      </thead>
+      <tbody id="fbTableBody"></tbody>
+    </table>
+
+    <!-- Empty state inside table wrapper -->
+    <div id="fbEmptyState" class="fb-empty" style="display:none;">
+      <span class="material-icons-round">chat_bubble_outline</span>
+      <div class="fb-empty-title">No feedback found</div>
+      <div class="fb-empty-sub">Try adjusting your search or filters.</div>
+    </div>
+  </div>
 
   <!-- PAGINATION -->
   <div class="pagination-row" id="fbPaginationRow" style="background:var(--surface-card);border:1px solid var(--border);border-top:none;">
-    <span class="table-info" id="fbPageInfo">—</span>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span class="table-info" id="fbPageInfo">—</span>
+      <select class="btn-ph btn-ph-sm" id="fbPageSize" onchange="fbChangePageSize(this.value)" aria-label="Rows per page">
+        <option value="15">15 / page</option>
+        <option value="25">25 / page</option>
+        <option value="50">50 / page</option>
+        <option value="100">100 / page</option>
+      </select>
+    </div>
     <div class="pg-btns" id="fbPgBtns"></div>
   </div>
 
@@ -331,7 +452,7 @@
 
 {% block page_scripts %}
 <script>
-/* ── FEEDBACK DATA ── */
+/* ── DATA ── */
 const ALL_FEEDBACK = [
   { id:1,  date:'2026-06-11', time:'14:32', category:'suggestion',  sentiment:'pos', comment:'Magdagdag ng upuan sa waiting area dahil maraming nakatayo lalo na sa umaga.',             note:'' },
   { id:2,  date:'2026-06-11', time:'13:15', category:'complaint',   sentiment:'neg', comment:'Mabagal ang proseso ng claims. Naghintay ako ng dalawang oras para sa simpleng inquiry.', note:'Nire-review ng management ang queue system. Target na mabawasan ang wait time sa loob ng 2 linggo.' },
@@ -366,25 +487,30 @@ const ALL_FEEDBACK = [
 ];
 
 const CAT_CONFIG = {
-  complaint:  { cls:'cat-complaint',  chipCls:'chip-complaint',  icon:'report_problem', label:'Complaint' },
-  suggestion: { cls:'cat-suggestion', chipCls:'chip-suggestion', icon:'lightbulb',       label:'Suggestion' },
-  compliment: { cls:'cat-compliment', chipCls:'chip-compliment', icon:'thumb_up',        label:'Compliment' },
-  concern:    { cls:'cat-concern',    chipCls:'chip-concern',    icon:'info',             label:'Service Concern' },
+  complaint:  { chipCls:'chip-complaint',  icon:'report_problem', label:'Complaint',       borderColor:'var(--red)' },
+  suggestion: { chipCls:'chip-suggestion', icon:'lightbulb',       label:'Suggestion',      borderColor:'var(--g-primary)' },
+  compliment: { chipCls:'chip-compliment', icon:'thumb_up',        label:'Compliment',      borderColor:'var(--gold)' },
+  concern:    { chipCls:'chip-concern',    icon:'info',             label:'Service Concern', borderColor:'#3b82f6' },
 };
 const SENT_CONFIG = {
-  pos: { cls:'sent-pos', icon:'sentiment_satisfied_alt', label:'Very Satisfactory' },
-  neu: { cls:'sent-neu', icon:'sentiment_neutral',       label:'Satisfactory' },
-  neg: { cls:'sent-neg', icon:'sentiment_dissatisfied',  label:'Unsatisfactory' },
+  pos: { cls:'sent-pos', icon:'sentiment_satisfied_alt', label:'Positive' },
+  neu: { cls:'sent-neu', icon:'sentiment_neutral',       label:'Neutral'   },
+  neg: { cls:'sent-neg', icon:'sentiment_dissatisfied',  label:'Negative' },
 };
 
 /* ── STATE ── */
 let filteredFb   = [...ALL_FEEDBACK];
 let fbPage       = 1;
-const FB_PAGE_SZ = 10;
+let fbPageSize   = 15;
 let activeCategory = '';
+let fbSortDir    = -1;
+let expandedIds  = new Set();
+let noteCache    = {};
 
 /* ── UTILS ── */
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 /* ── FILTERS ── */
 function setCategoryTab(btn, cat) {
@@ -396,16 +522,16 @@ function setCategoryTab(btn, cat) {
 
 function clearDates() {
   document.getElementById('dateFrom').value = '';
-  document.getElementById('dateTo').value = '';
+  document.getElementById('dateTo').value   = '';
   applyFbFilters();
 }
 
 function applyFbFilters() {
-  const q      = document.getElementById('fbSearch').value.toLowerCase();
-  const from   = document.getElementById('dateFrom').value;
-  const to     = document.getElementById('dateTo').value;
-  const sent   = document.getElementById('sentimentFilter').value;
-  const sort   = document.getElementById('sortFilter').value;
+  const q    = document.getElementById('fbSearch').value.toLowerCase();
+  const from = document.getElementById('dateFrom').value;
+  const to   = document.getElementById('dateTo').value;
+  const sent = document.getElementById('sentimentFilter').value;
+  const sort = document.getElementById('sortFilter').value;
 
   filteredFb = ALL_FEEDBACK.filter(f => {
     const matchCat  = !activeCategory || f.category === activeCategory;
@@ -416,146 +542,199 @@ function applyFbFilters() {
     return matchCat && matchQ && matchSent && matchFrom && matchTo;
   });
 
-  if (sort === 'newest')   filteredFb.sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time));
-  if (sort === 'oldest')   filteredFb.sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  if (sort === 'newest')   filteredFb.sort((a,b) => ((b.date+b.time) > (a.date+a.time) ? 1 : -1));
+  if (sort === 'oldest')   filteredFb.sort((a,b) => ((a.date+a.time) > (b.date+b.time) ? 1 : -1));
   if (sort === 'category') filteredFb.sort((a,b) => a.category.localeCompare(b.category));
 
   fbPage = 1;
-  renderFeedbackList();
+  renderFbTable();
   updateTabCounts();
 }
 
 function updateTabCounts() {
   const counts = { complaint:0, suggestion:0, compliment:0, concern:0 };
   ALL_FEEDBACK.forEach(f => counts[f.category]++);
-  document.getElementById('tabCountAll').textContent       = ALL_FEEDBACK.length;
-  document.getElementById('tabCountComplaint').textContent = counts.complaint;
-  document.getElementById('tabCountSuggestion').textContent= counts.suggestion;
-  document.getElementById('tabCountCompliment').textContent= counts.compliment;
-  document.getElementById('tabCountConcern').textContent   = counts.concern;
-  document.getElementById('countComplaint').textContent    = counts.complaint;
-  document.getElementById('countSuggestion').textContent   = counts.suggestion;
-  document.getElementById('countCompliment').textContent   = counts.compliment;
-  document.getElementById('countConcern').textContent      = counts.concern;
+  document.getElementById('tabCountAll').textContent        = ALL_FEEDBACK.length;
+  document.getElementById('tabCountComplaint').textContent  = counts.complaint;
+  document.getElementById('tabCountSuggestion').textContent = counts.suggestion;
+  document.getElementById('tabCountCompliment').textContent = counts.compliment;
+  document.getElementById('tabCountConcern').textContent    = counts.concern;
+  document.getElementById('countComplaint').textContent     = counts.complaint;
+  document.getElementById('countSuggestion').textContent    = counts.suggestion;
+  document.getElementById('countCompliment').textContent    = counts.compliment;
+  document.getElementById('countConcern').textContent       = counts.concern;
 }
 
-/* ── EXPAND / COLLAPSE ── */
-function toggleFbCard(id) {
-  const card = document.getElementById('fbcard-' + id);
-  if (!card) return;
-  card.classList.toggle('expanded');
-  const btn  = card.querySelector('.fb-expand-btn');
-  if (btn) btn.querySelector('.material-icons-round').textContent =
-    card.classList.contains('expanded') ? 'expand_less' : 'expand_more';
+function sortFb(field) {
+  fbSortDir *= -1;
+  const icon = document.getElementById('sort-date');
+  if (icon) {
+    icon.textContent = fbSortDir === -1 ? 'arrow_downward' : 'arrow_upward';
+    icon.style.opacity = '1';
+    icon.style.color   = 'var(--g-primary)';
+  }
+  filteredFb.sort((a, b) => {
+    const va = a.date + a.time, vb = b.date + b.time;
+    return (va > vb ? 1 : -1) * fbSortDir;
+  });
+  fbPage = 1;
+  renderFbTable();
 }
 
-/* ── SAVE NOTE ── */
+function fbChangePageSize(val) {
+  fbPageSize = parseInt(val);
+  fbPage = 1;
+  renderFbTable();
+}
+
+/* ── EXPAND / NOTE ── */
+function toggleExpand(id) {
+  if (expandedIds.has(id)) {
+    expandedIds.delete(id);
+  } else {
+    expandedIds.add(id);
+  }
+  renderFbTable();
+}
+
 function saveNote(id) {
   const ta  = document.getElementById('note-input-' + id);
   const val = ta ? ta.value.trim() : '';
   const idx = ALL_FEEDBACK.findIndex(f => f.id === id);
-  if (idx !== -1 && val) {
+  if (idx !== -1) {
     ALL_FEEDBACK[idx].note = val;
-    renderFeedbackList();
+    noteCache[id] = val;
   }
+  renderFbTable();
 }
 
 /* ── RENDER ── */
-function renderFeedbackList() {
-  const start = (fbPage - 1) * FB_PAGE_SZ;
-  const end   = Math.min(start + FB_PAGE_SZ, filteredFb.length);
+function renderFbTable() {
+  const start = (fbPage - 1) * fbPageSize;
+  const end   = Math.min(start + fbPageSize, filteredFb.length);
   const rows  = filteredFb.slice(start, end);
-  const list  = document.getElementById('feedbackList');
+  const body  = document.getElementById('fbTableBody');
+  const empty = document.getElementById('fbEmptyState');
+  const pagination = document.getElementById('fbPaginationRow');
 
   document.getElementById('fbInfo').textContent =
     filteredFb.length === 0 ? 'No results' :
-    `Showing ${start+1}–${end} of ${filteredFb.length} feedback`;
+    `${start + 1}–${end} of ${filteredFb.length}`;
 
   if (rows.length === 0) {
-    list.innerHTML = `<div class="empty-state">
-      <span class="material-icons-round">chat_bubble_outline</span>
-      <div class="empty-state-title">No feedback found</div>
-      <div class="empty-state-sub">Try adjusting your search or filters.</div>
-    </div>`;
-    document.getElementById('fbPaginationRow').style.display = 'none';
+    body.innerHTML = '';
+    empty.style.display   = 'flex';
+    pagination.style.display = 'none';
     return;
   }
+  empty.style.display   = 'none';
+  pagination.style.display = 'flex';
 
-  document.getElementById('fbPaginationRow').style.display = 'flex';
-  list.innerHTML = rows.map(f => {
-    const cat  = CAT_CONFIG[f.category];
-    const sent = SENT_CONFIG[f.sentiment];
-    const dateStr = new Date(f.date).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
-    const noteSection = f.note
-      ? `<div class="existing-note">
-          <div class="existing-note-meta"><span class="material-icons-round">task_alt</span>Action / Reply on Record</div>
-          ${escHtml(f.note)}
-        </div>`
-      : '';
-    return `<div class="feedback-card ${cat.cls}" id="fbcard-${f.id}">
-      <div class="feedback-card-header">
-        <div class="feedback-card-meta">
+  const isMobile = window.innerWidth <= 640;
+  const html = [];
+
+  rows.forEach(f => {
+    const cat      = CAT_CONFIG[f.category];
+    const sent     = SENT_CONFIG[f.sentiment];
+    const expanded = expandedIds.has(f.id);
+    const note     = noteCache[f.id] !== undefined ? noteCache[f.id] : f.note;
+    const dateStr  = new Date(f.date + 'T00:00:00').toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+
+    /* Sent chip for mobile (appended to category cell) */
+    const sentHtml = `<span class="sent-chip ${sent.cls}"><span class="material-icons-round">${sent.icon}</span>${sent.label}</span>`;
+
+    /* Comment */
+    const commentHtml = f.comment
+      ? `<div class="fb-comment-preview">${escHtml(f.comment)}</div>`
+      : `<span class="fb-no-comment">No comment provided</span>`;
+
+    html.push(`
+      <tr class="fb-data-row${expanded ? ' fb-row-expanded' : ''}" data-id="${f.id}">
+        <td class="fb-col-date">
+          <div class="fb-date">${dateStr}</div>
+          <div class="fb-time">${f.time}</div>
+        </td>
+        <td class="fb-col-category">
           <span class="cat-chip ${cat.chipCls}"><span class="material-icons-round">${cat.icon}</span>${cat.label}</span>
-          <span class="sent-chip ${sent.cls}"><span class="material-icons-round">${sent.icon}</span>${sent.label}</span>
-          <span class="feedback-card-date">${dateStr} · ${f.time}</span>
-        </div>
-        <button class="expand-btn fb-expand-btn" onclick="toggleFbCard(${f.id})" aria-label="Expand feedback" title="View full comment">
-          <span class="material-icons-round">expand_more</span>
-        </button>
-      </div>
-      <div class="feedback-card-body">${escHtml(f.comment)}</div>
-      <div class="action-notes">
-        ${noteSection}
-        <div class="notes-label"><span class="material-icons-round">edit_note</span>Action Taken / Reply Note</div>
-        <textarea class="notes-input" id="note-input-${f.id}" placeholder="Enter action taken or reply note here…">${escHtml(f.note)}</textarea>
-        <div class="notes-actions">
-          <button class="btn-ph btn-ph-primary" onclick="saveNote(${f.id})">
-            <span class="material-icons-round">save</span> Save Note
-          </button>
-          <button class="btn-ph" onclick="toggleFbCard(${f.id})">
-            <span class="material-icons-round">close</span> Collapse
-          </button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+          ${isMobile ? sentHtml : ''}
+        </td>
+        <td class="fb-col-sent">${sentHtml}</td>
+        <td class="fb-col-comment">${commentHtml}</td>
+        <td class="fb-col-expand">
+          ${f.comment ? `<button class="fb-expand-btn" onclick="toggleExpand(${f.id})" aria-label="${expanded ? 'Collapse' : 'Expand'} comment" title="${expanded ? 'Collapse' : 'Expand'}">
+            <span class="material-icons-round">${expanded ? 'expand_less' : 'expand_more'}</span>
+          </button>` : ''}
+        </td>
+      </tr>`);
 
+    /* Note row — only when expanded */
+    if (expanded) {
+      const existingNoteHtml = note
+        ? `<div class="existing-note">
+            <div class="existing-note-meta"><span class="material-icons-round">task_alt</span>Action / Reply on Record</div>
+            ${escHtml(note)}
+           </div>`
+        : '';
+      html.push(`
+        <tr class="fb-note-row">
+          <td colspan="5">
+            <div class="fb-note-inner">
+              ${existingNoteHtml}
+              <div class="note-label"><span class="material-icons-round">edit_note</span>Action Taken / Reply Note</div>
+              <textarea class="notes-input" id="note-input-${f.id}" placeholder="Enter action taken or reply note here…">${escHtml(note)}</textarea>
+              <div class="notes-actions">
+                <button class="btn-ph btn-ph-primary" onclick="saveNote(${f.id})">
+                  <span class="material-icons-round">save</span> Save Note
+                </button>
+                <button class="btn-ph" onclick="toggleExpand(${f.id})">
+                  <span class="material-icons-round">close</span> Collapse
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>`);
+    }
+  });
+
+  body.innerHTML = html.join('');
   renderFbPagination();
 }
 
 function renderFbPagination() {
-  const total = Math.ceil(filteredFb.length / FB_PAGE_SZ);
-  const start = (fbPage - 1) * FB_PAGE_SZ;
-  const end   = Math.min(start + FB_PAGE_SZ, filteredFb.length);
-  document.getElementById('fbPageInfo').textContent = `Page ${fbPage} of ${Math.max(total,1)}`;
+  const total = Math.ceil(filteredFb.length / fbPageSize);
+  const start = (fbPage - 1) * fbPageSize;
+  const end   = Math.min(start + fbPageSize, filteredFb.length);
+  document.getElementById('fbPageInfo').textContent = `Page ${fbPage} of ${Math.max(total, 1)}`;
+
   const cont = document.getElementById('fbPgBtns');
-  let html = `<button class="pg-btn" onclick="fbGoPage(${fbPage-1})" ${fbPage<=1?'disabled':''} aria-label="Previous">
+  let html = `<button class="pg-btn" onclick="fbGoPage(${fbPage - 1})" ${fbPage <= 1 ? 'disabled' : ''} aria-label="Previous">
     <span class="material-icons-round" style="font-size:16px">chevron_left</span></button>`;
+
   const pages = [];
-  if (total <= 7) { for (let i=1;i<=total;i++) pages.push(i); }
+  if (total <= 7) { for (let i = 1; i <= total; i++) pages.push(i); }
   else {
     pages.push(1);
     if (fbPage > 3) pages.push('…');
-    for (let i=Math.max(2,fbPage-1);i<=Math.min(total-1,fbPage+1);i++) pages.push(i);
-    if (fbPage < total-2) pages.push('…');
+    for (let i = Math.max(2, fbPage - 1); i <= Math.min(total - 1, fbPage + 1); i++) pages.push(i);
+    if (fbPage < total - 2) pages.push('…');
     pages.push(total);
   }
   pages.forEach(p => {
-    html += p==='…'
+    html += p === '…'
       ? `<button class="pg-btn" disabled style="cursor:default">…</button>`
-      : `<button class="pg-btn ${p===fbPage?'active':''}" onclick="fbGoPage(${p})">${p}</button>`;
+      : `<button class="pg-btn ${p === fbPage ? 'active' : ''}" onclick="fbGoPage(${p})">${p}</button>`;
   });
-  html += `<button class="pg-btn" onclick="fbGoPage(${fbPage+1})" ${fbPage>=total?'disabled':''} aria-label="Next">
+  html += `<button class="pg-btn" onclick="fbGoPage(${fbPage + 1})" ${fbPage >= total ? 'disabled' : ''} aria-label="Next">
     <span class="material-icons-round" style="font-size:16px">chevron_right</span></button>`;
   cont.innerHTML = html;
 }
 
 function fbGoPage(p) {
-  const total = Math.ceil(filteredFb.length / FB_PAGE_SZ);
-  if (p<1||p>total) return;
+  const total = Math.ceil(filteredFb.length / fbPageSize);
+  if (p < 1 || p > total) return;
   fbPage = p;
-  renderFeedbackList();
-  window.scrollTo({ top: 0, behavior:'smooth' });
+  renderFbTable();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ── EXPORT ── */
@@ -564,15 +743,23 @@ function exportFeedbackCSV() {
   const rows   = [header, ...filteredFb.map(f => [
     f.id, f.date, f.time, f.category, f.sentiment,
     `"${f.comment.replace(/"/g,'""')}"`,
-    `"${(f.note||'').replace(/"/g,'""')}"`
+    `"${((noteCache[f.id] !== undefined ? noteCache[f.id] : f.note) || '').replace(/"/g,'""')}"`
   ])];
-  const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+  const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
   const a = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(blob), download: 'philhealth-feedback.csv'
   });
   a.click();
 }
 
+/* ── RESIZE HANDLER ── */
+let resizeDebounce;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeDebounce);
+  resizeDebounce = setTimeout(() => renderFbTable(), 200);
+});
+
+/* ── INIT ── */
 function pageInit() {
   applyFbFilters();
   updateTabCounts();
