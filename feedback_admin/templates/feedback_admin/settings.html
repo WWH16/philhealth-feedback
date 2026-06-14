@@ -114,7 +114,33 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 }
 .keyword-tag-remove:hover { opacity: 1; }
 
-.emotion-preview { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+/* ── EMOTION PREVIEW — responsive (task 2) ── */
+.emotion-preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 420px) {
+  .emotion-preview {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+@media (min-width: 421px) and (max-width: 575px) {
+  .emotion-preview {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .emotion-preview-btn {
+    padding: 10px 4px !important;
+    font-size: 9px !important;
+  }
+  .emotion-preview-btn .material-icons-round { font-size: 20px !important; }
+}
+
 .emotion-preview-btn {
   display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px;
   border: 1.5px solid var(--border); background: var(--surface-page);
@@ -138,19 +164,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 .settings-save-bar { position: sticky; bottom: 16px; z-index: 40; display: flex; justify-content: flex-end; padding: 0; pointer-events: none; }
 .settings-save-inner { display: flex; align-items: center; gap: 8px; background: var(--surface-card); border: 1px solid var(--border); padding: 10px 16px; pointer-events: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
 
-@media (max-width: 991px) {
-  .settings-nav { flex-direction: row; overflow-x: auto; position: static; border-bottom: 1px solid var(--border); padding-bottom: 0; flex-wrap: nowrap; gap: 0; }
-  .settings-nav-item { border-left: none; border-bottom: 2px solid transparent; white-space: nowrap; }
-  .settings-nav-item.active { border-bottom-color: var(--g-primary); border-left: none; background: none; }
-  .settings-nav-group-label { display: none; }
-}
-@media (max-width: 575px) {
-  .settings-section-body { padding: 14px 12px; }
-  .settings-row { flex-direction: column; gap: 10px; }
-  .settings-input { min-width: 0; width: 100%; }
-  .emotion-preview { grid-template-columns: 1fr 1fr 1fr; }
-}
-
 .status-chip {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
@@ -165,6 +178,20 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 [data-theme="dark"] .chip-inactive { background: rgba(255,255,255,0.05); color: var(--ink5); }
 [data-theme="dark"] .chip-super    { background: rgba(184,147,58,0.12); color: #d4a840; border-color: rgba(184,147,58,0.25); }
 [data-theme="dark"] .chip-staff    { background: rgba(59,130,246,0.12); color: #93c5fd; border-color: rgba(59,130,246,0.25); }
+
+@media (max-width: 991px) {
+  .settings-nav { flex-direction: row; overflow-x: auto; position: static; border-bottom: 1px solid var(--border); padding-bottom: 0; flex-wrap: nowrap; gap: 0; }
+  .settings-nav-item { border-left: none; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .settings-nav-item.active { border-bottom-color: var(--g-primary); border-left: none; background: none; }
+  .settings-nav-group-label { display: none; }
+}
+@media (max-width: 575px) {
+  .settings-section-body { padding: 14px 12px; }
+  .settings-row { flex-direction: column; gap: 10px; }
+  .settings-input { min-width: 0; width: 100%; }
+  .btn-row-toggle-input { flex-wrap: wrap; gap: 8px !important; }
+  .btn-row-toggle-input input.settings-input { flex: 1; min-width: 0; }
+}
 {% endblock %}
 
 {% block page_content %}
@@ -215,7 +242,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
       ═══════════════════════════════ -->
       <div class="settings-panel active" id="panel-user-management">
 
-        <!-- ADD Staff — real POST to user_add view -->
+        <!-- ADD Staff -->
         <div class="settings-section">
           <div class="settings-section-head">
             <div class="settings-section-icon"><span class="material-icons-round">person_add</span></div>
@@ -225,7 +252,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
             </div>
           </div>
           <div class="settings-section-body">
-            {# We POST directly to user_add. JS validates first, then submits the hidden form. #}
             <form id="addAdminForm" method="post" action="{% url 'user_add' %}" style="display:none">
               {% csrf_token %}
               <input type="hidden" name="is_active"    value="on">
@@ -271,7 +297,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
               </div>
             </div>
 
-            {# Show Django error messages (from redirect after failed server-side validation) #}
             {% if messages %}
               {% for message in messages %}
                 {% if message.tags == 'error' %}
@@ -346,7 +371,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
           </div>
         </div>
 
-        <!-- CHANGE OWN PASSWORD — real POST to change_password view -->
+        <!-- CHANGE OWN PASSWORD -->
         <div class="settings-section">
           <div class="settings-section-head">
             <div class="settings-section-icon"><span class="material-icons-round">lock_reset</span></div>
@@ -432,18 +457,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 <textarea class="settings-textarea" id="offlineMsg" style="width:100%;margin-top:8px;">Ang feedback system ay pansamantalang hindi available. Pakisubukan muli mamaya.</textarea>
               </div>
             </div>
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Schedule Survey Window</div>
-                <div class="settings-row-hint">Automatically enable the survey only within office hours.</div>
-              </div>
-              <div class="settings-row-control">
-                <label class="toggle-switch" aria-label="Schedule survey">
-                  <input type="checkbox" id="toggleSchedule">
-                  <span class="toggle-track"></span>
-                </label>
-              </div>
-            </div>
+            <!-- REMOVED: Schedule Survey Window row (task 4) -->
           </div>
         </div>
 
@@ -483,15 +497,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 <input class="settings-input" id="commentPrompt" type="text" value="Additional concern" style="width:100%">
               </div>
             </div>
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Max Comment Length</div>
-                <div class="settings-row-hint">Maximum number of characters for the comment field.</div>
-              </div>
-              <div class="settings-row-control">
-                <input class="settings-input" type="number" value="500" min="100" max="2000" style="width:100px;text-align:center">
-              </div>
-            </div>
+            <!-- REMOVED: Max Comment Length row (task 5) -->
           </div>
         </div>
 
@@ -509,7 +515,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 <div class="settings-row-label">Button: Very Satisfactory</div>
                 <div class="settings-row-hint">Label for the positive (green) reaction button.</div>
               </div>
-              <div style="display:flex;align-items:center;gap:8px;">
+              <div class="btn-row-toggle-input" style="display:flex;align-items:center;gap:8px;">
                 <label class="toggle-switch" aria-label="Show button"><input type="checkbox" checked><span class="toggle-track"></span></label>
                 <input class="settings-input" type="text" value="Very Satisfactory" style="width:180px">
               </div>
@@ -519,7 +525,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 <div class="settings-row-label">Button: Satisfactory</div>
                 <div class="settings-row-hint">Label for the neutral (gold) reaction button.</div>
               </div>
-              <div style="display:flex;align-items:center;gap:8px;">
+              <div class="btn-row-toggle-input" style="display:flex;align-items:center;gap:8px;">
                 <label class="toggle-switch" aria-label="Show button"><input type="checkbox" checked><span class="toggle-track"></span></label>
                 <input class="settings-input" type="text" value="Satisfactory" style="width:180px">
               </div>
@@ -529,15 +535,26 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 <div class="settings-row-label">Button: Unsatisfactory</div>
                 <div class="settings-row-hint">Label for the negative (red) reaction button.</div>
               </div>
-              <div style="display:flex;align-items:center;gap:8px;">
+              <div class="btn-row-toggle-input" style="display:flex;align-items:center;gap:8px;">
                 <label class="toggle-switch" aria-label="Show button"><input type="checkbox" checked><span class="toggle-track"></span></label>
                 <input class="settings-input" type="text" value="Unsatisfactory" style="width:180px">
               </div>
             </div>
+
+            <!-- EMOTION PREVIEW — fixed responsive (task 2) -->
             <div class="emotion-preview">
-              <div class="emotion-preview-btn pos"><span class="material-icons-round">sentiment_satisfied_alt</span><span>Very Satisfactory</span></div>
-              <div class="emotion-preview-btn neu"><span class="material-icons-round">sentiment_neutral</span><span>Satisfactory</span></div>
-              <div class="emotion-preview-btn neg"><span class="material-icons-round">sentiment_dissatisfied</span><span>Unsatisfactory</span></div>
+              <div class="emotion-preview-btn pos">
+                <span class="material-icons-round">sentiment_satisfied_alt</span>
+                <span>Very Satisfactory</span>
+              </div>
+              <div class="emotion-preview-btn neu">
+                <span class="material-icons-round">sentiment_neutral</span>
+                <span>Satisfactory</span>
+              </div>
+              <div class="emotion-preview-btn neg">
+                <span class="material-icons-round">sentiment_dissatisfied</span>
+                <span>Unsatisfactory</span>
+              </div>
             </div>
           </div>
         </div>
@@ -935,7 +952,6 @@ function clearFieldErr(inputId) {
   input.parentElement.querySelectorAll('.settings-field-err').forEach(e => e.remove());
 }
 
-/* ── PASSWORD FIELD ERROR (uses static placeholder elements) ── */
 function showPwFieldErr(field, text, scroll) {
   const INPUT_MAP = {
     'current_password': { input: 'curPw',     err: 'err-current_password' },
@@ -950,7 +966,6 @@ function showPwFieldErr(field, text, scroll) {
   if (input) {
     input.classList.add('field-error');
     if (scroll) {
-      /* Scroll the error into view without jumping to top */
       setTimeout(() => {
         input.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 50);
@@ -976,13 +991,11 @@ function showPanel(id, btn) {
   btn.classList.add('active');
 }
 
-/* called only on manual nav click */
 function showPanelNav(id, btn) {
   showPanel(id, btn);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ── AUTO-OPEN PANEL FROM URL HASH ── */
 function openPanelFromHash() {
   const map = {
     '#user-management':    'user-management',
@@ -998,7 +1011,7 @@ function openPanelFromHash() {
   }
 }
 
-/* ── ADD ADMIN: client-side validation then real POST ── */
+/* ── ADD ADMIN ── */
 function submitAddAdmin() {
   const u  = document.getElementById('newUsername').value.trim();
   const p1 = document.getElementById('newPw').value;
@@ -1024,13 +1037,12 @@ function submitAddAdmin() {
   document.getElementById('addAdminForm').submit();
 }
 
-/* ── CHANGE PASSWORD: client-side validation then real POST ── */
+/* ── CHANGE PASSWORD ── */
 function submitChangePw() {
   const cur = document.getElementById('curPw').value;
   const p1  = document.getElementById('changePw1').value;
   const p2  = document.getElementById('changePw2').value;
 
-  /* Clear previous errors */
   ['curPw', 'changePw1', 'changePw2'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('field-error');
@@ -1116,12 +1128,10 @@ function pageInit() {
       }
 
       if (!raw.includes('|')) {
-        /* Success — toast */
         showToast(raw, 'success');
         return;
       }
 
-      /* Field error — inline + smooth scroll to field, no jump to top */
       const sep   = raw.indexOf('|');
       const field = raw.slice(0, sep);
       const text  = raw.slice(sep + 1);
