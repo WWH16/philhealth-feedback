@@ -80,31 +80,54 @@ def sentiment_analysis(request):
     """
     Sentiment analysis view.
 
-    Replace the dummy context below with real sentiment analysis results once
-    the Feedback model is in place and you have implemented your sentiment
-    analysis logic:
+    Replace the dummy context below once the Feedback model is in place:
 
         from feedback.models import FeedbackEntry
+        from django.db.models import Count
+        from django.db.models.functions import TruncDate
 
         entries = FeedbackEntry.objects.all()
-        # Implement your sentiment analysis logic here, e.g.:
-        # pos_count = entries.filter(sentiment='positive').count()
-        # neu_count = entries.filter(sentiment='neutral').count()
-        # neg_count = entries.filter(sentiment='negative').count()
+        total = entries.count()
+        positive = entries.filter(sentiment='positive').count()
+        neutral  = entries.filter(sentiment='neutral').count()
+        negative = entries.filter(sentiment='negative').count()
 
-        context = {
-            'total': entries.count(),
-            'positive': pos_count,
-            'neutral': neu_count,
-            'negative': neg_count,
-            # Add any additional context needed for charts or tables
-        }
+        trend_qs = (entries
+            .annotate(day=TruncDate('created_at'))
+            .values('day')
+            .annotate(
+                positive=Count('id', filter=Q(sentiment='positive')),
+                neutral=Count('id', filter=Q(sentiment='neutral')),
+                negative=Count('id', filter=Q(sentiment='negative')),
+            )
+            .order_by('day'))
+
+        trend_labels = [d['day'].strftime('%b %d') for d in trend_qs]
+        trend_positive = [d['positive'] for d in trend_qs]
+        trend_neutral  = [d['neutral'] for d in trend_qs]
+        trend_negative = [d['negative'] for d in trend_qs]
     """
+    total = 248
+    positive = 149
+    neutral = 64
+    negative = 35
+
+    def pct(n):
+        return round((n / total) * 100) if total else 0
+
     context = {
-        'total': 248,
-        'positive': 149,
-        'neutral': 64,
-        'negative': 35,
+        'total': total,
+        'positive': positive,
+        'neutral': neutral,
+        'negative': negative,
+        'positive_pct': pct(positive),
+        'neutral_pct': pct(neutral),
+        'negative_pct': pct(negative),
+
+        'trend_labels': ['Jun 1','Jun 2','Jun 3','Jun 4','Jun 5','Jun 6','Jun 7','Jun 8','Jun 9','Jun 10','Jun 11'],
+        'trend_positive': [12, 18, 14, 22, 16, 20, 25, 18, 23, 19, 16],
+        'trend_neutral':  [5, 7, 6, 8, 5, 7, 9, 6, 8, 7, 6],
+        'trend_negative': [3, 2, 4, 1, 3, 2, 3, 2, 4, 2, 3],
     }
     return render(request, 'feedback_admin/sentiment_analysis.html', context)
 
