@@ -171,6 +171,7 @@
             <th style="width:36px;padding:10px 8px 10px 16px;">
               <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" aria-label="Select all rows" style="cursor:pointer;accent-color:var(--g-primary)">
             </th>
+            <th style="width:60px">ID</th>
             <th class="sort-th" onclick="sortTable('date')" style="min-width:110px">
               Date &amp; Time <span class="material-icons-round sort-icon" id="sort-date">arrow_downward</span>
             </th>
@@ -211,7 +212,7 @@ const CSRF_TOKEN = '{{ csrf_token }}';
 /* ── DATA from Django context ── */
 /* When real model exists, replace ALL_DATA with entries serialized from the view:
    const ALL_DATA = {{ entries_json|safe }};
-   For now, dummy data covers all 7 columns. */
+   For now, dummy data covers all 8 columns. */
 const ALL_DATA = [
   { id:1,  date:'2026-06-11', time:'14:32', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Staff were very professional and accommodating. My concerns were addressed promptly.' },
   { id:2,  date:'2026-06-11', time:'13:15', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Excellent service! The queue system was efficient and the staff were knowledgeable.' },
@@ -297,6 +298,7 @@ function applyFilters() {
 
   filteredRows = ALL_DATA.filter(r => {
     const matchQ    = !q || (r.comment||'').toLowerCase().includes(q)
+                         || r.id.toString().includes(q)
                          || r.rating.toLowerCase().includes(q)
                          || r.date.includes(q)
                          || (r.sentiment||'').toLowerCase().includes(q);
@@ -393,7 +395,7 @@ function renderTable() {
   const end   = Math.min(start + pageSize, filteredRows.length);
   const rows  = filteredRows.slice(start, end);
 
-  const COLS = 7; /* checkbox + date + rating + sentiment + status + comment + expand */
+  const COLS = 8; /* checkbox + id + date + rating + sentiment + status + comment + expand */
 
   if (!rows.length) {
     body.innerHTML = `<tr><td colspan="${COLS}">
@@ -420,6 +422,7 @@ function renderTable() {
           <input type="checkbox" ${checked} onchange="toggleSelect(${r.id}, this.checked)"
             aria-label="Select response ${r.id}" style="cursor:pointer;accent-color:var(--g-primary)">
         </td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text-muted);">#${r.id}</td>
         <td class="datetime-cell">
           <div class="datetime-date">${dateStr}</div>
           <div class="datetime-time">${r.time}</div>
