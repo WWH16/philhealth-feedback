@@ -295,7 +295,6 @@ table.fb-table td {
   .fb-note-row td { padding: 0 !important; }
 }
 
-/* ── STAT CARDS / FILTER ROW RESPONSIVE ── */
 @media (max-width: 575px) {
   .category-tab { padding: 9px 10px; font-size: 9px; }
 
@@ -314,14 +313,21 @@ table.fb-table td {
   .date-range-inputs {
     width: 100%;
     display: grid;
-    grid-template-columns: auto 1fr auto 1fr auto;
+    grid-template-columns: 1fr 1fr auto;
     gap: 6px;
     align-items: center;
+  }
+
+  .date-range-inputs .filter-sep {
+    display: none;
   }
 
   .date-input {
     width: 100%;
     min-width: 0;
+    font-size: 11px;
+    padding: 0 6px;
+    box-sizing: border-box;
   }
 
   #sentimentFilter,
@@ -333,7 +339,7 @@ table.fb-table td {
     margin-left: 0 !important;
     text-align: right;
   }
-}.\
+}
 
 {% endblock %}
 
