@@ -985,6 +985,11 @@ function showPanel(id, btn) {
   document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-' + id).classList.add('active');
   btn.classList.add('active');
+  
+  // Ensure active button is visible in horizontal scroll
+  if (window.innerWidth <= 991) {
+    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
 }
 
 function showPanelNav(id, btn) {
