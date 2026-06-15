@@ -13,16 +13,17 @@
 }
 .settings-nav-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 9px 14px; font-size: 12px; font-weight: 600;
-  letter-spacing: 0.02em; border: none; background: transparent;
+  padding: 10px 16px; font-size: 13px; font-weight: 600;
+  letter-spacing: 0.01em; border: none; background: transparent;
   color: var(--text-secondary); cursor: pointer;
   font-family: var(--font); text-align: left; width: 100%;
-  border-left: 2px solid transparent; transition: all 120ms;
+  border-left: 3px solid transparent; transition: all 150ms;
 }
-.settings-nav-item:hover { background: var(--surface-card); color: var(--text-primary); }
+.settings-nav-item:hover { background: rgba(0,0,0,0.04); color: var(--text-primary); }
+[data-theme="dark"] .settings-nav-item:hover { background: rgba(255,255,255,0.04); }
 .settings-nav-item.active { color: var(--g-primary); border-left-color: var(--g-primary); background: var(--g-xlight); }
-[data-theme="dark"] .settings-nav-item.active { background: rgba(35,164,85,0.08); }
-.settings-nav-item .material-icons-round { font-size: 18px; flex-shrink: 0; }
+[data-theme="dark"] .settings-nav-item.active { background: rgba(35,164,85,0.12); color: #5fcf8a; border-left-color: #5fcf8a; }
+.settings-nav-item .material-icons-round { font-size: 19px; flex-shrink: 0; }
 .settings-nav-group-label {
   font-size: 9px; font-weight: 700; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--text-muted);
@@ -97,23 +98,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 .danger-section .settings-section-icon .material-icons-round { color: var(--red); }
 [data-theme="dark"] .danger-section .settings-section-head { background: rgba(192,0,26,0.06); }
 
-.keyword-input-wrap { display: flex; gap: 8px; margin-bottom: 10px; }
-.keyword-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.keyword-tag {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 600; padding: 4px 10px;
-  background: var(--g-xlight); border: 1px solid var(--g-light); color: var(--g-forest);
-}
-.keyword-tag.neg { background: var(--red-bg); border-color: #fca5a5; color: var(--red); }
-[data-theme="dark"] .keyword-tag     { background: rgba(35,164,85,0.1);  border-color: rgba(35,164,85,0.2); }
-[data-theme="dark"] .keyword-tag.neg { background: rgba(192,0,26,0.1);   border-color: rgba(192,0,26,0.2); }
-.keyword-tag-remove {
-  cursor: pointer; font-size: 14px; opacity: 0.6;
-  background: none; border: none; color: inherit; padding: 0;
-  display: flex; align-items: center; transition: opacity 120ms; line-height: 1;
-}
-.keyword-tag-remove:hover { opacity: 1; }
-
 /* ── EMOTION PREVIEW — responsive (task 2) ── */
 .emotion-preview {
   display: grid;
@@ -146,14 +130,16 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
   border: 1.5px solid var(--border); background: var(--surface-page);
   cursor: default; font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+  transition: all 150ms;
 }
 .emotion-preview-btn .material-icons-round { font-size: 24px; }
 .emotion-preview-btn.pos { border-color: var(--g-primary); color: var(--g-forest); background: var(--g-xlight); }
 .emotion-preview-btn.neu { border-color: var(--gold);      color: #7a5500;          background: var(--gold-light); }
 .emotion-preview-btn.neg { border-color: var(--red);       color: var(--red);       background: var(--red-bg); }
-[data-theme="dark"] .emotion-preview-btn.pos { background: rgba(35,164,85,0.1); }
-[data-theme="dark"] .emotion-preview-btn.neu { background: rgba(184,147,58,0.1); }
-[data-theme="dark"] .emotion-preview-btn.neg { background: rgba(192,0,26,0.1); }
+
+[data-theme="dark"] .emotion-preview-btn.pos { border-color: #5fcf8a; color: #5fcf8a; background: rgba(35,164,85,0.15); }
+[data-theme="dark"] .emotion-preview-btn.neu { border-color: #d4a840; color: #d4a840; background: rgba(184,147,58,0.15); }
+[data-theme="dark"] .emotion-preview-btn.neg { border-color: #f06070; color: #f06070; background: rgba(192,0,26,0.15); }
 
 .backup-log-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap; }
 .backup-log-item:last-child { border-bottom: none; }
@@ -180,9 +166,21 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 [data-theme="dark"] .chip-staff    { background: rgba(59,130,246,0.12); color: #93c5fd; border-color: rgba(59,130,246,0.25); }
 
 @media (max-width: 991px) {
-  .settings-nav { flex-direction: row; overflow-x: auto; position: static; border-bottom: 1px solid var(--border); padding-bottom: 0; flex-wrap: nowrap; gap: 0; }
-  .settings-nav-item { border-left: none; border-bottom: 2px solid transparent; white-space: nowrap; }
-  .settings-nav-item.active { border-bottom-color: var(--g-primary); border-left: none; background: none; }
+  .settings-nav { 
+    flex-direction: row; overflow-x: auto; position: sticky; top: var(--topbar-h); 
+    background: var(--surface-card); border-bottom: 1px solid var(--border); 
+    z-index: 50; padding: 0; flex-wrap: nowrap; gap: 0;
+    scrollbar-width: none;
+  }
+  .settings-nav::-webkit-scrollbar { display: none; }
+  .settings-nav-item { 
+    border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; 
+    padding: 12px 18px; width: auto; flex-shrink: 0;
+  }
+  .settings-nav-item.active { 
+    border-bottom-color: var(--g-primary); border-left: none; background: var(--g-xlight); 
+  }
+  [data-theme="dark"] .settings-nav-item.active { border-bottom-color: #5fcf8a; background: rgba(35,164,85,0.08); }
   .settings-nav-group-label { display: none; }
 }
 @media (max-width: 575px) {
@@ -571,104 +569,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
            PANEL 3 — SENTIMENT SETTINGS
       ═══════════════════════════════ -->
       <div class="settings-panel" id="panel-sentiment-settings">
-
-        <div class="settings-section">
-          <div class="settings-section-head">
-            <div class="settings-section-icon"><span class="material-icons-round">label</span></div>
-            <div>
-              <div class="settings-section-title">Sentiment Keywords</div>
-              <div class="settings-section-desc">Words used to classify comments as positive or negative.</div>
-            </div>
-          </div>
-          <div class="settings-section-body">
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Positive Keywords</div>
-                <div class="settings-row-hint">Words that indicate a positive experience.</div>
-              </div>
-            </div>
-            <div class="keyword-input-wrap">
-              <input class="settings-input" type="text" id="posKwInput" placeholder="Type keyword and press Enter…" onkeydown="addKeyword(event,'pos')">
-              <button class="btn-ph btn-ph-primary" onclick="addKeywordBtn('pos')"><span class="material-icons-round">add</span></button>
-            </div>
-            <div class="keyword-tags" id="posKeywords">
-              <span class="keyword-tag">accommodating <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag">professional  <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag">efficient     <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag">helpful       <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag">mabilis       <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag">magaling      <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag">salamat       <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-            </div>
-            <div class="settings-row" style="margin-top:16px;">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Negative Keywords</div>
-                <div class="settings-row-hint">Words that indicate a poor experience.</div>
-              </div>
-            </div>
-            <div class="keyword-input-wrap">
-              <input class="settings-input" type="text" id="negKwInput" placeholder="Type keyword and press Enter…" onkeydown="addKeyword(event,'neg')">
-              <button class="btn-ph btn-ph-primary" onclick="addKeywordBtn('neg')"><span class="material-icons-round">add</span></button>
-            </div>
-            <div class="keyword-tags" id="negKeywords">
-              <span class="keyword-tag neg">mabagal    <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag neg">rude       <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag neg">matagal    <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag neg">bastos     <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag neg">overcrowded<button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-              <span class="keyword-tag neg">waiting    <button class="keyword-tag-remove" onclick="removeKw(this)">×</button></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section">
-          <div class="settings-section-head">
-            <div class="settings-section-icon"><span class="material-icons-round">rule</span></div>
-            <div>
-              <div class="settings-section-title">Classification Rules</div>
-              <div class="settings-section-desc">Define how comments are automatically categorized.</div>
-            </div>
-          </div>
-          <div class="settings-section-body">
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Positive Rating → Auto-categorize as Compliment</div>
-                <div class="settings-row-hint">Feedback rated "Very Satisfactory" with no complaint keywords is tagged as a Compliment.</div>
-              </div>
-              <div class="settings-row-control">
-                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Negative Rating → Auto-categorize as Complaint</div>
-                <div class="settings-row-hint">Feedback rated "Unsatisfactory" is automatically tagged as a Complaint.</div>
-              </div>
-              <div class="settings-row-control">
-                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Suggestion Keywords → Auto-categorize as Suggestion</div>
-                <div class="settings-row-hint">Comments containing "sana," "magdagdag," "suggest" are tagged as Suggestions.</div>
-              </div>
-              <div class="settings-row-control">
-                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Confidence Threshold</div>
-                <div class="settings-row-hint">Minimum confidence % for auto-classification. Below this, the entry is marked "Unclassified."</div>
-              </div>
-              <div class="settings-row-control">
-                <input class="settings-input" type="number" value="65" min="0" max="100" style="width:80px;text-align:center">
-                <span style="font-size:12px;color:var(--text-muted);margin-left:6px">%</span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div class="settings-section">
           <div class="settings-section-head">
@@ -1065,24 +965,6 @@ function submitChangePw() {
 function onToggleSurvey(cb) {
   document.getElementById('surveyOffMsg').style.display = cb.checked ? 'none' : 'flex';
 }
-
-/* ── KEYWORD MANAGEMENT ── */
-function addKeyword(event, type) {
-  if (event.key !== 'Enter') return;
-  event.preventDefault();
-  addKeywordBtn(type);
-}
-function addKeywordBtn(type) {
-  const input = document.getElementById(type + 'KwInput');
-  const val   = input.value.trim();
-  if (!val) return;
-  const tag = document.createElement('span');
-  tag.className = type === 'neg' ? 'keyword-tag neg' : 'keyword-tag';
-  tag.innerHTML = `${escHtml(val)} <button class="keyword-tag-remove" onclick="removeKw(this)">×</button>`;
-  document.getElementById(type + 'Keywords').appendChild(tag);
-  input.value = '';
-}
-function removeKw(btn) { btn.closest('.keyword-tag').remove(); }
 
 /* ── RESTORE FILE ── */
 function onRestoreFileSelected(input) {
