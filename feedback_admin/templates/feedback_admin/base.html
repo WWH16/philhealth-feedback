@@ -252,7 +252,6 @@ input:not(:checked) + .slider .sun {
 .topbar-welcome { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.25; }
 .topbar-welcome-label { font-size: 9px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
 .topbar-welcome-name { font-size: 12px; font-weight: 700; color: #ffffff; }
-.topbar-clock { font-family: var(--mono); font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6); letter-spacing: 0.04em; white-space: nowrap; border-left: 1px solid rgba(255,255,255,0.12); padding-left: 12px; }
 .topbar-actions { display: flex; align-items: center; gap: 6px; }
 .topbar-icon-btn {
   width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
@@ -470,7 +469,6 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
 .topbar-welcome-name, [data-theme="dark"] .topbar-welcome-name { color: #ffffff; }
 .topbar-brand-city, [data-theme="dark"] .topbar-brand-city { color: var(--g-primary); }
 .topbar-welcome-label, [data-theme="dark"] .topbar-welcome-label { color: rgba(255,255,255,0.4); }
-.topbar-clock, [data-theme="dark"] .topbar-clock { color: rgba(255,255,255,0.6); }
 .topbar-avatar, [data-theme="dark"] .topbar-avatar { background: var(--g-primary); border-color: rgba(255,255,255,0.2); }
 .topbar-avatar .material-icons-round, [data-theme="dark"] .topbar-avatar .material-icons-round { color: var(--g-dark); }
 .topbar-icon-btn, [data-theme="dark"] .topbar-icon-btn { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); }
@@ -622,7 +620,6 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
   .sidebar-overlay { display: block; opacity: 0; pointer-events: none; transition: opacity 200ms; }
   .sidebar-overlay.visible { opacity: 1; pointer-events: auto; }
   .main-content { margin-left: 0 !important; }
-  .topbar-clock { font-size: 11px; }
 }
 @media (max-width: 575px) {
   :root { --topbar-h: 50px; }
@@ -637,7 +634,6 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
   .topbar-brand-name { font-size: 11px; }
   .topbar-brand-city { font-size: 8px; }
   .topbar-welcome { display: none; }
-  .topbar-clock { display: none; }
   .topbar-actions { gap: 4px; }
   .topbar-icon-btn { width: 30px; height: 30px; }
   .topbar-icon-btn .material-icons-round { font-size: 16px; }
@@ -756,7 +752,6 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
         <span class="topbar-welcome-label">Welcome,</span>
         <span class="topbar-welcome-name">{{ request.user.get_full_name|default:request.user.username }}</span>
       </div>
-      <div class="topbar-clock" id="topbarClock">—</div>
       <div class="topbar-actions">
         <div class="theme-switch-wrapper">
           <label class="theme-switch" for="themeCheckbox" title="Toggle dark mode">
@@ -922,19 +917,6 @@ function toggleTheme() {
   if (typeof onThemeChange === 'function') onThemeChange(newTheme === 'dark');
 }
 
-/* ── CLOCK ── */
-function tickClock() {
-  const now         = new Date();
-  const options     = { timeZone: 'Asia/Manila', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-  const timeOptions = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-  const dateStr     = now.toLocaleDateString('en-PH', options);
-  const timeStr     = now.toLocaleTimeString('en-PH', timeOptions);
-  const dateBadge   = document.getElementById('currentDate');
-  if (dateBadge) dateBadge.textContent = `${dateStr}  ${timeStr}`;
-  const clk = document.getElementById('topbarClock');
-  if (clk) clk.textContent = timeStr;
-}
-
 /* ── ANIMATE COUNT ── */
 function animateCount(id, target) {
   const el = document.getElementById(id);
@@ -963,8 +945,6 @@ document.addEventListener('keydown', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-  tickClock();
-  setInterval(tickClock, 1000);
   if (typeof pageInit === 'function') pageInit();
 });
 
