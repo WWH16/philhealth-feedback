@@ -1,3 +1,6 @@
+import json
+from datetime import timedelta
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.hashers import make_password
@@ -11,9 +14,9 @@ from django.http import JsonResponse
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm
+from django.utils import timezone
 
-# When backend is integrated, import your Feedback model here, e.g.:
-# from feedback.models import FeedbackEntry
+from feedback.models import FeedbackEntry
 
 
 def _is_ajax(request):
@@ -22,58 +25,87 @@ def _is_ajax(request):
 
 @login_required
 def dashboard(request):
-    """
-    Admin dashboard view.
-
-    Replace the dummy context below with real queryset aggregations once
-    the Feedback model is in place:
-
-        from django.db.models import Count
-        from feedback.models import FeedbackEntry
-
-        qs = FeedbackEntry.objects.all()
-        context = {
-            'total': qs.count(),
-            'very_satisfactory': qs.filter(rating='pos').count(),
-            'satisfactory': qs.filter(rating='neu').count(),
-            'unsatisfactory': qs.filter(rating='neg').count(),
-        }
-    """
+    qs = FeedbackEntry.objects.all()
+    now = timezone.localtime(timezone.now())
+    today = now.date()
+    week_start = now - timedelta(days=7)
+    month_start = now - timedelta(days=30)
+    recent_entries = qs.order_by('-created_at')[:5]
     context = {
-        'total': 248,
-        'very_satisfactory': 149,
-        'satisfactory': 64,
-        'unsatisfactory': 35,
+        'total': qs.count(),
+        'very_satisfactory': qs.filter(rating=FeedbackEntry.VERY_SATISFACTORY).count(),
+        'satisfactory': qs.filter(rating=FeedbackEntry.SATISFACTORY).count(),
+        'unsatisfactory': qs.filter(rating=FeedbackEntry.UNSATISFACTORY).count(),
+        'recent_entries_data': [_entry_to_row(entry) for entry in recent_entries],
+        'filter_data': {
+            'today': _rating_counts(qs.filter(created_at__date=today)),
+            'week': _rating_counts(qs.filter(created_at__gte=week_start)),
+            'month': _rating_counts(qs.filter(created_at__gte=month_start)),
+            'all': _rating_counts(qs),
+        },
     }
     return render(request, 'feedback_admin/dashboard.html', context)
 
 
 @login_required
 def responses(request):
-    """
-    Full responses list view.
-
-    Replace the dummy context below with a real queryset once the
-    Feedback model is in place:
-
-        from feedback.models import FeedbackEntry
-
-        entries = FeedbackEntry.objects.order_by('-created_at')
-        context = {
-            'total': entries.count(),
-            'very_satisfactory': entries.filter(rating='pos').count(),
-            'satisfactory':      entries.filter(rating='neu').count(),
-            'unsatisfactory':    entries.filter(rating='neg').count(),
-            'entries': entries,   # passed to template for server-side rendering
-        }
-    """
+    entries = FeedbackEntry.objects.order_by('-created_at')
     context = {
-        'total': 248,
-        'very_satisfactory': 149,
-        'satisfactory': 64,
-        'unsatisfactory': 35,
+        'total': entries.count(),
+        'very_satisfactory': entries.filter(rating=FeedbackEntry.VERY_SATISFACTORY).count(),
+        'satisfactory': entries.filter(rating=FeedbackEntry.SATISFACTORY).count(),
+        'unsatisfactory': entries.filter(rating=FeedbackEntry.UNSATISFACTORY).count(),
+        'entries_data': [_entry_to_row(entry) for entry in entries],
     }
     return render(request, 'feedback_admin/responses.html', context)
+
+
+def _entry_to_row(entry):
+    local_created = timezone.localtime(entry.created_at)
+    return {
+        'id': entry.id,
+        'tracking_code': entry.tracking_code,
+        'date': local_created.strftime('%Y-%m-%d'),
+        'time': local_created.strftime('%H:%M'),
+        'rating': entry.get_rating_display(),
+        'sentiment': entry.sentiment,
+        'status': entry.get_status_display(),
+        'status_value': entry.status,
+        'comment': entry.comment,
+    }
+
+
+def _rating_counts(qs):
+    return {
+        'total': qs.count(),
+        'vsat': qs.filter(rating=FeedbackEntry.VERY_SATISFACTORY).count(),
+        'sat': qs.filter(rating=FeedbackEntry.SATISFACTORY).count(),
+        'neg': qs.filter(rating=FeedbackEntry.UNSATISFACTORY).count(),
+    }
+
+
+@login_required
+@require_POST
+def response_status_update(request, entry_id):
+    entry = get_object_or_404(FeedbackEntry, pk=entry_id)
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError:
+        return JsonResponse({'ok': False, 'error': 'Invalid request.'}, status=400)
+
+    status = payload.get('status')
+    valid_statuses = {choice[0] for choice in FeedbackEntry.STATUS_CHOICES}
+    if status not in valid_statuses:
+        return JsonResponse({'ok': False, 'error': 'Invalid status.'}, status=400)
+
+    entry.status = status
+    entry.save(update_fields=['status', 'updated_at'])
+    return JsonResponse({
+        'ok': True,
+        'status': entry.get_status_display(),
+        'status_value': entry.status,
+        'updated_at': timezone.localtime(entry.updated_at).strftime('%b %d, %Y %I:%M %p'),
+    })
 
 @login_required
 def sentiment_analysis(request):

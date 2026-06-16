@@ -184,6 +184,8 @@
 {% endblock %}
 
 {% block page_scripts %}
+{{ recent_entries_data|json_script:"recent-entries-data" }}
+{{ filter_data|json_script:"filter-data" }}
 <script>
 const RATING_CONFIG = {
   'Very Satisfactory': { cls: 'chip-pos', icon: 'sentiment_satisfied_alt' },
@@ -191,13 +193,8 @@ const RATING_CONFIG = {
   'Unsatisfactory':    { cls: 'chip-neg', icon: 'sentiment_dissatisfied' },
 };
 
-const RECENT_DATA = [
-  { date:'2026-06-11', time:'14:32', rating:'Very Satisfactory', comment:'Staff were very professional and accommodating. My concerns were addressed promptly.' },
-  { date:'2026-06-11', time:'13:15', rating:'Very Satisfactory', comment:'Excellent service! The queue system was efficient and the staff were knowledgeable.' },
-  { date:'2026-06-11', time:'12:48', rating:'Satisfactory',      comment:'Service was okay. The waiting time was a bit long but staff were helpful.' },
-  { date:'2026-06-11', time:'11:30', rating:'Very Satisfactory', comment:'Very smooth transaction. The online appointment system works well.' },
-  { date:'2026-06-11', time:'10:55', rating:'Unsatisfactory',    comment:'Waited over an hour for a simple inquiry. The waiting area was overcrowded.' },
-];
+const RECENT_DATA = JSON.parse(document.getElementById('recent-entries-data').textContent);
+const FILTER_DATA = JSON.parse(document.getElementById('filter-data').textContent);
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -231,7 +228,7 @@ function initPieChart() {
     type: 'doughnut',
     data: {
       labels: ['Very Satisfactory', 'Satisfactory', 'Unsatisfactory'],
-      datasets: [{ data: [149, 64, 35], backgroundColor: ['#23A455','#b8933a','#c0001a'], borderColor: isDark ? '#1a1e24' : '#ffffff', borderWidth: 3, hoverOffset: 6 }]
+      datasets: [{ data: [FILTER_DATA.all.vsat, FILTER_DATA.all.sat, FILTER_DATA.all.neg], backgroundColor: ['#23A455','#b8933a','#c0001a'], borderColor: isDark ? '#1a1e24' : '#ffffff', borderWidth: 3, hoverOffset: 6 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
@@ -273,13 +270,6 @@ function initLineChart() {
     }
   });
 }
-
-const FILTER_DATA = {
-  today: { total:18,   vsat:11,  sat:5,   neg:2   },
-  week:  { total:84,   vsat:52,  sat:22,  neg:10  },
-  month: { total:248,  vsat:149, sat:64,  neg:35  },
-  all:   { total:1042, vsat:628, sat:271, neg:143 },
-};
 
 function setFilter(btn, period) {
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));

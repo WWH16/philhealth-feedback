@@ -172,6 +172,7 @@
               <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" aria-label="Select all rows" style="cursor:pointer;accent-color:var(--g-primary)">
             </th>
             <th style="width:60px">ID</th>
+            <th style="min-width:150px">Tracking Code</th>
             <th class="sort-th" onclick="sortTable('date')" style="min-width:110px">
               Date &amp; Time <span class="material-icons-round sort-icon" id="sort-date">arrow_downward</span>
             </th>
@@ -206,45 +207,11 @@
 {% endblock %}
 
 {% block page_scripts %}
+{{ entries_data|json_script:"entries-data" }}
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
 
-/* ── DATA from Django context ── */
-/* When real model exists, replace ALL_DATA with entries serialized from the view:
-   const ALL_DATA = {{ entries_json|safe }};
-   For now, dummy data covers all 8 columns. */
-const ALL_DATA = [
-  { id:1,  date:'2026-06-11', time:'14:32', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Staff were very professional and accommodating. My concerns were addressed promptly.' },
-  { id:2,  date:'2026-06-11', time:'13:15', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Excellent service! The queue system was efficient and the staff were knowledgeable.' },
-  { id:3,  date:'2026-06-11', time:'12:48', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Service was okay. The waiting time was a bit long but staff were helpful.' },
-  { id:4,  date:'2026-06-11', time:'11:30', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Very smooth transaction. The online appointment system works well.' },
-  { id:5,  date:'2026-06-11', time:'10:55', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'Waited over an hour for a simple inquiry. The waiting area was overcrowded.' },
-  { id:6,  date:'2026-06-10', time:'16:20', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Staff explained all requirements clearly. No issues at all.' },
-  { id:7,  date:'2026-06-10', time:'15:05', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Good service overall. Could improve on signage for first-time visitors.' },
-  { id:8,  date:'2026-06-10', time:'14:40', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Fast and efficient. The new numbering system helped a lot.' },
-  { id:9,  date:'2026-06-10', time:'13:22', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'The staff was rude and dismissive when I asked about my claim status.' },
-  { id:10, date:'2026-06-10', time:'11:10', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'' },
-  { id:11, date:'2026-06-09', time:'15:44', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Acceptable service. The forms could be made available online to save time.' },
-  { id:12, date:'2026-06-09', time:'14:30', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Staff went above and beyond to help me with my documents.' },
-  { id:13, date:'2026-06-09', time:'13:05', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Very organized office. I was in and out in 20 minutes.' },
-  { id:14, date:'2026-06-09', time:'11:50', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Average experience. Nothing exceptional, nothing terrible.' },
-  { id:15, date:'2026-06-09', time:'10:25', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'Air conditioning was not working properly. It was very uncomfortable.' },
-  { id:16, date:'2026-06-08', time:'16:10', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'The staff member who assisted me was very patient and thorough.' },
-  { id:17, date:'2026-06-08', time:'15:00', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Excellent front-desk service. Thank you.' },
-  { id:18, date:'2026-06-08', time:'13:30', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Decent service but the waiting area could use more chairs.' },
-  { id:19, date:'2026-06-08', time:'11:15', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Transaction completed on time. Highly recommend the online pre-registration.' },
-  { id:20, date:'2026-06-08', time:'10:00', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'My appointment was not honored. Had to wait two hours despite having a scheduled time.' },
-  { id:21, date:'2026-06-07', time:'14:55', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Very informative staff. They helped me understand my benefits.' },
-  { id:22, date:'2026-06-07', time:'13:40', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Adequate service. Room for improvement in the processing speed.' },
-  { id:23, date:'2026-06-06', time:'16:30', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Quick and hassle-free. I was pleasantly surprised.' },
-  { id:24, date:'2026-06-06', time:'15:20', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'Was given incorrect information about requirements. Wasted a trip.' },
-  { id:25, date:'2026-06-06', time:'11:45', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'' },
-  { id:26, date:'2026-06-05', time:'14:10', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'The staff were polite but the process took longer than expected.' },
-  { id:27, date:'2026-06-05', time:'11:00', rating:'Very Satisfactory', sentiment:'Positive',  status:'Reviewed', comment:'Very impressed with the cleanliness of the office.' },
-  { id:28, date:'2026-06-04', time:'15:30', rating:'Unsatisfactory',    sentiment:'Negative',  status:'Pending',  comment:'Had to visit three times before my concern was resolved.' },
-  { id:29, date:'2026-06-04', time:'10:20', rating:'Very Satisfactory', sentiment:'Positive',  status:'Resolved', comment:'Staff remembered me from my last visit. Very personal service.' },
-  { id:30, date:'2026-06-03', time:'13:50', rating:'Satisfactory',      sentiment:'Neutral',   status:'Pending',  comment:'Good but the online portal sometimes has errors.' },
-];
+const ALL_DATA = JSON.parse(document.getElementById('entries-data').textContent);
 
 const RATING_CONFIG = {
   'Very Satisfactory': { cls:'chip-pos', icon:'sentiment_satisfied_alt' },
@@ -262,6 +229,9 @@ const STATUS_CLS = {
   'Pending':  's-pending',
   'Reviewed': 's-reviewed',
   'Resolved': 's-resolved',
+  'pending':  's-pending',
+  'reviewed': 's-reviewed',
+  'resolved': 's-resolved',
 };
 
 /* ── STATE ── */
@@ -299,6 +269,7 @@ function applyFilters() {
   filteredRows = ALL_DATA.filter(r => {
     const matchQ    = !q || (r.comment||'').toLowerCase().includes(q)
                          || r.id.toString().includes(q)
+                         || (r.tracking_code || '').toLowerCase().includes(q)
                          || r.rating.toLowerCase().includes(q)
                          || r.date.includes(q)
                          || (r.sentiment||'').toLowerCase().includes(q);
@@ -334,20 +305,28 @@ function changePageSize(val) { pageSize = parseInt(val); currentPage = 1; render
 
 /* ── STATUS INLINE UPDATE ── */
 function updateStatus(id, newStatus) {
-  /* When real model exists, POST to a status-update endpoint:
-     fetch(`/dashboard/responses/${id}/status/`, {
-       method:'POST',
-       headers:{'X-CSRFToken': CSRF_TOKEN, 'Content-Type':'application/json'},
-       body: JSON.stringify({status: newStatus})
-     });
-  */
-  const row = ALL_DATA.find(r => r.id === id);
-  if (row) row.status = newStatus;
-  /* Re-style the select without a full re-render */
-  const sel = document.getElementById('status-sel-' + id);
-  if (sel) {
-    sel.className = 'status-select s-' + newStatus.toLowerCase();
-  }
+  fetch(`/dashboard/responses/${id}/status/`, {
+    method:'POST',
+    headers:{'X-CSRFToken': CSRF_TOKEN, 'Content-Type':'application/json'},
+    body: JSON.stringify({status: newStatus})
+  })
+  .then(response => response.json().then(data => {
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to update status.');
+    return data;
+  }))
+  .then(data => {
+    const row = ALL_DATA.find(r => r.id === id);
+    if (row) {
+      row.status = data.status;
+      row.status_value = data.status_value;
+    }
+    const sel = document.getElementById('status-sel-' + id);
+    if (sel) sel.className = 'status-select s-' + data.status_value;
+  })
+  .catch(err => {
+    alert(err.message);
+    renderTable();
+  });
 }
 
 /* ── SELECTION ── */
@@ -395,7 +374,7 @@ function renderTable() {
   const end   = Math.min(start + pageSize, filteredRows.length);
   const rows  = filteredRows.slice(start, end);
 
-  const COLS = 8; /* checkbox + id + date + rating + sentiment + status + comment + expand */
+  const COLS = 9; /* checkbox + id + tracking + date + rating + sentiment + status + comment + expand */
 
   if (!rows.length) {
     body.innerHTML = `<tr><td colspan="${COLS}">
@@ -408,7 +387,8 @@ function renderTable() {
     body.innerHTML = rows.flatMap(r => {
       const rCfg      = RATING_CONFIG[r.rating]    || RATING_CONFIG['Satisfactory'];
       const sCfg      = SENTIMENT_CONFIG[r.sentiment] || SENTIMENT_CONFIG['Neutral'];
-      const stCls     = STATUS_CLS[r.status]       || 's-pending';
+      const statusVal = r.status_value || String(r.status || 'Pending').toLowerCase();
+      const stCls     = STATUS_CLS[statusVal] || STATUS_CLS[r.status] || 's-pending';
       const dateStr   = new Date(r.date).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
       const checked   = selectedIds.has(r.id) ? 'checked' : '';
       const expanded  = expandedIds.has(r.id);
@@ -423,6 +403,7 @@ function renderTable() {
             aria-label="Select response ${r.id}" style="cursor:pointer;accent-color:var(--g-primary)">
         </td>
         <td style="font-family:var(--mono);font-size:11px;color:var(--text-muted);">#${r.id}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text-muted);">${escHtml(r.tracking_code || '—')}</td>
         <td class="datetime-cell">
           <div class="datetime-date">${dateStr}</div>
           <div class="datetime-time">${r.time}</div>
@@ -442,9 +423,9 @@ function renderTable() {
             class="status-select ${stCls}"
             onchange="updateStatus(${r.id}, this.value)"
             aria-label="Status for response ${r.id}">
-            <option value="Pending"  ${r.status==='Pending'  ? 'selected':''}>Pending</option>
-            <option value="Reviewed" ${r.status==='Reviewed' ? 'selected':''}>Reviewed</option>
-            <option value="Resolved" ${r.status==='Resolved' ? 'selected':''}>Resolved</option>
+            <option value="pending"  ${statusVal==='pending'  ? 'selected':''}>Pending</option>
+            <option value="reviewed" ${statusVal==='reviewed' ? 'selected':''}>Reviewed</option>
+            <option value="resolved" ${statusVal==='resolved' ? 'selected':''}>Resolved</option>
           </select>
         </td>
         <td class="comment-cell">${preview}</td>
@@ -513,9 +494,9 @@ function goPage(p) {
 
 /* ── EXPORT ── */
 function buildCSVRows(data) {
-  const header = ['ID','Date','Time','Rating','Sentiment','Status','Comment'];
+  const header = ['ID','Tracking Code','Date','Time','Rating','Sentiment','Status','Comment'];
   const body   = data.map(r => [
-    r.id, r.date, r.time, r.rating,
+    r.id, r.tracking_code || '', r.date, r.time, r.rating,
     r.sentiment || '',
     r.status    || '',
     `"${(r.comment||'').replace(/"/g,'""')}"`

@@ -9,6 +9,7 @@ urlpatterns = [
     # ── Dashboard & pages ─────────────────────────────────────────────
     path('',                            views.dashboard,          name='dashboard'),
     path('responses/',                  views.responses,          name='responses'),
+    path('responses/<int:entry_id>/status/', views.response_status_update, name='response_status_update'),
     path('sentiment_analysis/',         views.sentiment_analysis, name='sentiment_analysis'),
     path('reports/',                    views.reports,            name='reports'),
 
