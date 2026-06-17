@@ -332,10 +332,12 @@ function updateStatus(id, newStatus) {
     if (row) {
       row.status = data.status;
       row.status_value = data.status_value;
-      // Note: In a real app, we might want to refresh status_history here too.
+      if (data.history_entry) {
+        if (!row.status_history) row.status_history = [];
+        row.status_history.push(data.history_entry);
+      }
     }
-    const sel = document.getElementById('status-sel-' + id);
-    if (sel) sel.className = 'status-select s-' + data.status_value;
+    renderTable();
   })
   .catch(err => {
     alert(err.message);

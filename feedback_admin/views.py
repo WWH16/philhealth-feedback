@@ -4,6 +4,8 @@ from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.hashers import make_password
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -16,7 +18,67 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
 
-from feedback.models import FeedbackEntry, FeedbackStatusLog, FeedbackNote
+from feedback.models import FeedbackEntry
+
+
+# ── Activity log helpers (built on Django's built-in django_admin_log table) ──
+
+def _feedback_content_type():
+    return ContentType.objects.get_for_model(FeedbackEntry)
+
+
+def log_feedback_note(user, entry, body):
+    """Records an 'action taken / reply' note as an ADDITION log entry."""
+    LogEntry.objects.log_actions(
+        user_id=user.id,
+        queryset=[entry],
+        action_flag=ADDITION,
+        change_message=body,
+        single_object=True,
+    )
+
+
+def log_feedback_status_change(user, entry, old_status, new_status):
+    """Records a status change as a CHANGE log entry."""
+    LogEntry.objects.log_actions(
+        user_id=user.id,
+        queryset=[entry],
+        action_flag=CHANGE,
+        change_message=f'{old_status}|{new_status}',
+        single_object=True,
+    )
+
+
+def get_feedback_activity(entry):
+    """Builds (notes, status_history) for an entry from django_admin_log."""
+    logs = (LogEntry.objects
+            .filter(content_type=_feedback_content_type(), object_id=str(entry.pk))
+            .select_related('user')
+            .order_by('action_time'))
+
+    status_display = dict(FeedbackEntry.STATUS_CHOICES)
+    notes, history = [], []
+
+    for log in logs:
+        author = (log.user.get_full_name() or log.user.username) if log.user else 'System'
+        at = timezone.localtime(log.action_time).strftime('%b %d, %Y %I:%M %p')
+
+        if log.action_flag == CHANGE and '|' in log.change_message:
+            old_raw, _, new_raw = log.change_message.partition('|')
+            history.append({
+                'old': status_display.get(old_raw, old_raw),
+                'new': status_display.get(new_raw, new_raw),
+                'by': author,
+                'at': at,
+            })
+        else:
+            notes.append({'author': author, 'body': log.change_message, 'created_at': at})
+
+    return notes, history
+
+
+def _is_ajax(request):
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 
 @login_required
@@ -32,24 +94,16 @@ def response_note_add(request, entry_id):
     if not body:
         return JsonResponse({'ok': False, 'error': 'Note body cannot be empty.'}, status=400)
 
-    note = FeedbackNote.objects.create(
-        entry=entry,
-        author=request.user,
-        body=body
-    )
+    log_feedback_note(request.user, entry, body)
 
     return JsonResponse({
         'ok': True,
         'note': {
-            'author': note.author.get_full_name() or note.author.username,
-            'body': note.body,
-            'created_at': timezone.localtime(note.created_at).strftime('%b %d, %Y %I:%M %p'),
+            'author': request.user.get_full_name() or request.user.username,
+            'body': body,
+            'created_at': timezone.localtime(timezone.now()).strftime('%b %d, %Y %I:%M %p'),
         }
     })
-
-
-def _is_ajax(request):
-    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 
 @login_required
@@ -91,6 +145,7 @@ def responses(request):
 
 def _entry_to_row(entry):
     local_created = timezone.localtime(entry.created_at)
+    notes, status_history = get_feedback_activity(entry)
     return {
         'id': entry.id,
         'tracking_code': entry.tracking_code,
@@ -102,17 +157,8 @@ def _entry_to_row(entry):
         'status': entry.get_status_display(),
         'status_value': entry.status,
         'comment': entry.comment,
-        'notes': [{
-            'author': n.author.get_full_name() or n.author.username,
-            'body': n.body,
-            'created_at': timezone.localtime(n.created_at).strftime('%b %d, %Y %I:%M %p')
-        } for n in entry.notes.all().select_related('author')],
-        'status_history': [{
-            'old': h.old_status,
-            'new': h.new_status,
-            'by': h.changed_by.get_full_name() or h.changed_by.username if h.changed_by else 'System',
-            'at': timezone.localtime(h.changed_at).strftime('%b %d, %Y %I:%M %p')
-        } for h in entry.status_history.all().select_related('changed_by')],
+        'notes': notes,
+        'status_history': status_history,
     }
 
 
@@ -139,56 +185,32 @@ def response_status_update(request, entry_id):
     if status not in valid_statuses:
         return JsonResponse({'ok': False, 'error': 'Invalid status.'}, status=400)
 
+    status_display = dict(FeedbackEntry.STATUS_CHOICES)
     old_status = entry.status
+    history_entry = None
+
     if status != old_status:
         entry.status = status
         entry.save(update_fields=['status', 'updated_at'])
-        FeedbackStatusLog.objects.create(
-            entry=entry,
-            old_status=old_status,
-            new_status=status,
-            changed_by=request.user
-        )
+        log_feedback_status_change(request.user, entry, old_status, status)
+        history_entry = {
+            'old': status_display.get(old_status, old_status),
+            'new': status_display.get(status, status),
+            'by': request.user.get_full_name() or request.user.username,
+            'at': timezone.localtime(timezone.now()).strftime('%b %d, %Y %I:%M %p'),
+        }
 
     return JsonResponse({
         'ok': True,
         'status': entry.get_status_display(),
         'status_value': entry.status,
         'updated_at': timezone.localtime(entry.updated_at).strftime('%b %d, %Y %I:%M %p'),
+        'history_entry': history_entry,
     })
+
 
 @login_required
 def sentiment_analysis(request):
-    """
-    Sentiment analysis view.
-
-    Replace the dummy context below once the Feedback model is in place:
-
-        from feedback.models import FeedbackEntry, FeedbackStatusLog
-        from django.db.models import Count
-        from django.db.models.functions import TruncDate
-
-        entries = FeedbackEntry.objects.all()
-        total = entries.count()
-        positive = entries.filter(sentiment='positive').count()
-        neutral  = entries.filter(sentiment='neutral').count()
-        negative = entries.filter(sentiment='negative').count()
-
-        trend_qs = (entries
-            .annotate(day=TruncDate('created_at'))
-            .values('day')
-            .annotate(
-                positive=Count('id', filter=Q(sentiment='positive')),
-                neutral=Count('id', filter=Q(sentiment='neutral')),
-                negative=Count('id', filter=Q(sentiment='negative')),
-            )
-            .order_by('day'))
-
-        trend_labels = [d['day'].strftime('%b %d') for d in trend_qs]
-        trend_positive = [d['positive'] for d in trend_qs]
-        trend_neutral  = [d['neutral'] for d in trend_qs]
-        trend_negative = [d['negative'] for d in trend_qs]
-    """
     total = 248
     positive = 149
     neutral = 64
@@ -213,33 +235,9 @@ def sentiment_analysis(request):
     }
     return render(request, 'feedback_admin/sentiment_analysis.html', context)
 
+
 @login_required
 def reports(request):
-    """
-    Reports view with multiple report types.
-
-    Replace the dummy context below with real data once the Feedback model is in place:
-
-        from feedback.models import FeedbackEntry, FeedbackStatusLog
-        from django.db.models import Count, Avg
-        from datetime import timedelta
-        from django.utils import timezone
-
-        entries = FeedbackEntry.objects.all()
-        today = timezone.now().date()
-
-        # Daily report
-        daily_entries = entries.filter(created_at__date=today)
-
-        context = {
-            'daily_total': daily_entries.count(),
-            'weekly_total': entries.filter(created_at__gte=today - timedelta(days=7)).count(),
-            'monthly_total': entries.filter(created_at__gte=today - timedelta(days=30)).count(),
-            'quarterly_total': entries.filter(created_at__gte=today - timedelta(days=90)).count(),
-            'annual_total': entries.filter(created_at__year=today.year).count(),
-            # Add satisfaction rates, suggestions, etc.
-        }
-    """
     context = {
         'daily_total': 18,
         'daily_vsat': 11,
@@ -272,6 +270,70 @@ def reports(request):
         'annual_satisfaction': 77,
     }
     return render(request, 'feedback_admin/reports.html', context)
+
+
+@login_required
+def activity_log(request):
+    """
+    Government-facing audit trail: every status change and action-taken
+    note recorded against a feedback entry, sourced entirely from Django's
+    built-in django_admin_log table.
+    """
+    logs = (LogEntry.objects
+            .filter(content_type=_feedback_content_type())
+            .select_related('user')
+            .order_by('-action_time'))
+
+    status_display = dict(FeedbackEntry.STATUS_CHOICES)
+    entry_ids = {int(l.object_id) for l in logs if l.object_id and l.object_id.isdigit()}
+    entries_by_id = {e.pk: e for e in FeedbackEntry.objects.filter(pk__in=entry_ids)}
+
+    rows = []
+    status_change_count = 0
+    note_count = 0
+
+    for log in logs:
+        entry = entries_by_id.get(int(log.object_id)) if log.object_id and log.object_id.isdigit() else None
+        local_time = timezone.localtime(log.action_time)
+        author = (log.user.get_full_name() or log.user.username) if log.user else 'System'
+
+        row = {
+            'id': log.pk,
+            'date': local_time.strftime('%Y-%m-%d'),
+            'time': local_time.strftime('%H:%M'),
+            'admin': author,
+            'tracking_code': entry.tracking_code if entry else '—',
+            'rating': entry.get_rating_display() if entry else '',
+            'category': entry.get_category_display() if entry else '',
+        }
+
+        if log.action_flag == CHANGE and '|' in log.change_message:
+            old_raw, _, new_raw = log.change_message.partition('|')
+            row.update({
+                'action_type': 'status',
+                'old_status': status_display.get(old_raw, old_raw),
+                'new_status': status_display.get(new_raw, new_raw),
+                'note': '',
+            })
+            status_change_count += 1
+        else:
+            row.update({
+                'action_type': 'note',
+                'old_status': '',
+                'new_status': '',
+                'note': log.change_message,
+            })
+            note_count += 1
+
+        rows.append(row)
+
+    context = {
+        'logs_data': rows,
+        'total_actions': len(rows),
+        'total_status_changes': status_change_count,
+        'total_notes': note_count,
+    }
+    return render(request, 'feedback_admin/activity_log.html', context)
 
 
 # ── user management ───────────────────────────────────────────────────
@@ -314,7 +376,6 @@ def user_add(request):
     if pw1 != pw2:
         return err('Passwords do not match.')
 
-    # Build a temporary user object so similarity validator can compare
     tmp_user = User(
         username=username,
         email=request.POST.get('email', '').strip(),
@@ -399,11 +460,9 @@ def user_edit(request, user_id):
             return err(' '.join(e.messages))
         user.set_password(pw1)
 
-    # Password-based auth toggle (only meaningful when not setting a new password)
     has_usable_password = request.POST.get('has_usable_password', 'on') == 'on'
     if not pw1:
         if has_usable_password and not user.has_usable_password():
-            # Can't re-enable without a new password
             pass
         elif not has_usable_password:
             user.set_unusable_password()
@@ -431,7 +490,7 @@ def user_delete(request, user_id):
         return redirect('users')
     username = user.username
     user.delete()
-    
+
     msg = f'User "{username}" deleted.'
     messages.success(request, msg)
 
@@ -528,12 +587,6 @@ def group_delete(request, group_id):
 
 # ── LOGIN ─────────────────────────────────────────────────────────────
 def admin_login(request):
-    """
-    Custom login view for the feedback admin panel.
-    GET  → render login form.
-    POST → validate credentials, redirect to dashboard on success.
-    """
-    # Already logged in? Go straight to dashboard.
     if request.user.is_authenticated:
         return redirect('dashboard')
 
@@ -545,7 +598,6 @@ def admin_login(request):
             login(request, user)
             next_url = request.POST.get('next') or request.GET.get('next') or 'dashboard'
             return redirect(next_url)
-        # Form errors render automatically via {{ form.errors }} in the template.
 
     return render(request, 'feedback_admin/login.html', {
         'form': form,
@@ -556,63 +608,31 @@ def admin_login(request):
 # ── LOGOUT ────────────────────────────────────────────────────────────
 @require_POST
 def admin_logout(request):
-    """
-    POST-only logout to prevent CSRF-free logouts via GET.
-    Redirects to the login page after clearing the session.
-    """
     logout(request)
     messages.success(request, 'You have been signed out.')
     return redirect('admin_login')
 
+
 @login_required
 def feedback_detail(request):
-    """
-    Feedback detail view.
-
-    Replace the dummy context below with a real queryset once the
-    Feedback model is in place:
-
-        from feedback.models import FeedbackEntry, FeedbackStatusLog
-
-        entry = get_object_or_404(FeedbackEntry, pk=entry_id)
-        context = {
-            'entry': entry,
-            # Add any additional context needed for the detail view
-        }
-    """
     context = {
         'entry': {
             'id': 123,
             'rating': 'pos',
             'comment': 'Great service!',
             'created_at': '2024-01-01 12:34:56',
-            # Add any additional fields needed for the template
         }
     }
     return render(request, 'feedback_admin/feedback.html', context)
 
+
 @login_required
 def settings_page(request):
-    """
-    Settings page view.
-
-    Replace the dummy context below with real settings data once you have
-    defined what settings are needed for your application:
-
-        # Example: load settings from a model or config file
-        from .models import AdminSetting
-
-        settings = AdminSetting.objects.first()
-        context = {
-            'setting1': settings.setting1,
-            'setting2': settings.setting2,
-            # Add any additional settings needed for the template
-        }
-    """
     context = {
         'users': User.objects.all().order_by('-date_joined'),
     }
     return render(request, 'feedback_admin/settings.html', context)
+
 
 @login_required
 @require_POST

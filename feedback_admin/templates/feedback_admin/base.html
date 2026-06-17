@@ -699,6 +699,10 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
         <span class="material-icons-round">chat_bubble_outline</span>
         <span class="nav-item-label">Feedback</span>
       </a>
+        <a href="{% url 'activity_log' %}" class="nav-item {% block nav_activity_log %}{% endblock %}">
+          <span class="material-icons-round">history</span>
+          <span class="nav-item-label">Audit Trail</span>
+        </a>
       <a href="{% url 'users' %}" class="nav-item {% block nav_users %}{% endblock %}">
         <span class="material-icons-round">manage_accounts</span>
         <span class="nav-item-label">Users</span>
