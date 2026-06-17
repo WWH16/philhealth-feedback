@@ -1,4 +1,5 @@
 var selectedReaction = null;
+var selectedCategory = null;
 var lastTrackingCode = null;
 
 function getCookie(name) {
@@ -20,6 +21,21 @@ function selectReaction(val) {
   btn.setAttribute('aria-pressed', 'true');
   document.getElementById('reactionErr').classList.add('hidden');
   document.getElementById('reactionErr').classList.remove('flex');
+}
+
+function selectCategory(val) {
+  if (selectedCategory === val) {
+    selectedCategory = null;
+    document.getElementById('cat-' + val).classList.remove('sel-cat');
+  } else {
+    ['complaint', 'suggestion', 'compliment', 'concern'].forEach(function (e) {
+      var b = document.getElementById('cat-' + e);
+      if (b) b.classList.remove('sel-cat');
+    });
+    selectedCategory = val;
+    var btn = document.getElementById('cat-' + val);
+    if (btn) btn.classList.add('sel-cat');
+  }
 }
 
 function updateCount() {
@@ -48,6 +64,7 @@ function handleSubmit(event) {
     },
     body: JSON.stringify({
       rating: selectedReaction,
+      category: selectedCategory,
       comment: document.getElementById('concern').value
     })
   })
@@ -80,6 +97,7 @@ function handleSubmit(event) {
 
 function resetForm() {
   selectedReaction = null;
+  selectedCategory = null;
   lastTrackingCode = null;
   document.getElementById('concern').value = '';
   document.getElementById('charCount').textContent = '0 / 500';
@@ -87,6 +105,10 @@ function resetForm() {
     var b = document.getElementById('btn-' + e);
     b.classList.remove('sel-pos', 'sel-neu', 'sel-neg');
     b.setAttribute('aria-pressed', 'false');
+  });
+  ['complaint', 'suggestion', 'compliment', 'concern'].forEach(function (e) {
+    var b = document.getElementById('cat-' + e);
+    if (b) b.classList.remove('sel-cat');
   });
   document.getElementById('reactionErr').classList.add('hidden');
   document.getElementById('reactionErr').classList.remove('flex');

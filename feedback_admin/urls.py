@@ -10,6 +10,7 @@ urlpatterns = [
     path('',                            views.dashboard,          name='dashboard'),
     path('responses/',                  views.responses,          name='responses'),
     path('responses/<int:entry_id>/status/', views.response_status_update, name='response_status_update'),
+    path('responses/<int:entry_id>/notes/add/', views.response_note_add, name='response_note_add'),
     path('sentiment_analysis/',         views.sentiment_analysis, name='sentiment_analysis'),
     path('reports/',                    views.reports,            name='reports'),
 

@@ -2,6 +2,7 @@ import secrets
 
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 class FeedbackEntry(models.Model):
@@ -25,8 +26,21 @@ class FeedbackEntry(models.Model):
         (RESOLVED, 'Resolved'),
     ]
 
+    COMPLAINT = 'complaint'
+    SUGGESTION = 'suggestion'
+    COMPLIMENT = 'compliment'
+    CONCERN = 'concern'
+
+    CATEGORY_CHOICES = [
+        (COMPLAINT, 'Complaint'),
+        (SUGGESTION, 'Suggestion'),
+        (COMPLIMENT, 'Compliment'),
+        (CONCERN, 'Concern'),
+    ]
+
     tracking_code = models.CharField(max_length=24, unique=True, editable=False)
     rating = models.CharField(max_length=3, choices=RATING_CHOICES)
+    category = models.CharField(max_length=12, choices=CATEGORY_CHOICES, blank=True)
     comment = models.TextField(blank=True, max_length=500)
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -63,3 +77,24 @@ class FeedbackEntry(models.Model):
             self.SATISFACTORY: 'Neutral',
             self.UNSATISFACTORY: 'Negative',
         }.get(self.rating, 'Neutral')
+
+
+class FeedbackNote(models.Model):
+    entry = models.ForeignKey(FeedbackEntry, related_name='notes', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Note on {self.entry.tracking_code} by {self.author}'
+
+
+class FeedbackStatusLog(models.Model):
+    entry = models.ForeignKey(FeedbackEntry, related_name='status_history', on_delete=models.CASCADE)
+    old_status = models.CharField(max_length=12)
+    new_status = models.CharField(max_length=12)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.entry.tracking_code}: {self.old_status} -> {self.new_status}'

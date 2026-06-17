@@ -173,6 +173,7 @@
           <tr>
             <th style="min-width:100px">Date &amp; Time</th>
             <th style="min-width:130px">Rating</th>
+            <th style="min-width:120px">Category</th>
             <th>Feedback / Comment</th>
           </tr>
         </thead>
@@ -212,6 +213,11 @@ function renderRecent() {
         <div class="datetime-time">${r.time}</div>
       </td>
       <td><span class="rating-chip ${cfg.cls}"><span class="material-icons-round">${cfg.icon}</span>${r.rating}</span></td>
+      <td>
+        <span style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;">
+          ${escHtml(r.category || '—')}
+        </span>
+      </td>
       <td class="comment-cell">${comment}</td>
     </tr>`;
   }).join('');

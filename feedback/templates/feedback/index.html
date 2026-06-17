@@ -79,6 +79,29 @@
         </p>
       </div>
 
+      <!-- STEP 1.5: CATEGORY -->
+      <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
+      <div class="flex items-center gap-[10px] mb-[10px]">
+        <div class="w-[24px] h-[24px] flex items-center justify-center text-[11px] font-bold shrink-0" style="background:var(--ink);color:var(--white)" aria-hidden="true">1.5</div>
+        <span class="text-[11px] font-bold tracking-[0.08em] uppercase" style="color:var(--ink3)">Feedback category</span>
+        <div class="flex-1 h-[1px]" style="background:var(--ink7)"></div>
+        <span class="text-[11px] font-semibold tracking-[0.06em] uppercase ml-[8px]" style="color:var(--ink5)">Optional</span>
+      </div>
+
+      <div class="p-[20px] sm:p-[28px] mb-[6px] border" style="background:var(--white);border-color:var(--ink7)">
+        <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">What kind of feedback is this?</p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-[8px]">
+          <button class="cat-btn font-bold uppercase py-[10px] text-[10px] tracking-[0.05em] transition-all"
+            id="cat-complaint" onclick="selectCategory('complaint')" style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">Complaint</button>
+          <button class="cat-btn font-bold uppercase py-[10px] text-[10px] tracking-[0.05em] transition-all"
+            id="cat-suggestion" onclick="selectCategory('suggestion')" style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">Suggestion</button>
+          <button class="cat-btn font-bold uppercase py-[10px] text-[10px] tracking-[0.05em] transition-all"
+            id="cat-compliment" onclick="selectCategory('compliment')" style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">Compliment</button>
+          <button class="cat-btn font-bold uppercase py-[10px] text-[10px] tracking-[0.05em] transition-all"
+            id="cat-concern" onclick="selectCategory('concern')" style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">Concern</button>
+        </div>
+      </div>
+
       <!-- STEP 2 -->
       <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
       <div class="flex items-center gap-[10px] mb-[10px]">

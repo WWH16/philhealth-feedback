@@ -134,6 +134,22 @@ body {
 .reaction-btn.sel-neg > div { border-color: #f87171 !important; background: #ffe4e6 !important; }
 .reaction-btn.sel-neg > div .material-icons-round { color: var(--red) !important; }
 
+/* ── CATEGORY BUTTONS ───────────────────────────────────────────────────── */
+.cat-btn {
+  cursor: pointer;
+  transition: all 120ms;
+}
+.cat-btn:hover {
+  border-color: var(--ink3) !important;
+  color: var(--ink) !important;
+}
+.cat-btn.sel-cat {
+  border-color: var(--g-primary) !important;
+  background: var(--g-xlight) !important;
+  color: var(--g-forest) !important;
+  box-shadow: inset 0 0 0 1px var(--g-primary);
+}
+
 /* ── SUCCESS MODAL ──────────────────────────────────────────────────────── */
 .track-card {
   background: var(--white);

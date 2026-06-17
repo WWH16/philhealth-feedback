@@ -20,7 +20,7 @@
   background: var(--surface-page);
 }
 .detail-inner {
-  padding: 14px 20px 16px 48px;
+  padding: 20px 24px 24px 48px;
   font-size: 13px; color: var(--text-secondary); line-height: 1.7;
   border-left: 3px solid var(--g-primary); margin-left: 16px;
 }
@@ -129,6 +129,13 @@
           <option value="Satisfactory">Satisfactory</option>
           <option value="Unsatisfactory">Unsatisfactory</option>
         </select>
+        <select class="btn-ph" id="categoryFilter" onchange="applyFilters()" aria-label="Filter by category" style="cursor:pointer">
+          <option value="">All Categories</option>
+          <option value="Complaint">Complaint</option>
+          <option value="Suggestion">Suggestion</option>
+          <option value="Compliment">Compliment</option>
+          <option value="Concern">Concern</option>
+        </select>
         <select class="btn-ph" id="sentimentFilter" onchange="applyFilters()" aria-label="Filter by sentiment" style="cursor:pointer">
           <option value="">All Sentiments</option>
           <option value="Positive">Positive</option>
@@ -178,6 +185,9 @@
             </th>
             <th class="sort-th" onclick="sortTable('rating')" style="min-width:140px">
               Rating <span class="material-icons-round sort-icon" id="sort-rating">unfold_more</span>
+            </th>
+            <th class="sort-th" onclick="sortTable('category')" style="min-width:120px">
+              Category <span class="material-icons-round sort-icon" id="sort-category">unfold_more</span>
             </th>
             <th style="min-width:100px">Sentiment</th>
             <th style="min-width:110px">Status</th>
@@ -262,6 +272,7 @@ function inDateRange(r) {
 function applyFilters() {
   const q         = document.getElementById('tableSearch').value.toLowerCase();
   const rating    = document.getElementById('ratingFilter').value;
+  const category  = document.getElementById('categoryFilter').value;
   const sentiment = document.getElementById('sentimentFilter').value;
   const status    = document.getElementById('statusFilter').value;
   activeDateRange = document.getElementById('dateRangeFilter').value;
@@ -271,12 +282,14 @@ function applyFilters() {
                          || r.id.toString().includes(q)
                          || (r.tracking_code || '').toLowerCase().includes(q)
                          || r.rating.toLowerCase().includes(q)
+                         || (r.category||'').toLowerCase().includes(q)
                          || r.date.includes(q)
                          || (r.sentiment||'').toLowerCase().includes(q);
     const matchR    = !rating    || r.rating    === rating;
+    const matchC    = !category  || r.category  === category;
     const matchS    = !sentiment || r.sentiment === sentiment;
     const matchSt   = !status    || r.status    === status;
-    return matchQ && matchR && matchS && matchSt && inDateRange(r);
+    return matchQ && matchR && matchC && matchS && matchSt && inDateRange(r);
   });
   doSort();
   currentPage = 1;
@@ -292,7 +305,7 @@ function doSort() {
 
 function sortTable(field) {
   if (sortField === field) { sortDir *= -1; } else { sortField = field; sortDir = -1; }
-  ['date','rating'].forEach(f => {
+  ['date','rating','category'].forEach(f => {
     const el = document.getElementById('sort-' + f);
     if (!el) return;
     el.textContent = f === field ? (sortDir === -1 ? 'arrow_downward' : 'arrow_upward') : 'unfold_more';
@@ -319,6 +332,7 @@ function updateStatus(id, newStatus) {
     if (row) {
       row.status = data.status;
       row.status_value = data.status_value;
+      // Note: In a real app, we might want to refresh status_history here too.
     }
     const sel = document.getElementById('status-sel-' + id);
     if (sel) sel.className = 'status-select s-' + data.status_value;
@@ -327,6 +341,33 @@ function updateStatus(id, newStatus) {
     alert(err.message);
     renderTable();
   });
+}
+
+/* ── NOTES ── */
+function addNote(id) {
+  const input = document.getElementById('note-input-' + id);
+  const body = input.value.trim();
+  if (!body) return;
+
+  fetch(`/dashboard/responses/${id}/notes/add/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF_TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ body: body })
+  })
+  .then(response => response.json().then(data => {
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to add note.');
+    return data;
+  }))
+  .then(data => {
+    const row = ALL_DATA.find(r => r.id === id);
+    if (row) {
+      if (!row.notes) row.notes = [];
+      row.notes.push(data.note);
+    }
+    input.value = '';
+    renderTable();
+  })
+  .catch(err => alert(err.message));
 }
 
 /* ── SELECTION ── */
@@ -374,7 +415,7 @@ function renderTable() {
   const end   = Math.min(start + pageSize, filteredRows.length);
   const rows  = filteredRows.slice(start, end);
 
-  const COLS = 9; /* checkbox + id + tracking + date + rating + sentiment + status + comment + expand */
+  const COLS = 10; /* checkbox + id + tracking + date + rating + category + sentiment + status + comment + expand */
 
   if (!rows.length) {
     body.innerHTML = `<tr><td colspan="${COLS}">
@@ -414,6 +455,11 @@ function renderTable() {
           </span>
         </td>
         <td>
+          <span style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;">
+            ${escHtml(r.category || '—')}
+          </span>
+        </td>
+        <td>
           <span class="rating-chip ${sCfg.cls}">
             <span class="material-icons-round">${sCfg.icon}</span>${r.sentiment || '—'}
           </span>
@@ -430,19 +476,63 @@ function renderTable() {
         </td>
         <td class="comment-cell">${preview}</td>
         <td style="padding:13px 12px 13px 4px;text-align:center;">
-          ${hasComment
-            ? `<button class="expand-btn" onclick="toggleExpand(${r.id})"
-                title="${expanded ? 'Collapse' : 'Expand'}" aria-expanded="${expanded}">
-                <span class="material-icons-round">${expanded ? 'expand_less' : 'expand_more'}</span>
-              </button>`
-            : ''}
+          <button class="expand-btn" onclick="toggleExpand(${r.id})"
+            title="${expanded ? 'Collapse' : 'Expand'}" aria-expanded="${expanded}">
+            <span class="material-icons-round">${expanded ? 'expand_less' : 'expand_more'}</span>
+          </button>
         </td>
       </tr>`;
 
-      const detailRow = expanded && hasComment
+      const detailRow = expanded
         ? `<tr class="detail-row" data-detail="${r.id}">
             <td colspan="${COLS}">
-              <div class="detail-inner">${escHtml(r.comment)}</div>
+              <div class="detail-inner">
+                <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:32px;">
+                  <div>
+                    <div style="font-weight:700;margin-bottom:8px;text-transform:uppercase;font-size:10px;color:var(--text-muted);letter-spacing:0.05em;">Original Feedback</div>
+                    <div style="font-size:13px;color:var(--text-primary);white-space:pre-wrap;margin-bottom:20px;line-height:1.6;">${escHtml(r.comment || 'No additional comment provided.')}</div>
+                    
+                    <div style="font-weight:700;margin-bottom:12px;text-transform:uppercase;font-size:10px;color:var(--text-muted);letter-spacing:0.05em;display:flex;align-items:center;gap:6px;">
+                      <span class="material-icons-round" style="font-size:14px">description</span>
+                      Internal Administrative Notes
+                    </div>
+                    <div id="notes-list-${r.id}" style="margin-bottom:16px;">
+                      ${(r.notes||[]).map(n => `
+                        <div style="padding:10px 12px;background:var(--surface-page);border:1.5px solid var(--border);margin-bottom:6px;">
+                          <div style="font-size:11px;font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between;">
+                            <span>${escHtml(n.author)}</span>
+                            <span style="font-weight:400;color:var(--text-muted);">${n.created_at}</span>
+                          </div>
+                          <div style="font-size:12px;color:var(--text-secondary);">${escHtml(n.body)}</div>
+                        </div>
+                      `).join('') || '<div style="font-size:12px;font-style:italic;color:var(--text-muted);margin-bottom:12px;">No internal notes yet.</div>'}
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                      <input type="text" id="note-input-${r.id}" placeholder="Type administrative note..." style="flex:1;font-size:12px;padding:8px 12px;border:1.5px solid var(--border);background:var(--surface-page);outline:none;border-radius:0;">
+                      <button class="btn-ph btn-ph-sm btn-ph-primary" onclick="addNote(${r.id})">Add Note</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-weight:700;margin-bottom:12px;text-transform:uppercase;font-size:10px;color:var(--text-muted);letter-spacing:0.05em;display:flex;align-items:center;gap:6px;">
+                      <span class="material-icons-round" style="font-size:14px">history</span>
+                      Status History
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                      ${(r.status_history||[]).map(h => `
+                        <div style="font-size:11px;padding:8px;border-left:2px solid var(--border);background:rgba(0,0,0,0.01);">
+                          <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">${h.at}</div>
+                          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                            <span class="status-select s-${h.old.toLowerCase()}" style="padding:1px 5px;font-size:9px;pointer-events:none;">${h.old}</span>
+                            <span class="material-icons-round" style="font-size:14px;color:var(--text-muted)">arrow_forward</span>
+                            <span class="status-select s-${h.new.toLowerCase()}" style="padding:1px 5px;font-size:9px;pointer-events:none;">${h.new}</span>
+                          </div>
+                          <div style="color:var(--text-muted);font-size:10px;">Changed by <strong>${h.by}</strong></div>
+                        </div>
+                      `).join('') || '<div style="font-size:11px;font-style:italic;color:var(--text-muted);">Initial submission status: Pending</div>'}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </td>
           </tr>`
         : '';
@@ -494,9 +584,10 @@ function goPage(p) {
 
 /* ── EXPORT ── */
 function buildCSVRows(data) {
-  const header = ['ID','Tracking Code','Date','Time','Rating','Sentiment','Status','Comment'];
+  const header = ['ID','Tracking Code','Date','Time','Rating','Category','Sentiment','Status','Comment'];
   const body   = data.map(r => [
     r.id, r.tracking_code || '', r.date, r.time, r.rating,
+    r.category || '',
     r.sentiment || '',
     r.status    || '',
     `"${(r.comment||'').replace(/"/g,'""')}"`

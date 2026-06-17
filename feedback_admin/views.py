@@ -16,7 +16,36 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
 
-from feedback.models import FeedbackEntry
+from feedback.models import FeedbackEntry, FeedbackStatusLog, FeedbackNote
+
+
+@login_required
+@require_POST
+def response_note_add(request, entry_id):
+    entry = get_object_or_404(FeedbackEntry, pk=entry_id)
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError:
+        return JsonResponse({'ok': False, 'error': 'Invalid request.'}, status=400)
+
+    body = (payload.get('body') or '').strip()
+    if not body:
+        return JsonResponse({'ok': False, 'error': 'Note body cannot be empty.'}, status=400)
+
+    note = FeedbackNote.objects.create(
+        entry=entry,
+        author=request.user,
+        body=body
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'note': {
+            'author': note.author.get_full_name() or note.author.username,
+            'body': note.body,
+            'created_at': timezone.localtime(note.created_at).strftime('%b %d, %Y %I:%M %p'),
+        }
+    })
 
 
 def _is_ajax(request):
@@ -68,10 +97,22 @@ def _entry_to_row(entry):
         'date': local_created.strftime('%Y-%m-%d'),
         'time': local_created.strftime('%H:%M'),
         'rating': entry.get_rating_display(),
+        'category': entry.get_category_display(),
         'sentiment': entry.sentiment,
         'status': entry.get_status_display(),
         'status_value': entry.status,
         'comment': entry.comment,
+        'notes': [{
+            'author': n.author.get_full_name() or n.author.username,
+            'body': n.body,
+            'created_at': timezone.localtime(n.created_at).strftime('%b %d, %Y %I:%M %p')
+        } for n in entry.notes.all().select_related('author')],
+        'status_history': [{
+            'old': h.old_status,
+            'new': h.new_status,
+            'by': h.changed_by.get_full_name() or h.changed_by.username if h.changed_by else 'System',
+            'at': timezone.localtime(h.changed_at).strftime('%b %d, %Y %I:%M %p')
+        } for h in entry.status_history.all().select_related('changed_by')],
     }
 
 
@@ -98,8 +139,17 @@ def response_status_update(request, entry_id):
     if status not in valid_statuses:
         return JsonResponse({'ok': False, 'error': 'Invalid status.'}, status=400)
 
-    entry.status = status
-    entry.save(update_fields=['status', 'updated_at'])
+    old_status = entry.status
+    if status != old_status:
+        entry.status = status
+        entry.save(update_fields=['status', 'updated_at'])
+        FeedbackStatusLog.objects.create(
+            entry=entry,
+            old_status=old_status,
+            new_status=status,
+            changed_by=request.user
+        )
+
     return JsonResponse({
         'ok': True,
         'status': entry.get_status_display(),
@@ -114,7 +164,7 @@ def sentiment_analysis(request):
 
     Replace the dummy context below once the Feedback model is in place:
 
-        from feedback.models import FeedbackEntry
+        from feedback.models import FeedbackEntry, FeedbackStatusLog
         from django.db.models import Count
         from django.db.models.functions import TruncDate
 
@@ -170,7 +220,7 @@ def reports(request):
 
     Replace the dummy context below with real data once the Feedback model is in place:
 
-        from feedback.models import FeedbackEntry
+        from feedback.models import FeedbackEntry, FeedbackStatusLog
         from django.db.models import Count, Avg
         from datetime import timedelta
         from django.utils import timezone
@@ -522,7 +572,7 @@ def feedback_detail(request):
     Replace the dummy context below with a real queryset once the
     Feedback model is in place:
 
-        from feedback.models import FeedbackEntry
+        from feedback.models import FeedbackEntry, FeedbackStatusLog
 
         entry = get_object_or_404(FeedbackEntry, pk=entry_id)
         context = {

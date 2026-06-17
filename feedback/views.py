@@ -22,15 +22,21 @@ def submit_feedback(request):
         return JsonResponse({'ok': False, 'error': 'Invalid request.'}, status=400)
 
     rating = payload.get('rating')
+    category = payload.get('category')
     comment = (payload.get('comment') or '').strip()
 
     valid_ratings = {choice[0] for choice in FeedbackEntry.RATING_CHOICES}
     if rating not in valid_ratings:
         return JsonResponse({'ok': False, 'error': 'Please select your experience.'}, status=400)
+
+    valid_categories = {choice[0] for choice in FeedbackEntry.CATEGORY_CHOICES}
+    if category and category not in valid_categories:
+        return JsonResponse({'ok': False, 'error': 'Invalid category selected.'}, status=400)
+
     if len(comment) > 500:
         return JsonResponse({'ok': False, 'error': 'Concern must be 500 characters or fewer.'}, status=400)
 
-    entry = FeedbackEntry.objects.create(rating=rating, comment=comment)
+    entry = FeedbackEntry.objects.create(rating=rating, category=category or '', comment=comment)
 
     return JsonResponse({
         'ok': True,
