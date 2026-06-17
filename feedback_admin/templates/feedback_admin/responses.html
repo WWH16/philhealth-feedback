@@ -263,25 +263,25 @@ function inDateRange(r) {
 
 /* ── FILTER ── */
 function applyFilters() {
-  const q         = document.getElementById('tableSearch').value.toLowerCase();
-  const rating    = document.getElementById('ratingFilter').value;
-  const category  = document.getElementById('categoryFilter').value;
-  const sentiment = document.getElementById('sentimentFilter').value;
-  const status    = document.getElementById('statusFilter').value;
-  activeDateRange = document.getElementById('dateRangeFilter').value;
+  const q          = document.getElementById('tableSearch').value.toLowerCase();
+  const experience = document.getElementById('experienceFilter').value;
+  const category   = document.getElementById('categoryFilter').value;
+  const sentiment  = document.getElementById('sentimentFilter').value;
+  const status     = document.getElementById('statusFilter').value;
+  activeDateRange  = document.getElementById('dateRangeFilter').value;
 
   filteredRows = ALL_DATA.filter(r => {
     const matchQ    = !q || (r.comment||'').toLowerCase().includes(q)
                          || r.id.toString().includes(q)
-                         || r.rating.toLowerCase().includes(q)
+                         || r.experience.toLowerCase().includes(q)
                          || (r.category||'').toLowerCase().includes(q)
                          || r.date.includes(q)
                          || (r.sentiment||'').toLowerCase().includes(q);
-    const matchR    = !rating    || r.rating    === rating;
-    const matchC    = !category  || r.category  === category;
-    const matchS    = !sentiment || r.sentiment === sentiment;
-    const matchSt   = !status    || r.status    === status;
-    return matchQ && matchR && matchC && matchS && matchSt && inDateRange(r);
+    const matchE    = !experience || r.experience === experience;
+    const matchC    = !category   || r.category   === category;
+    const matchS    = !sentiment  || r.sentiment  === sentiment;
+    const matchSt   = !status     || r.status     === status;
+    return matchQ && matchE && matchC && matchS && matchSt && inDateRange(r);
   });
   currentPage = 1;
   renderTable();

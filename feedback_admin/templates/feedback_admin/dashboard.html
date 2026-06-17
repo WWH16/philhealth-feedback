@@ -64,7 +64,7 @@
     <div class="col-6 col-lg-3">
       <div class="stat-card card-neg h-100">
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
-        <div class="stat-value" id="negVal">{{ unsatisfactory }}</div>
+        <div class="stat-value" id="unsatVal">{{ unsatisfactory }}</div>
         <div class="stat-label">Unsatisfactory</div>
         <span class="stat-delta down"><span class="material-icons-round">arrow_downward</span>−3% this week</span>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
@@ -172,7 +172,7 @@
         <thead>
           <tr>
             <th style="min-width:100px">Date &amp; Time</th>
-            <th style="min-width:130px">Rating</th>
+            <th style="min-width:130px">Experience</th>
             <th style="min-width:120px">Category</th>
             <th>Feedback / Comment</th>
           </tr>
@@ -308,4 +308,5 @@ function pageInit() {
   renderRecent();
 }
 </script>
+{% endblock %}
 {% endblock %}

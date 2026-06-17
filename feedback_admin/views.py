@@ -17,6 +17,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
+from django.db.models.functions import TruncDate
 
 from feedback.models import FeedbackEntry
 
@@ -116,15 +117,15 @@ def dashboard(request):
     recent_entries = qs.order_by('-created_at')[:5]
     context = {
         'total': qs.count(),
-        'very_satisfactory': qs.filter(rating=FeedbackEntry.VERY_SATISFACTORY).count(),
-        'satisfactory': qs.filter(rating=FeedbackEntry.SATISFACTORY).count(),
-        'unsatisfactory': qs.filter(rating=FeedbackEntry.UNSATISFACTORY).count(),
+        'very_satisfactory': qs.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count(),
+        'satisfactory': qs.filter(experience=FeedbackEntry.SATISFACTORY).count(),
+        'unsatisfactory': qs.filter(experience=FeedbackEntry.UNSATISFACTORY).count(),
         'recent_entries_data': [_entry_to_row(entry) for entry in recent_entries],
         'filter_data': {
-            'today': _rating_counts(qs.filter(created_at__date=today)),
-            'week': _rating_counts(qs.filter(created_at__gte=week_start)),
-            'month': _rating_counts(qs.filter(created_at__gte=month_start)),
-            'all': _rating_counts(qs),
+            'today': _experience_counts(qs.filter(created_at__date=today)),
+            'week': _experience_counts(qs.filter(created_at__gte=week_start)),
+            'month': _experience_counts(qs.filter(created_at__gte=month_start)),
+            'all': _experience_counts(qs),
         },
     }
     return render(request, 'feedback_admin/dashboard.html', context)
@@ -135,9 +136,9 @@ def responses(request):
     entries = FeedbackEntry.objects.order_by('-created_at')
     context = {
         'total': entries.count(),
-        'very_satisfactory': entries.filter(rating=FeedbackEntry.VERY_SATISFACTORY).count(),
-        'satisfactory': entries.filter(rating=FeedbackEntry.SATISFACTORY).count(),
-        'unsatisfactory': entries.filter(rating=FeedbackEntry.UNSATISFACTORY).count(),
+        'very_satisfactory': entries.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count(),
+        'satisfactory': entries.filter(experience=FeedbackEntry.SATISFACTORY).count(),
+        'unsatisfactory': entries.filter(experience=FeedbackEntry.UNSATISFACTORY).count(),
         'entries_data': [_entry_to_row(entry) for entry in entries],
     }
     return render(request, 'feedback_admin/responses.html', context)
@@ -148,12 +149,15 @@ def _entry_to_row(entry):
     notes, status_history = get_feedback_activity(entry)
     return {
         'id': entry.id,
+        'tracking_code': entry.tracking_code,
         'date': local_created.strftime('%Y-%m-%d'),
         'time': local_created.strftime('%H:%M'),
-        'rating': entry.get_rating_display(),
+        'experience': entry.get_experience_display(),
+        'rating': entry.get_experience_display(),
         'category': entry.get_category_display(),
         'category_value': entry.category,
-        'sentiment': entry.sentiment,
+        'sentiment': entry.get_sentiment_display(),
+        'sentiment_value': entry.sentiment,
         'status': entry.get_status_display(),
         'status_value': entry.status,
         'comment': entry.comment,
@@ -162,12 +166,12 @@ def _entry_to_row(entry):
     }
 
 
-def _rating_counts(qs):
+def _experience_counts(qs):
     return {
         'total': qs.count(),
-        'vsat': qs.filter(rating=FeedbackEntry.VERY_SATISFACTORY).count(),
-        'sat': qs.filter(rating=FeedbackEntry.SATISFACTORY).count(),
-        'neg': qs.filter(rating=FeedbackEntry.UNSATISFACTORY).count(),
+        'vsat': qs.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count(),
+        'sat': qs.filter(experience=FeedbackEntry.SATISFACTORY).count(),
+        'unsat': qs.filter(experience=FeedbackEntry.UNSATISFACTORY).count(),
     }
 
 
@@ -235,13 +239,28 @@ def response_category_update(request, entry_id):
 
 @login_required
 def sentiment_analysis(request):
-    total = 248
-    positive = 149
-    neutral = 64
-    negative = 35
+    entries = FeedbackEntry.objects.all()
+    positive = entries.filter(sentiment=FeedbackEntry.POSITIVE).count()
+    neutral = entries.filter(sentiment=FeedbackEntry.NEUTRAL).count()
+    negative = entries.filter(sentiment=FeedbackEntry.NEGATIVE).count()
+    total = positive + neutral + negative
 
     def pct(n):
         return round((n / total) * 100) if total else 0
+
+    trend_rows = list(
+        entries.exclude(sentiment=FeedbackEntry.PENDING)
+        .annotate(day=TruncDate('created_at'))
+        .values('day', 'sentiment')
+        .annotate(total=Count('id'))
+        .order_by('day')
+    )
+    trend_dates = sorted({row['day'] for row in trend_rows})
+    trend_labels = [f'{day:%b} {day.day}' for day in trend_dates]
+
+    def trend_for(sentiment):
+        counts = {row['day']: row['total'] for row in trend_rows if row['sentiment'] == sentiment}
+        return [counts.get(day, 0) for day in trend_dates]
 
     context = {
         'total': total,
@@ -252,10 +271,10 @@ def sentiment_analysis(request):
         'neutral_pct': pct(neutral),
         'negative_pct': pct(negative),
 
-        'trend_labels': ['Jun 1','Jun 2','Jun 3','Jun 4','Jun 5','Jun 6','Jun 7','Jun 8','Jun 9','Jun 10','Jun 11'],
-        'trend_positive': [12, 18, 14, 22, 16, 20, 25, 18, 23, 19, 16],
-        'trend_neutral':  [5, 7, 6, 8, 5, 7, 9, 6, 8, 7, 6],
-        'trend_negative': [3, 2, 4, 1, 3, 2, 3, 2, 4, 2, 3],
+        'trend_labels': trend_labels,
+        'trend_positive': trend_for(FeedbackEntry.POSITIVE),
+        'trend_neutral': trend_for(FeedbackEntry.NEUTRAL),
+        'trend_negative': trend_for(FeedbackEntry.NEGATIVE),
     }
     return render(request, 'feedback_admin/sentiment_analysis.html', context)
 
@@ -326,7 +345,8 @@ def activity_log(request):
             'date': local_time.strftime('%Y-%m-%d'),
             'time': local_time.strftime('%H:%M'),
             'admin': author,
-            'rating': entry.get_rating_display() if entry else '',
+            'tracking_code': entry.tracking_code if entry else '—',
+            'rating': entry.get_experience_display() if entry else '',
             'category': entry.get_category_display() if entry else '',
         }
 
@@ -641,7 +661,7 @@ def feedback_detail(request):
     context = {
         'entry': {
             'id': 123,
-            'rating': 'pos',
+            'experience': 'vsat',
             'comment': 'Great service!',
             'created_at': '2024-01-01 12:34:56',
         }

@@ -181,7 +181,7 @@ function applyActFilters() {
   const admin = document.getElementById('adminFilter').value;
 
   filteredLogs = ALL_LOGS.filter(l => {
-    const haystack = [l.admin, l.note, l.old_status, l.new_status, l.rating, l.category].join(' ').toLowerCase();
+    const haystack = [l.admin, l.note, l.old_status, l.new_status, l.experience, l.category].join(' ').toLowerCase();
     const matchQ     = !q || haystack.includes(q);
     const matchType  = !type  || l.action_type === type;
     const matchAdmin = !admin || l.admin === admin;

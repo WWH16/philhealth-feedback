@@ -31,26 +31,26 @@
       </div>
 
       <div class="p-[20px] sm:p-[28px] mb-[6px] border" style="background:var(--white);border-color:var(--ink7)">
-        <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">Tap a reaction.</p>
+        <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">Select your satisfaction rating. This is recorded separately from the sentiment of your comment.</p>
         <div class="grid grid-cols-3 gap-[8px]" role="group" aria-label="Rate your experience">
-          <button class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
-            id="btn-pos" onclick="selectReaction('pos')" aria-pressed="false" aria-label="Very satisfactory"
+          <button type="button" class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
+            id="btn-vsat" onclick="selectExperience('vsat')" aria-pressed="false" aria-label="Very satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
             <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
               <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--g-primary)" aria-hidden="true">sentiment_satisfied_alt</span>
             </div>
             <span>Very satisfactory</span>
           </button>
-          <button class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
-            id="btn-neu" onclick="selectReaction('neu')" aria-pressed="false" aria-label="Satisfactory"
+          <button type="button" class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
+            id="btn-sat" onclick="selectExperience('sat')" aria-pressed="false" aria-label="Satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
             <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
               <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--gold)" aria-hidden="true">sentiment_neutral</span>
             </div>
             <span>Satisfactory</span>
           </button>
-          <button class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
-            id="btn-neg" onclick="selectReaction('neg')" aria-pressed="false" aria-label="Unsatisfactory"
+          <button type="button" class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
+            id="btn-unsat" onclick="selectExperience('unsat')" aria-pressed="false" aria-label="Unsatisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
             <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
               <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--red)" aria-hidden="true">sentiment_dissatisfied</span>
@@ -84,7 +84,7 @@
       <!-- SUBMIT -->
       <div class="h-[20px] border-l-[1.5px] ml-[28px]" style="border-color:var(--ink7)"></div>
       <div class="mt-[6px]">
-        <button class="w-full h-[56px] border-none text-[13px] font-bold tracking-[0.1em] uppercase cursor-pointer flex items-center justify-center gap-[10px] transition-opacity duration-[120ms] relative overflow-hidden hover:opacity-[0.88] active:opacity-[0.95] active:scale-[0.995] focus:outline-none focus:ring-2 focus:ring-offset-2"
+        <button type="button" class="w-full h-[56px] border-none text-[13px] font-bold tracking-[0.1em] uppercase cursor-pointer flex items-center justify-center gap-[10px] transition-opacity duration-[120ms] relative overflow-hidden hover:opacity-[0.88] active:opacity-[0.95] active:scale-[0.995] focus:outline-none focus:ring-2 focus:ring-offset-2"
           style="background:var(--g-forest);color:var(--white);border-radius:0;"
           onclick="handleSubmit(event)">
           <span class="material-icons-round text-[18px]" aria-hidden="true">send</span>
@@ -108,8 +108,9 @@
           <span class="material-icons-round" aria-hidden="true">task_alt</span>
           <span id="successDetailText">—</span>
         </div>
+        <p class="success-meta" id="successMetaText">—</p>
         <br>
-        <button class="success-reset-btn" onclick="resetForm()">
+        <button type="button" class="success-reset-btn" onclick="resetForm()">
           <span class="material-icons-round" aria-hidden="true">refresh</span>
           Submit another
         </button>
