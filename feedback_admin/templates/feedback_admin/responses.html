@@ -35,11 +35,6 @@
 .empty-state-title { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .empty-state-sub   { font-size: 12px; }
 
-.sort-th { cursor: pointer; user-select: none; }
-.sort-th:hover { color: var(--text-primary); }
-.sort-icon { font-size: 11px !important; vertical-align: middle; margin-left: 3px; opacity: 0.4; }
-.sort-icon.active { opacity: 1; color: var(--g-primary); }
-
 .bulk-bar {
   display: none; align-items: center; gap: 10px; padding: 8px 16px;
   background: var(--g-xlight); border-bottom: 1px solid var(--g-light);
@@ -179,15 +174,9 @@
               <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" aria-label="Select all rows" style="cursor:pointer;accent-color:var(--g-primary)">
             </th>
             <th style="width:60px">ID</th>
-            <th class="sort-th" onclick="sortTable('date')" style="min-width:110px">
-              Date &amp; Time <span class="material-icons-round sort-icon" id="sort-date">arrow_downward</span>
-            </th>
-            <th class="sort-th" onclick="sortTable('rating')" style="min-width:140px">
-              Rating <span class="material-icons-round sort-icon" id="sort-rating">unfold_more</span>
-            </th>
-            <th class="sort-th" onclick="sortTable('category')" style="min-width:120px">
-              Category <span class="material-icons-round sort-icon" id="sort-category">unfold_more</span>
-            </th>
+            <th style="min-width:110px">Date &amp; Time</th>
+            <th style="min-width:140px">Rating</th>
+            <th style="min-width:120px">Category</th>
             <th style="min-width:100px">Sentiment</th>
             <th style="min-width:110px">Status</th>
             <th>Feedback / Comment</th>
@@ -254,8 +243,6 @@ const CAT_CLS = {
 let filteredRows    = [...ALL_DATA];
 let currentPage     = 1;
 let pageSize        = 10;
-let sortField       = 'date';
-let sortDir         = -1;
 let selectedIds     = new Set();
 let expandedIds     = new Set();
 let activeDateRange = 'all';
@@ -274,7 +261,7 @@ function inDateRange(r) {
   return true;
 }
 
-/* ── FILTER & SORT ── */
+/* ── FILTER ── */
 function applyFilters() {
   const q         = document.getElementById('tableSearch').value.toLowerCase();
   const rating    = document.getElementById('ratingFilter').value;
@@ -296,27 +283,8 @@ function applyFilters() {
     const matchSt   = !status    || r.status    === status;
     return matchQ && matchR && matchC && matchS && matchSt && inDateRange(r);
   });
-  doSort();
   currentPage = 1;
   renderTable();
-}
-
-function doSort() {
-  filteredRows.sort((a, b) => {
-    if (sortField === 'date') return (dateOf(a) - dateOf(b)) * sortDir;
-    return (a[sortField]||'').localeCompare(b[sortField]||'') * sortDir;
-  });
-}
-
-function sortTable(field) {
-  if (sortField === field) { sortDir *= -1; } else { sortField = field; sortDir = -1; }
-  ['date','rating','category'].forEach(f => {
-    const el = document.getElementById('sort-' + f);
-    if (!el) return;
-    el.textContent = f === field ? (sortDir === -1 ? 'arrow_downward' : 'arrow_upward') : 'unfold_more';
-    el.classList.toggle('active', f === field);
-  });
-  doSort(); currentPage = 1; renderTable();
 }
 
 function changePageSize(val) { pageSize = parseInt(val); currentPage = 1; renderTable(); }
@@ -647,6 +615,6 @@ function exportSelected() {
 }
 
 /* ── INIT ── */
-function pageInit() { doSort(); renderTable(); }
+function pageInit() { renderTable(); }
 </script>
 {% endblock %}
