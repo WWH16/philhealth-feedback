@@ -223,6 +223,9 @@ input:not(:checked) + .slider .sun {
   background: var(--g-primary); color: var(--g-dark);
   padding: 1px 6px; letter-spacing: 0.04em; line-height: 1.5;
   transition: opacity 180ms;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
 }
 .sidebar.collapsed .nav-badge { opacity: 0; }
 
@@ -684,7 +687,7 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
       <a href="{% url 'responses' %}" class="nav-item {% block nav_responses %}{% endblock %}" id="nav-responses">
         <span class="material-icons-round">inbox</span>
         <span class="nav-item-label">Responses</span>
-        <span class="nav-badge">248</span>
+        <span class="nav-badge" id="nav-badge-count">{{ global_feedback_count|default:0 }}</span>
       </a>
       <a href="{% url 'sentiment_analysis' %}" class="nav-item {% block nav_sentiment %}{% endblock %}">
         <span class="material-icons-round">psychology</span>

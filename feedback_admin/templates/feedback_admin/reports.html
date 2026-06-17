@@ -298,52 +298,9 @@
 {% endblock %}
 
 {% block page_scripts %}
+{{ report_json|json_script:"report-json" }}
 <script>
-/* ── REPORT DATA ──
-   `categories` reflects feedback that admins have manually flagged into
-   complaint / suggestion / compliment / concern (see feedback.html tabs).
-   `categorized` = total entries that have been tagged so far (may be
-   total, since tagging is manual and ongoing).
-*/
-const REPORT_DATA = {
-  daily: {
-    total: 18, vsat: 11, sat: 5, neg: 2,
-    satisfaction: 83,
-    trendData: [2, 3, 4, 5, 3, 1], trendLabels: ['8am', '10am', '12pm', '2pm', '4pm', '5pm'],
-    categorized: 15,
-    categories: { compliment: 9, suggestion: 3, complaint: 2, concern: 1 }
-  },
-  weekly: {
-    total: 84, vsat: 52, sat: 22, neg: 10,
-    satisfaction: 81,
-    trendData: [12, 18, 14, 22, 16, 2], trendLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    categorized: 70,
-    categories: { compliment: 38, suggestion: 16, complaint: 11, concern: 5 }
-  },
-  monthly: {
-    total: 248, vsat: 149, sat: 64, neg: 35,
-    satisfaction: 82,
-    trendData: [30, 35, 28, 42, 38, 45, 50, 40, 35, 38, 32, 32],
-    trendLabels: ['1–3', '4–7', '8–11', '12–14', '15–18', '19–21', '22–24', '25–26', '27–29', '30–31'],
-    categorized: 63,
-    categories: { compliment: 24, suggestion: 19, complaint: 12, concern: 8 }
-  },
-  quarterly: {
-    total: 756, vsat: 453, sat: 204, neg: 99,
-    satisfaction: 79,
-    trendData: [82, 80, 76], trendLabels: ['April', 'May', 'June'],
-    categorized: 190,
-    categories: { compliment: 78, suggestion: 52, complaint: 38, concern: 22 }
-  },
-  annual: {
-    total: 3021, vsat: 1813, sat: 809, neg: 399,
-    satisfaction: 77,
-    trendData: [75, 74, 76, 77, 78, 77, 79, 78, 77, 79, 78, 77],
-    trendLabels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    categorized: 712,
-    categories: { compliment: 298, suggestion: 201, complaint: 142, concern: 71 }
-  }
-};
+const REPORT_DATA = JSON.parse(document.getElementById('report-json').textContent);
 
 let currentPeriod = 'daily';
 let reportPieChart, reportTrendChart;
