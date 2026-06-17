@@ -179,7 +179,6 @@
               <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" aria-label="Select all rows" style="cursor:pointer;accent-color:var(--g-primary)">
             </th>
             <th style="width:60px">ID</th>
-            <th style="min-width:150px">Tracking Code</th>
             <th class="sort-th" onclick="sortTable('date')" style="min-width:110px">
               Date &amp; Time <span class="material-icons-round sort-icon" id="sort-date">arrow_downward</span>
             </th>
@@ -244,6 +243,13 @@ const STATUS_CLS = {
   'resolved': 's-resolved',
 };
 
+const CAT_CLS = {
+  'complaint': 's-pending',
+  'suggestion': 's-reviewed',
+  'compliment': 's-reviewed',
+  'concern': 's-pending',
+};
+
 /* ── STATE ── */
 let filteredRows    = [...ALL_DATA];
 let currentPage     = 1;
@@ -280,7 +286,6 @@ function applyFilters() {
   filteredRows = ALL_DATA.filter(r => {
     const matchQ    = !q || (r.comment||'').toLowerCase().includes(q)
                          || r.id.toString().includes(q)
-                         || (r.tracking_code || '').toLowerCase().includes(q)
                          || r.rating.toLowerCase().includes(q)
                          || (r.category||'').toLowerCase().includes(q)
                          || r.date.includes(q)
@@ -336,6 +341,30 @@ function updateStatus(id, newStatus) {
         if (!row.status_history) row.status_history = [];
         row.status_history.push(data.history_entry);
       }
+    }
+    renderTable();
+  })
+  .catch(err => {
+    alert(err.message);
+    renderTable();
+  });
+}
+
+function updateCategory(id, newCat) {
+  fetch(`/dashboard/responses/${id}/category/`, {
+    method:'POST',
+    headers:{'X-CSRFToken': CSRF_TOKEN, 'Content-Type':'application/json'},
+    body: JSON.stringify({category: newCat})
+  })
+  .then(response => response.json().then(data => {
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to update category.');
+    return data;
+  }))
+  .then(data => {
+    const row = ALL_DATA.find(r => r.id === id);
+    if (row) {
+      row.category = data.category;
+      row.category_value = data.category_value;
     }
     renderTable();
   })
@@ -417,7 +446,7 @@ function renderTable() {
   const end   = Math.min(start + pageSize, filteredRows.length);
   const rows  = filteredRows.slice(start, end);
 
-  const COLS = 10; /* checkbox + id + tracking + date + rating + category + sentiment + status + comment + expand */
+  const COLS = 9; /* checkbox + id + date + rating + category + sentiment + status + comment + expand */
 
   if (!rows.length) {
     body.innerHTML = `<tr><td colspan="${COLS}">
@@ -432,6 +461,7 @@ function renderTable() {
       const sCfg      = SENTIMENT_CONFIG[r.sentiment] || SENTIMENT_CONFIG['Neutral'];
       const statusVal = r.status_value || String(r.status || 'Pending').toLowerCase();
       const stCls     = STATUS_CLS[statusVal] || STATUS_CLS[r.status] || 's-pending';
+      const catVal    = r.category_value || '';
       const dateStr   = new Date(r.date).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
       const checked   = selectedIds.has(r.id) ? 'checked' : '';
       const expanded  = expandedIds.has(r.id);
@@ -446,7 +476,6 @@ function renderTable() {
             aria-label="Select response ${r.id}" style="cursor:pointer;accent-color:var(--g-primary)">
         </td>
         <td style="font-family:var(--mono);font-size:11px;color:var(--text-muted);">#${r.id}</td>
-        <td style="font-family:var(--mono);font-size:11px;color:var(--text-muted);">${escHtml(r.tracking_code || '—')}</td>
         <td class="datetime-cell">
           <div class="datetime-date">${dateStr}</div>
           <div class="datetime-time">${r.time}</div>
@@ -457,9 +486,17 @@ function renderTable() {
           </span>
         </td>
         <td>
-          <span style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;">
-            ${escHtml(r.category || '—')}
-          </span>
+          <select id="cat-sel-${r.id}"
+            class="status-select"
+            style="font-size:10px;text-transform:uppercase;font-weight:700;letter-spacing:0.04em;"
+            onchange="updateCategory(${r.id}, this.value)"
+            aria-label="Category for response ${r.id}">
+            <option value="">— Unset —</option>
+            <option value="complaint"  ${catVal==='complaint'  ? 'selected':''}>Complaint</option>
+            <option value="suggestion" ${catVal==='suggestion' ? 'selected':''}>Suggestion</option>
+            <option value="compliment" ${catVal==='compliment' ? 'selected':''}>Compliment</option>
+            <option value="concern"    ${catVal==='concern'    ? 'selected':''}>Concern</option>
+          </select>
         </td>
         <td>
           <span class="rating-chip ${sCfg.cls}">
@@ -586,9 +623,9 @@ function goPage(p) {
 
 /* ── EXPORT ── */
 function buildCSVRows(data) {
-  const header = ['ID','Tracking Code','Date','Time','Rating','Category','Sentiment','Status','Comment'];
+  const header = ['ID','Date','Time','Rating','Category','Sentiment','Status','Comment'];
   const body   = data.map(r => [
-    r.id, r.tracking_code || '', r.date, r.time, r.rating,
+    r.id, r.date, r.time, r.rating,
     r.category || '',
     r.sentiment || '',
     r.status    || '',

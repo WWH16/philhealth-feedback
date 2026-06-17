@@ -119,7 +119,6 @@
           <tr>
             <th style="min-width:120px">Date &amp; Time</th>
             <th style="min-width:150px">Admin</th>
-            <th style="min-width:150px">Tracking Code</th>
             <th style="min-width:140px">Action</th>
             <th>Details</th>
           </tr>
@@ -182,7 +181,7 @@ function applyActFilters() {
   const admin = document.getElementById('adminFilter').value;
 
   filteredLogs = ALL_LOGS.filter(l => {
-    const haystack = [l.admin, l.tracking_code, l.note, l.old_status, l.new_status, l.rating, l.category].join(' ').toLowerCase();
+    const haystack = [l.admin, l.note, l.old_status, l.new_status, l.rating, l.category].join(' ').toLowerCase();
     const matchQ     = !q || haystack.includes(q);
     const matchType  = !type  || l.action_type === type;
     const matchAdmin = !admin || l.admin === admin;
@@ -237,7 +236,6 @@ function renderActTable() {
         <div class="datetime-time">${l.time}</div>
       </td>
       <td><span style="font-size:12px;font-weight:600;color:var(--text-primary)">${escHtml(l.admin)}</span></td>
-      <td><span style="font-family:var(--mono);font-size:11px;color:var(--text-muted);">${escHtml(l.tracking_code)}</span></td>
       <td>${actionChip}</td>
       <td>${details}</td>
     </tr>`;
@@ -282,9 +280,9 @@ function actGoPage(p) {
 }
 
 function exportActivityCSV() {
-  const header = ['Date','Time','Admin','Tracking Code','Action Type','Old Status','New Status','Note'];
+  const header = ['Date','Time','Admin','Action Type','Old Status','New Status','Note'];
   const rows = [header, ...filteredLogs.map(l => [
-    l.date, l.time, l.admin, l.tracking_code,
+    l.date, l.time, l.admin,
     l.action_type === 'status' ? 'Status Update' : 'Note / Reply',
     l.old_status, l.new_status,
     `"${(l.note || '').replace(/"/g,'""')}"`

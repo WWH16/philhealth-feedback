@@ -22,42 +22,20 @@ def submit_feedback(request):
         return JsonResponse({'ok': False, 'error': 'Invalid request.'}, status=400)
 
     rating = payload.get('rating')
-    category = payload.get('category')
     comment = (payload.get('comment') or '').strip()
 
     valid_ratings = {choice[0] for choice in FeedbackEntry.RATING_CHOICES}
     if rating not in valid_ratings:
         return JsonResponse({'ok': False, 'error': 'Please select your experience.'}, status=400)
 
-    valid_categories = {choice[0] for choice in FeedbackEntry.CATEGORY_CHOICES}
-    if category and category not in valid_categories:
-        return JsonResponse({'ok': False, 'error': 'Invalid category selected.'}, status=400)
-
     if len(comment) > 500:
         return JsonResponse({'ok': False, 'error': 'Concern must be 500 characters or fewer.'}, status=400)
 
-    entry = FeedbackEntry.objects.create(rating=rating, category=category or '', comment=comment)
+    entry = FeedbackEntry.objects.create(rating=rating, comment=comment)
 
     return JsonResponse({
         'ok': True,
-        'tracking_code': entry.tracking_code,
         'rating': entry.get_rating_display(),
         'status': entry.get_status_display(),
         'created_at': entry.created_at.strftime('%b %d, %Y %I:%M %p'),
-        'track_url': reverse('feedback-track', args=[entry.tracking_code]),
     }, status=201)
-
-
-@require_GET
-def track_feedback(request, tracking_code):
-    entry = FeedbackEntry.objects.filter(tracking_code=tracking_code.strip().upper()).first()
-    if not entry:
-        return JsonResponse({'ok': False, 'error': 'Tracking code not found.'}, status=404)
-    return JsonResponse({
-        'ok': True,
-        'tracking_code': entry.tracking_code,
-        'rating': entry.get_rating_display(),
-        'status': entry.get_status_display(),
-        'created_at': entry.created_at.strftime('%b %d, %Y %I:%M %p'),
-        'updated_at': entry.updated_at.strftime('%b %d, %Y %I:%M %p'),
-    })

@@ -148,11 +148,11 @@ def _entry_to_row(entry):
     notes, status_history = get_feedback_activity(entry)
     return {
         'id': entry.id,
-        'tracking_code': entry.tracking_code,
         'date': local_created.strftime('%Y-%m-%d'),
         'time': local_created.strftime('%H:%M'),
         'rating': entry.get_rating_display(),
         'category': entry.get_category_display(),
+        'category_value': entry.category,
         'sentiment': entry.sentiment,
         'status': entry.get_status_display(),
         'status_value': entry.status,
@@ -206,6 +206,30 @@ def response_status_update(request, entry_id):
         'status_value': entry.status,
         'updated_at': timezone.localtime(entry.updated_at).strftime('%b %d, %Y %I:%M %p'),
         'history_entry': history_entry,
+    })
+
+
+@login_required
+@require_POST
+def response_category_update(request, entry_id):
+    entry = get_object_or_404(FeedbackEntry, pk=entry_id)
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError:
+        return JsonResponse({'ok': False, 'error': 'Invalid request.'}, status=400)
+
+    category = payload.get('category')
+    valid_categories = {choice[0] for choice in FeedbackEntry.CATEGORY_CHOICES}
+    if category and category not in valid_categories:
+        return JsonResponse({'ok': False, 'error': 'Invalid category.'}, status=400)
+
+    entry.category = category or ''
+    entry.save(update_fields=['category', 'updated_at'])
+
+    return JsonResponse({
+        'ok': True,
+        'category': entry.get_category_display(),
+        'category_value': entry.category,
     })
 
 
@@ -302,7 +326,6 @@ def activity_log(request):
             'date': local_time.strftime('%Y-%m-%d'),
             'time': local_time.strftime('%H:%M'),
             'admin': author,
-            'tracking_code': entry.tracking_code if entry else '—',
             'rating': entry.get_rating_display() if entry else '',
             'category': entry.get_category_display() if entry else '',
         }
