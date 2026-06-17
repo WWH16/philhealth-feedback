@@ -115,11 +115,33 @@ def dashboard(request):
     week_start = now - timedelta(days=7)
     month_start = now - timedelta(days=30)
     recent_entries = qs.order_by('-created_at')[:5]
+    total = qs.count()
+    very_satisfactory = qs.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count()
+    satisfactory = qs.filter(experience=FeedbackEntry.SATISFACTORY).count()
+    unsatisfactory = qs.filter(experience=FeedbackEntry.UNSATISFACTORY).count()
+    trend_rows = list(
+        qs.annotate(day=TruncDate('created_at'))
+        .values('day', 'experience')
+        .annotate(total=Count('id'))
+        .order_by('day')
+    )
+    trend_dates = sorted({row['day'] for row in trend_rows})
+
+    def pct(value):
+        return round((value / total) * 100) if total else 0
+
+    def trend_for(experience):
+        counts = {row['day']: row['total'] for row in trend_rows if row['experience'] == experience}
+        return [counts.get(day, 0) for day in trend_dates]
+
     context = {
-        'total': qs.count(),
-        'very_satisfactory': qs.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count(),
-        'satisfactory': qs.filter(experience=FeedbackEntry.SATISFACTORY).count(),
-        'unsatisfactory': qs.filter(experience=FeedbackEntry.UNSATISFACTORY).count(),
+        'total': total,
+        'very_satisfactory': very_satisfactory,
+        'satisfactory': satisfactory,
+        'unsatisfactory': unsatisfactory,
+        'very_satisfactory_pct': pct(very_satisfactory),
+        'satisfactory_pct': pct(satisfactory),
+        'unsatisfactory_pct': pct(unsatisfactory),
         'recent_entries_data': [_entry_to_row(entry) for entry in recent_entries],
         'filter_data': {
             'today': _experience_counts(qs.filter(created_at__date=today)),
@@ -127,6 +149,10 @@ def dashboard(request):
             'month': _experience_counts(qs.filter(created_at__gte=month_start)),
             'all': _experience_counts(qs),
         },
+        'trend_labels': [f'{day:%b} {day.day}' for day in trend_dates],
+        'trend_very_satisfactory': trend_for(FeedbackEntry.VERY_SATISFACTORY),
+        'trend_satisfactory': trend_for(FeedbackEntry.SATISFACTORY),
+        'trend_unsatisfactory': trend_for(FeedbackEntry.UNSATISFACTORY),
     }
     return render(request, 'feedback_admin/dashboard.html', context)
 

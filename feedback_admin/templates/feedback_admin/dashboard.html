@@ -39,7 +39,7 @@
         <div class="stat-card-icon"><span class="material-icons-round" style="color:var(--g-primary);background:var(--g-xlight)">forum</span></div>
         <div class="stat-value" id="totalVal">{{ total }}</div>
         <div class="stat-label">Total Responses</div>
-        <span class="stat-delta up"><span class="material-icons-round">arrow_upward</span>+12% this week</span>
+        <span class="stat-delta flat"><span class="material-icons-round">remove</span>Live database total</span>
         <div class="stat-card-bg-icon"><span class="material-icons-round">forum</span></div>
       </div>
     </div>
@@ -48,7 +48,7 @@
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
         <div class="stat-value" id="vsatVal">{{ very_satisfactory }}</div>
         <div class="stat-label">Very Satisfactory</div>
-        <span class="stat-delta up"><span class="material-icons-round">arrow_upward</span>+8% this week</span>
+        <span class="stat-delta flat"><span class="material-icons-round">remove</span>{{ very_satisfactory_pct }}% of total</span>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
       </div>
     </div>
@@ -57,7 +57,7 @@
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_neutral</span></div>
         <div class="stat-value" id="satVal">{{ satisfactory }}</div>
         <div class="stat-label">Satisfactory</div>
-        <span class="stat-delta flat"><span class="material-icons-round">remove</span>No change</span>
+        <span class="stat-delta flat"><span class="material-icons-round">remove</span>{{ satisfactory_pct }}% of total</span>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_neutral</span></div>
       </div>
     </div>
@@ -66,7 +66,7 @@
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
         <div class="stat-value" id="unsatVal">{{ unsatisfactory }}</div>
         <div class="stat-label">Unsatisfactory</div>
-        <span class="stat-delta down"><span class="material-icons-round">arrow_downward</span>−3% this week</span>
+        <span class="stat-delta flat"><span class="material-icons-round">remove</span>{{ unsatisfactory_pct }}% of total</span>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
       </div>
     </div>
@@ -98,36 +98,36 @@
                   <div class="pie-legend-dot" style="background:var(--g-primary)"></div>
                   <span class="pie-legend-label">Very Sat.</span>
                   <span class="pie-legend-value">{{ very_satisfactory }}</span>
-                  <span class="pie-legend-pct">60%</span>
+                  <span class="pie-legend-pct">{{ very_satisfactory_pct }}%</span>
                 </div>
                 <div class="pie-legend-item">
                   <div class="pie-legend-dot" style="background:var(--gold)"></div>
                   <span class="pie-legend-label">Satisfactory</span>
                   <span class="pie-legend-value">{{ satisfactory }}</span>
-                  <span class="pie-legend-pct">26%</span>
+                  <span class="pie-legend-pct">{{ satisfactory_pct }}%</span>
                 </div>
                 <div class="pie-legend-item">
                   <div class="pie-legend-dot" style="background:var(--red)"></div>
                   <span class="pie-legend-label">Unsat.</span>
                   <span class="pie-legend-value">{{ unsatisfactory }}</span>
-                  <span class="pie-legend-pct">14%</span>
+                  <span class="pie-legend-pct">{{ unsatisfactory_pct }}%</span>
                 </div>
               </div>
               <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
                 <div class="mini-stat" style="padding-top:0">
                   <div class="mini-stat-label">Very Sat.</div>
-                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" style="width:60%;background:var(--g-primary)"></div></div>
-                  <div class="mini-stat-val">60%</div>
+                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" style="width:{{ very_satisfactory_pct }}%;background:var(--g-primary)"></div></div>
+                  <div class="mini-stat-val">{{ very_satisfactory_pct }}%</div>
                 </div>
                 <div class="mini-stat">
                   <div class="mini-stat-label">Satisfactory</div>
-                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" style="width:26%;background:var(--gold)"></div></div>
-                  <div class="mini-stat-val">26%</div>
+                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" style="width:{{ satisfactory_pct }}%;background:var(--gold)"></div></div>
+                  <div class="mini-stat-val">{{ satisfactory_pct }}%</div>
                 </div>
                 <div class="mini-stat">
                   <div class="mini-stat-label">Unsat.</div>
-                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" style="width:14%;background:var(--red)"></div></div>
-                  <div class="mini-stat-val">14%</div>
+                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" style="width:{{ unsatisfactory_pct }}%;background:var(--red)"></div></div>
+                  <div class="mini-stat-val">{{ unsatisfactory_pct }}%</div>
                 </div>
               </div>
             </div>
@@ -196,13 +196,17 @@ const RATING_CONFIG = {
 
 const RECENT_DATA = JSON.parse(document.getElementById('recent-entries-data').textContent);
 const FILTER_DATA = JSON.parse(document.getElementById('filter-data').textContent);
+const TREND_LABELS = {{ trend_labels|safe }};
+const TREND_VSAT = {{ trend_very_satisfactory|safe }};
+const TREND_SAT = {{ trend_satisfactory|safe }};
+const TREND_UNSAT = {{ trend_unsatisfactory|safe }};
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function renderRecent() {
   const body = document.getElementById('recentTableBody');
   body.innerHTML = RECENT_DATA.map(r => {
-    const cfg     = RATING_CONFIG[r.rating] || RATING_CONFIG['Satisfactory'];
+    const cfg     = RATING_CONFIG[r.experience] || RATING_CONFIG['Satisfactory'];
     const dateStr = new Date(r.date).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
     const comment = r.comment
       ? `<div class="comment-text">${escHtml(r.comment)}</div>`
@@ -212,7 +216,7 @@ function renderRecent() {
         <div class="datetime-date">${dateStr}</div>
         <div class="datetime-time">${r.time}</div>
       </td>
-      <td><span class="rating-chip ${cfg.cls}"><span class="material-icons-round">${cfg.icon}</span>${r.rating}</span></td>
+      <td><span class="rating-chip ${cfg.cls}"><span class="material-icons-round">${cfg.icon}</span>${r.experience}</span></td>
       <td>
         <span style="font-size:11px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;">
           ${escHtml(r.category || '—')}
@@ -234,7 +238,7 @@ function initPieChart() {
     type: 'doughnut',
     data: {
       labels: ['Very Satisfactory', 'Satisfactory', 'Unsatisfactory'],
-      datasets: [{ data: [FILTER_DATA.all.vsat, FILTER_DATA.all.sat, FILTER_DATA.all.neg], backgroundColor: ['#23A455','#b8933a','#c0001a'], borderColor: isDark ? '#1a1e24' : '#ffffff', borderWidth: 3, hoverOffset: 6 }]
+      datasets: [{ data: [FILTER_DATA.all.vsat, FILTER_DATA.all.sat, FILTER_DATA.all.unsat], backgroundColor: ['#23A455','#b8933a','#c0001a'], borderColor: isDark ? '#1a1e24' : '#ffffff', borderWidth: 3, hoverOffset: 6 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
@@ -255,11 +259,11 @@ function initLineChart() {
   lineChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Jun 1','Jun 2','Jun 3','Jun 4','Jun 5','Jun 6','Jun 7','Jun 8','Jun 9','Jun 10','Jun 11'],
+      labels: TREND_LABELS,
       datasets: [
-        { label:'Very Satisfactory', data:[12,18,14,22,16,20,25,18,23,19,16], borderColor:'#23A455', backgroundColor:'rgba(35,164,85,0.08)', tension:0.4, fill:true,  pointBackgroundColor:'#23A455', pointRadius:4, pointHoverRadius:6, borderWidth:2 },
-        { label:'Satisfactory',      data:[5,7,6,8,5,7,9,6,8,7,6],           borderColor:'#b8933a', backgroundColor:'rgba(184,147,58,0.06)', tension:0.4, fill:false, pointBackgroundColor:'#b8933a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
-        { label:'Unsatisfactory',    data:[3,2,4,1,3,2,3,2,4,2,3],           borderColor:'#c0001a', backgroundColor:'rgba(192,0,26,0.05)',    tension:0.4, fill:false, pointBackgroundColor:'#c0001a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
+        { label:'Very Satisfactory', data:TREND_VSAT,  borderColor:'#23A455', backgroundColor:'rgba(35,164,85,0.08)', tension:0.4, fill:true,  pointBackgroundColor:'#23A455', pointRadius:4, pointHoverRadius:6, borderWidth:2 },
+        { label:'Satisfactory',      data:TREND_SAT,   borderColor:'#b8933a', backgroundColor:'rgba(184,147,58,0.06)', tension:0.4, fill:false, pointBackgroundColor:'#b8933a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
+        { label:'Unsatisfactory',    data:TREND_UNSAT, borderColor:'#c0001a', backgroundColor:'rgba(192,0,26,0.05)',    tension:0.4, fill:false, pointBackgroundColor:'#c0001a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
       ]
     },
     options: {
@@ -308,5 +312,4 @@ function pageInit() {
   renderRecent();
 }
 </script>
-{% endblock %}
 {% endblock %}
