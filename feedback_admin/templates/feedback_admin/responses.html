@@ -524,7 +524,7 @@ function renderTable() {
                       <span class="material-icons-round" style="font-size:14px">history</span>
                       Status History
                     </div>
-                    <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;padding-right:4px;">
                       ${(r.status_history||[]).map(h => `
                         <div style="font-size:11px;padding:8px;border-left:2px solid var(--border);background:rgba(0,0,0,0.01);">
                           <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">${h.at}</div>
