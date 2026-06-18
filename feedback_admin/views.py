@@ -736,14 +736,9 @@ def admin_login(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            next_url = request.POST.get('next') or request.GET.get('next') or 'dashboard'
-            return redirect(next_url)
+            return redirect('dashboard')
 
-    return render(request, 'feedback_admin/login.html', {
-        'form': form,
-        'next': request.GET.get('next', ''),
-    })
-
+    return render(request, 'feedback_admin/login.html', {'form': form})
 
 # ── LOGOUT ────────────────────────────────────────────────────────────
 @require_POST
