@@ -836,6 +836,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 {% block page_scripts %}
 <script>
 let savedAutoAnalysisEnabled = null;
+let sentimentSettingsSavePromise = null;
 
 function runReanalysis() {
   const btn = document.getElementById('reanalyzeBtn');
@@ -867,17 +868,47 @@ function syncSentimentSettingsState() {
     : 'Unsaved changes';
 }
 
-function saveSentimentSettings(form) {
+function hasUnsavedSentimentSettings() {
+  const toggle = document.getElementById('autoAnalysisToggle');
+  return !!toggle
+    && savedAutoAnalysisEnabled !== null
+    && toggle.checked !== savedAutoAnalysisEnabled;
+}
+
+function getActiveSettingsPanelId() {
+  const panel = document.querySelector('.settings-panel.active');
+  return panel ? panel.id.replace('panel-', '') : '';
+}
+
+function resetSentimentSettingsForm() {
+  const toggle = document.getElementById('autoAnalysisToggle');
+  if (!toggle || savedAutoAnalysisEnabled === null) return;
+  toggle.checked = savedAutoAnalysisEnabled;
+  syncSentimentSettingsState();
+}
+
+function persistSentimentSettings(options = {}) {
+  const {
+    showSuccessToast = true,
+    successMessage = null,
+  } = options;
+  const form = document.getElementById('sentimentSettingsForm');
   const btn = document.getElementById('saveSentimentSettingsBtn');
+  if (!form || !btn) return Promise.resolve(false);
+
+  if (sentimentSettingsSavePromise) {
+    return sentimentSettingsSavePromise;
+  }
+
   btn.classList.add('is-loading');
 
-  fetch(form.action, {
-    method: 'POST',
-    body: new FormData(form),
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest',
-    },
-  })
+  sentimentSettingsSavePromise = fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
     .then(async r => {
       const data = await r.json();
       if (!r.ok || !data.ok) {
@@ -885,14 +916,25 @@ function saveSentimentSettings(form) {
       }
       savedAutoAnalysisEnabled = !!data.auto_analysis_enabled;
       syncSentimentSettingsState();
-      showToast(data.message, 'success');
+      if (showSuccessToast) {
+        showToast(successMessage || data.message, 'success');
+      }
+      return true;
     })
     .catch(err => {
       showToast(err.message || 'Unable to save sentiment settings.', 'error');
+      return false;
     })
     .finally(() => {
       btn.classList.remove('is-loading');
+      sentimentSettingsSavePromise = null;
     });
+
+  return sentimentSettingsSavePromise;
+}
+
+function saveSentimentSettings() {
+  return persistSentimentSettings();
 }
 /* ── HELPERS ── */
 function escHtml(s) {
@@ -979,7 +1021,16 @@ function showPanel(id, btn) {
   }
 }
 
-function showPanelNav(id, btn) {
+async function showPanelNav(id, btn) {
+  const activePanelId = getActiveSettingsPanelId();
+  if (
+    activePanelId === 'sentiment-analysis'
+    && id !== 'sentiment-analysis'
+    && hasUnsavedSentimentSettings()
+  ) {
+    resetSentimentSettingsForm();
+  }
+
   showPanel(id, btn);
   // Only scroll to top if not on mobile (on mobile, the nav bar is sticky/at top)
   if (window.innerWidth > 991) {
