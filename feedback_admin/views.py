@@ -89,6 +89,46 @@ def get_feedback_activity(entry):
     return notes, history
 
 
+def _build_feedback_activity_map(entry_ids):
+    """Builds feedback activity for many entries in one query."""
+    if not entry_ids:
+        return {}
+
+    logs = (LogEntry.objects
+            .filter(content_type=_feedback_content_type(), object_id__in=[str(pk) for pk in entry_ids])
+            .select_related('user')
+            .order_by('object_id', 'action_time'))
+
+    status_display = dict(FeedbackEntry.STATUS_CHOICES)
+    activity = {}
+
+    for log in logs:
+        if not log.object_id or not log.object_id.isdigit():
+            continue
+
+        entry_id = int(log.object_id)
+        bucket = activity.setdefault(entry_id, {'notes': [], 'status_history': []})
+        author = (log.user.get_full_name() or log.user.username) if log.user else 'System'
+        at = timezone.localtime(log.action_time).strftime('%b %d, %Y %I:%M %p')
+
+        if log.action_flag == CHANGE and '|' in log.change_message:
+            old_raw, _, new_raw = log.change_message.partition('|')
+            bucket['status_history'].append({
+                'old': status_display.get(old_raw, old_raw),
+                'new': status_display.get(new_raw, new_raw),
+                'by': author,
+                'at': at,
+            })
+        else:
+            bucket['notes'].append({
+                'author': author,
+                'body': log.change_message,
+                'created_at': at,
+            })
+
+    return activity
+
+
 def _format_audit_row(log, entry=None):
     local_time = timezone.localtime(log.action_time)
     author = (log.user.get_full_name() or log.user.username) if log.user else 'System'
@@ -251,6 +291,9 @@ def dashboard(request):
         counts = {row['day']: row['total'] for row in trend_rows if row['experience'] == experience}
         return [counts.get(day, 0) for day in trend_dates]
 
+    recent_entries_data = list(recent_entries)
+    recent_activity = _build_feedback_activity_map([entry.pk for entry in recent_entries_data])
+
     context = {
         'total': total,
         'very_satisfactory': very_satisfactory,
@@ -259,7 +302,7 @@ def dashboard(request):
         'very_satisfactory_pct': pct(very_satisfactory),
         'satisfactory_pct': pct(satisfactory),
         'unsatisfactory_pct': pct(unsatisfactory),
-        'recent_entries_data': [_entry_to_row(entry) for entry in recent_entries],
+        'recent_entries_data': [_entry_to_row(entry, recent_activity) for entry in recent_entries_data],
         'filter_data': {
             'today': _experience_counts(qs.filter(created_at__date=today)),
             'week': _experience_counts(qs.filter(created_at__gte=week_start)),
@@ -277,19 +320,34 @@ def dashboard(request):
 @login_required
 def responses(request):
     entries = FeedbackEntry.objects.order_by('-created_at')
+    entries_data = list(entries)
+    activity_map = _build_feedback_activity_map([entry.pk for entry in entries_data])
+    experience_counts = {
+        FeedbackEntry.VERY_SATISFACTORY: 0,
+        FeedbackEntry.SATISFACTORY: 0,
+        FeedbackEntry.UNSATISFACTORY: 0,
+    }
+    for entry in entries_data:
+        experience_counts[entry.experience] += 1
+
     context = {
-        'total': entries.count(),
-        'very_satisfactory': entries.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count(),
-        'satisfactory': entries.filter(experience=FeedbackEntry.SATISFACTORY).count(),
-        'unsatisfactory': entries.filter(experience=FeedbackEntry.UNSATISFACTORY).count(),
-        'entries_data': [_entry_to_row(entry) for entry in entries],
+        'total': len(entries_data),
+        'very_satisfactory': experience_counts[FeedbackEntry.VERY_SATISFACTORY],
+        'satisfactory': experience_counts[FeedbackEntry.SATISFACTORY],
+        'unsatisfactory': experience_counts[FeedbackEntry.UNSATISFACTORY],
+        'entries_data': [_entry_to_row(entry, activity_map) for entry in entries_data],
     }
     return render(request, 'feedback_admin/responses.html', context)
 
 
-def _entry_to_row(entry):
+def _entry_to_row(entry, activity=None):
     local_created = timezone.localtime(entry.created_at)
-    notes, status_history = get_feedback_activity(entry)
+    if activity is None:
+        notes, status_history = get_feedback_activity(entry)
+    else:
+        entry_activity = activity.get(entry.pk, {'notes': [], 'status_history': []})
+        notes = entry_activity['notes']
+        status_history = entry_activity['status_history']
     return {
         'id': entry.id,
         'tracking_code': entry.tracking_code,
