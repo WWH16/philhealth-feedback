@@ -5,7 +5,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
-from .models import FeedbackEntry
+from .models import FeedbackConfiguration, FeedbackEntry
 from .services import analyze_comment_sentiment
 
 
@@ -31,10 +31,16 @@ def submit_feedback(request):
     if len(comment) > 500:
         return JsonResponse({'ok': False, 'error': 'Concern must be 500 characters or fewer.'}, status=400)
 
+    sentiment = (
+        analyze_comment_sentiment(comment)
+        if FeedbackConfiguration.auto_analysis_is_enabled()
+        else FeedbackEntry.PENDING
+    )
+
     entry = FeedbackEntry.objects.create(
         experience=experience,
         comment=comment,
-        sentiment=analyze_comment_sentiment(comment),
+        sentiment=sentiment,
     )
 
     return JsonResponse({

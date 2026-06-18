@@ -19,7 +19,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
 from django.db.models.functions import TruncDate
 
-from feedback.models import FeedbackEntry
+from feedback.models import FeedbackConfiguration, FeedbackEntry
 
 
 # ── Activity log helpers (built on Django's built-in django_admin_log table) ──
@@ -765,6 +765,7 @@ def feedback_detail(request):
 def settings_page(request):
     context = {
         'users': User.objects.all().order_by('-date_joined'),
+        'feedback_config': FeedbackConfiguration.get_solo(),
     }
     return render(request, 'feedback_admin/settings.html', context)
 
@@ -794,3 +795,32 @@ def change_password(request):
     update_session_auth_hash(request, request.user)
     messages.success(request, 'Password updated successfully.', extra_tags='pw_field')
     return redirect('settings_page')
+
+from feedback.services import reanalyze_pending_entries
+
+
+@login_required
+@require_POST
+def update_sentiment_settings(request):
+    auto_analysis_enabled = request.POST.get('auto_analysis_enabled') == 'on'
+    config = FeedbackConfiguration.get_solo()
+    config.auto_analysis_enabled = auto_analysis_enabled
+    config.save(update_fields=['auto_analysis_enabled', 'updated_at'])
+
+    state = 'enabled' if auto_analysis_enabled else 'disabled'
+    return JsonResponse({
+        'ok': True,
+        'message': f'Auto-analysis {state}. New feedback will {"be analyzed for sentiment immediately" if auto_analysis_enabled else "stay pending until you re-enable auto-analysis or run re-analysis"}.',
+        'auto_analysis_enabled': auto_analysis_enabled,
+    })
+
+
+@login_required
+@require_POST
+def reanalyze_sentiment_view(request):
+    total, processed = reanalyze_pending_entries(force=False)
+    if total == 0:
+        message = 'Nothing to process — no pending entries with comments found.'
+    else:
+        message = f'Re-analysis complete: {processed} of {total} pending entries categorized.'
+    return JsonResponse({'ok': True, 'message': message, 'processed': processed, 'total': total})

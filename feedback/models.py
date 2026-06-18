@@ -1,6 +1,7 @@
 import secrets
 
 from django.db import models
+from django.db.utils import OperationalError, ProgrammingError
 from django.utils import timezone
 
 
@@ -79,3 +80,32 @@ class FeedbackEntry(models.Model):
             code = f'CF-{today}-{secrets.token_hex(3).upper()}'
             if not cls.objects.filter(tracking_code=code).exists():
                 return code
+
+
+class FeedbackConfiguration(models.Model):
+    auto_analysis_enabled = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'feedback configuration'
+        verbose_name_plural = 'feedback configuration'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        state = 'enabled' if self.auto_analysis_enabled else 'disabled'
+        return f'Feedback configuration ({state})'
+
+    @classmethod
+    def get_solo(cls):
+        try:
+            config, _ = cls.objects.get_or_create(pk=1)
+        except (OperationalError, ProgrammingError):
+            return cls(pk=1, auto_analysis_enabled=True)
+        return config
+
+    @classmethod
+    def auto_analysis_is_enabled(cls):
+        return cls.get_solo().auto_analysis_enabled

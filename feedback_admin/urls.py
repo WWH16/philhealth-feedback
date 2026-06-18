@@ -32,4 +32,8 @@ urlpatterns = [
     # ── Management ──────────────────────────────────────────────
     path('feedback/', views.feedback_detail, name='feedback_detail'),
     path('settings/', views.settings_page, name='settings_page'),
+    path('settings/sentiment/', views.update_sentiment_settings, name='update_sentiment_settings'),
+
+    # ── Sentiment trigger ──────────────────────────────────────────────
+    path('settings/reanalyze/', views.reanalyze_sentiment_view, name='reanalyze_sentiment'),
 ]
