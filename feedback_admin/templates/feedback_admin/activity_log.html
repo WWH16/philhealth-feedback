@@ -29,8 +29,10 @@
 .act-chip .material-icons-round { font-size: 12px; }
 .act-status { background: #eff6ff; color: #1d4ed8; }
 .act-note   { background: var(--g-xlight); color: var(--g-forest); }
+.act-event  { background: var(--ink8); color: var(--ink4); }
 [data-theme="dark"] .act-status { background: rgba(59,130,246,0.12); color: #93c5fd; }
 [data-theme="dark"] .act-note   { background: rgba(35,164,85,0.12); color: #5fcf8a; }
+[data-theme="dark"] .act-event  { background: rgba(255,255,255,0.06); color: var(--ink5); }
 
 .detail-status-flow { display: flex; align-items: center; gap: 6px; font-size: 12px; flex-wrap: wrap; }
 .detail-status-flow .material-icons-round { font-size: 14px; color: var(--text-muted); }
@@ -80,7 +82,7 @@
           Accountability &amp; Transparency
         </div>
         <h1 class="page-title">Audit Trail</h1>
-        <p class="page-subtitle">A permanent record of every status update and action taken on citizen feedback, by admin and timestamp.</p>
+        <p class="page-subtitle">A permanent record of every admin login, logout, setting change, and feedback action, by admin and timestamp.</p>
       </div>
       <button class="btn-ph btn-ph-primary" onclick="exportActivityCSV()">
         <span class="material-icons-round">download</span> Export CSV
@@ -92,7 +94,7 @@
     <div class="filter-panel-row">
       <div class="search-box">
         <span class="material-icons-round">search</span>
-        <input type="text" id="actSearch" placeholder="Search username, note…" oninput="applyActFilters()" aria-label="Search audit trail">
+        <input type="text" id="actSearch" placeholder="Search admin, action, object, or details…" oninput="applyActFilters()" aria-label="Search audit trail">
       </div>
       <div class="date-range-inputs">
         <span class="filter-sep">From</span>
@@ -102,8 +104,17 @@
       </div>
       <select class="btn-ph" id="actionTypeFilter" onchange="applyActFilters()" aria-label="Filter by action type">
         <option value="">All Actions</option>
+        <option value="login">Logins</option>
+        <option value="logout">Logouts</option>
+        <option value="create">Creates</option>
+        <option value="update">Updates</option>
+        <option value="delete">Deletes</option>
+        <option value="profile">Profile Changes</option>
+        <option value="settings">Settings</option>
         <option value="status">Status Updates</option>
+        <option value="category">Category Updates</option>
         <option value="note">Notes / Replies</option>
+        <option value="event">Other Events</option>
       </select>
       <select class="btn-ph" id="adminFilter" onchange="applyActFilters()" aria-label="Filter by admin">
         <option value="">All Admins</option>
@@ -154,6 +165,19 @@
 const ALL_LOGS = JSON.parse(document.getElementById('logs-data').textContent);
 
 const STATUS_PILL_CLASS = { 'Pending':'pill-pending', 'Reviewed':'pill-reviewed', 'Resolved':'pill-resolved' };
+const ACTION_META = {
+  status:   { label: 'Status Update',   icon: 'sync_alt',   cls: 'act-status' },
+  category: { label: 'Category Update', icon: 'sell',       cls: 'act-status' },
+  note:     { label: 'Note / Reply',    icon: 'edit_note',  cls: 'act-note' },
+  login:    { label: 'Login',           icon: 'login',      cls: 'act-event' },
+  logout:   { label: 'Logout',          icon: 'logout',     cls: 'act-event' },
+  create:   { label: 'Created',         icon: 'add_circle', cls: 'act-note' },
+  update:   { label: 'Updated',         icon: 'edit',       cls: 'act-status' },
+  delete:   { label: 'Deleted',         icon: 'delete',     cls: 'act-event' },
+  profile:  { label: 'Profile Change',  icon: 'badge',      cls: 'act-status' },
+  settings: { label: 'Settings',        icon: 'tune',       cls: 'act-status' },
+  event:    { label: 'Event',           icon: 'info',       cls: 'act-event' },
+};
 
 let filteredLogs = [...ALL_LOGS];
 let actPage = 1;
@@ -181,7 +205,7 @@ function applyActFilters() {
   const admin = document.getElementById('adminFilter').value;
 
   filteredLogs = ALL_LOGS.filter(l => {
-    const haystack = [l.admin, l.note, l.old_status, l.new_status, l.experience, l.category].join(' ').toLowerCase();
+    const haystack = [l.admin, l.summary, l.search_text, l.old_status, l.new_status].join(' ').toLowerCase();
     const matchQ     = !q || haystack.includes(q);
     const matchType  = !type  || l.action_type === type;
     const matchAdmin = !admin || l.admin === admin;
@@ -218,9 +242,8 @@ function renderActTable() {
 
   body.innerHTML = rows.map(l => {
     const dateStr = new Date(l.date + 'T00:00:00').toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
-    const actionChip = l.action_type === 'status'
-      ? `<span class="act-chip act-status"><span class="material-icons-round">sync_alt</span>Status Update</span>`
-      : `<span class="act-chip act-note"><span class="material-icons-round">edit_note</span>Note / Reply</span>`;
+    const meta = ACTION_META[l.action_type] || ACTION_META.event;
+    const actionChip = `<span class="act-chip ${meta.cls}"><span class="material-icons-round">${meta.icon}</span>${meta.label}</span>`;
 
     const details = l.action_type === 'status'
       ? `<div class="detail-status-flow">
@@ -228,7 +251,7 @@ function renderActTable() {
           <span class="material-icons-round">arrow_forward</span>
           <span class="detail-status-pill ${STATUS_PILL_CLASS[l.new_status] || ''}">${escHtml(l.new_status)}</span>
         </div>`
-      : `<div class="detail-note-text">${escHtml(l.note || '—')}</div>`;
+      : `<div class="detail-note-text">${escHtml(l.summary || '—')}</div>`;
 
     return `<tr>
       <td class="datetime-cell">
@@ -280,12 +303,13 @@ function actGoPage(p) {
 }
 
 function exportActivityCSV() {
-  const header = ['Date','Time','Admin','Action Type','Old Status','New Status','Note'];
+  const header = ['Date','Time','Admin','Action Type','Summary','Old Status','New Status'];
   const rows = [header, ...filteredLogs.map(l => [
     l.date, l.time, l.admin,
-    l.action_type === 'status' ? 'Status Update' : 'Note / Reply',
-    l.old_status, l.new_status,
-    `"${(l.note || '').replace(/"/g,'""')}"`
+    (ACTION_META[l.action_type] || ACTION_META.event).label,
+    `"${(l.summary || '').replace(/"/g,'""')}"`,
+    l.old_status || '',
+    l.new_status || '',
   ])];
   const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
   Object.assign(document.createElement('a'), {

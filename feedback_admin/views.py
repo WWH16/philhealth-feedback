@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.hashers import make_password
-from django.contrib.admin.models import LogEntry, ADDITION, CHANGE
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count
 from django.contrib import messages
@@ -50,6 +50,17 @@ def log_feedback_status_change(user, entry, old_status, new_status):
     )
 
 
+def log_admin_event(user, obj, action_flag, change_message):
+    """Writes a generic built-in admin log entry for any tracked object."""
+    LogEntry.objects.log_actions(
+        user_id=user.id,
+        queryset=[obj],
+        action_flag=action_flag,
+        change_message=change_message,
+        single_object=True,
+    )
+
+
 def get_feedback_activity(entry):
     """Builds (notes, status_history) for an entry from django_admin_log."""
     logs = (LogEntry.objects
@@ -76,6 +87,112 @@ def get_feedback_activity(entry):
             notes.append({'author': author, 'body': log.change_message, 'created_at': at})
 
     return notes, history
+
+
+def _format_audit_row(log, entry=None):
+    local_time = timezone.localtime(log.action_time)
+    author = (log.user.get_full_name() or log.user.username) if log.user else 'System'
+    ctype = log.content_type.model if log.content_type_id else ''
+    message = log.change_message or ''
+    action_label = 'Event'
+    summary = message
+    action_type = 'event'
+    search_parts = [
+        author,
+        message,
+        ctype,
+        log.object_repr or '',
+        getattr(entry, 'tracking_code', ''),
+        getattr(entry, 'username', ''),
+        getattr(entry, 'name', ''),
+    ]
+    old_status = ''
+    new_status = ''
+
+    if ctype == 'feedbackentry':
+        if log.action_flag == CHANGE and '|' in message:
+            old_raw, _, new_raw = message.partition('|')
+            action_label = 'Status Update'
+            action_type = 'status'
+            old_status = dict(FeedbackEntry.STATUS_CHOICES).get(old_raw, old_raw)
+            new_status = dict(FeedbackEntry.STATUS_CHOICES).get(new_raw, new_raw)
+            summary = f"{entry.tracking_code if entry else log.object_repr}: {old_status} -> {new_status}"
+        elif log.action_flag == CHANGE and message.startswith('category:'):
+            _, _, payload = message.partition(':')
+            old_raw, _, new_raw = payload.partition('|')
+            action_label = 'Category Update'
+            action_type = 'category'
+            summary = f"{entry.tracking_code if entry else log.object_repr}: {dict(FeedbackEntry.CATEGORY_CHOICES).get(old_raw, old_raw or 'Uncategorized')} -> {dict(FeedbackEntry.CATEGORY_CHOICES).get(new_raw, new_raw or 'Uncategorized')}"
+        elif log.action_flag == DELETION:
+            action_label = 'Feedback Deleted'
+            action_type = 'delete'
+            summary = f"{entry.tracking_code if entry else log.object_repr} deleted"
+        elif log.action_flag == ADDITION:
+            action_label = 'Note / Reply'
+            action_type = 'note'
+            summary = f"{entry.tracking_code if entry else log.object_repr}: {message}"
+        else:
+            summary = f"{entry.tracking_code if entry else log.object_repr}: {message}"
+    elif ctype == 'user':
+        if log.action_flag == ADDITION and message == 'Logged in':
+            action_label = 'Login'
+            action_type = 'login'
+            summary = f"{log.object_repr} logged in"
+        elif log.action_flag == CHANGE and message == 'Logged out':
+            action_label = 'Logout'
+            action_type = 'logout'
+            summary = f"{log.object_repr} logged out"
+        elif log.action_flag == ADDITION:
+            action_label = 'User Created'
+            action_type = 'create'
+            summary = message or f'{log.object_repr} created'
+        elif log.action_flag == CHANGE and message == 'Password updated':
+            action_label = 'Password Updated'
+            action_type = 'profile'
+            summary = f"{log.object_repr}: password updated"
+        elif log.action_flag == CHANGE:
+            action_label = 'Profile Updated'
+            action_type = 'profile'
+            summary = message or f'{log.object_repr} updated'
+        elif log.action_flag == DELETION:
+            action_label = 'User Deleted'
+            action_type = 'delete'
+            summary = message or f'{log.object_repr} deleted'
+    elif ctype == 'group':
+        if log.action_flag == ADDITION:
+            action_label = 'Group Created'
+            action_type = 'create'
+        elif log.action_flag == CHANGE:
+            action_label = 'Group Updated'
+            action_type = 'update'
+        elif log.action_flag == DELETION:
+            action_label = 'Group Deleted'
+            action_type = 'delete'
+        summary = message or log.object_repr
+    elif ctype == 'feedbackconfiguration':
+        if message.startswith('Auto-analysis'):
+            action_label = 'Auto-Analysis Toggle'
+            action_type = 'settings'
+        elif message.startswith('Batch re-analysis'):
+            action_label = 'Batch Re-analyze'
+            action_type = 'settings'
+        else:
+            action_label = 'Settings Update'
+            action_type = 'settings'
+        summary = message
+
+    return {
+        'id': log.pk,
+        'date': local_time.strftime('%Y-%m-%d'),
+        'time': local_time.strftime('%H:%M'),
+        'admin': author,
+        'action_type': action_type,
+        'action_label': action_label,
+        'summary': summary,
+        'old_status': old_status,
+        'new_status': new_status,
+        'search_text': ' '.join(str(part) for part in search_parts if part),
+    }
 
 
 def _is_ajax(request):
@@ -253,8 +370,16 @@ def response_category_update(request, entry_id):
     if category and category not in valid_categories:
         return JsonResponse({'ok': False, 'error': 'Invalid category.'}, status=400)
 
+    old_category = entry.category
     entry.category = category or ''
-    entry.save(update_fields=['category', 'updated_at'])
+    if entry.category != old_category:
+        entry.save(update_fields=['category', 'updated_at'])
+        log_admin_event(
+            request.user,
+            entry,
+            CHANGE,
+            f'category:{old_category or ""}|{entry.category or ""}',
+        )
 
     return JsonResponse({
         'ok': True,
@@ -415,63 +540,28 @@ def reports(request):
 @login_required
 def activity_log(request):
     """
-    Government-facing audit trail: every status change and action-taken
-    note recorded against a feedback entry, sourced entirely from Django's
-    built-in django_admin_log table.
+    Government-facing audit trail sourced entirely from Django's built-in
+    django_admin_log table.
     """
     logs = (LogEntry.objects
-            .filter(content_type=_feedback_content_type())
-            .select_related('user')
+            .select_related('user', 'content_type')
             .order_by('-action_time'))
 
-    status_display = dict(FeedbackEntry.STATUS_CHOICES)
-    entry_ids = {int(l.object_id) for l in logs if l.object_id and l.object_id.isdigit()}
-    entries_by_id = {e.pk: e for e in FeedbackEntry.objects.filter(pk__in=entry_ids)}
+    feedback_ids = {
+        int(l.object_id)
+        for l in logs
+        if l.content_type_id and l.content_type.model == 'feedbackentry' and l.object_id and l.object_id.isdigit()
+    }
+    feedback_entries = {e.pk: e for e in FeedbackEntry.objects.filter(pk__in=feedback_ids)}
 
     rows = []
-    status_change_count = 0
-    note_count = 0
-
     for log in logs:
-        entry = entries_by_id.get(int(log.object_id)) if log.object_id and log.object_id.isdigit() else None
-        local_time = timezone.localtime(log.action_time)
-        author = (log.user.get_full_name() or log.user.username) if log.user else 'System'
-
-        row = {
-            'id': log.pk,
-            'date': local_time.strftime('%Y-%m-%d'),
-            'time': local_time.strftime('%H:%M'),
-            'admin': author,
-            'tracking_code': entry.tracking_code if entry else '—',
-            'rating': entry.get_experience_display() if entry else '',
-            'category': entry.get_category_display() if entry else '',
-        }
-
-        if log.action_flag == CHANGE and '|' in log.change_message:
-            old_raw, _, new_raw = log.change_message.partition('|')
-            row.update({
-                'action_type': 'status',
-                'old_status': status_display.get(old_raw, old_raw),
-                'new_status': status_display.get(new_raw, new_raw),
-                'note': '',
-            })
-            status_change_count += 1
-        else:
-            row.update({
-                'action_type': 'note',
-                'old_status': '',
-                'new_status': '',
-                'note': log.change_message,
-            })
-            note_count += 1
-
-        rows.append(row)
+        entry = feedback_entries.get(int(log.object_id)) if log.content_type_id and log.content_type.model == 'feedbackentry' and log.object_id and log.object_id.isdigit() else None
+        rows.append(_format_audit_row(log, entry))
 
     context = {
         'logs_data': rows,
         'total_actions': len(rows),
-        'total_status_changes': status_change_count,
-        'total_notes': note_count,
     }
     return render(request, 'feedback_admin/activity_log.html', context)
 
@@ -551,6 +641,8 @@ def user_add(request):
     if perm_ids:
         user.user_permissions.set(Permission.objects.filter(id__in=perm_ids))
 
+    log_admin_event(request.user, user, ADDITION, f'Created user "{username}"')
+
     msg = f'User "{username}" created successfully.'
     messages.success(request, msg)
 
@@ -563,6 +655,18 @@ def user_add(request):
 @require_POST
 def user_edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
+    original = {
+        'username': user.username,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'is_active': user.is_active,
+        'is_staff': user.is_staff,
+        'is_superuser': user.is_superuser,
+        'groups': list(user.groups.values_list('id', flat=True)),
+        'perms': list(user.user_permissions.values_list('id', flat=True)),
+        'has_password': user.has_usable_password(),
+    }
 
     def err(msg):
         if _is_ajax(request):
@@ -611,6 +715,37 @@ def user_edit(request, user_id):
     user.groups.set(Group.objects.filter(id__in=request.POST.getlist('groups')))
     user.user_permissions.set(Permission.objects.filter(id__in=request.POST.getlist('user_permissions')))
 
+    changed_fields = []
+    for key, label in [
+        ('username', 'username'),
+        ('email', 'email'),
+        ('first_name', 'first name'),
+        ('last_name', 'last name'),
+    ]:
+        if original[key] != getattr(user, key):
+            changed_fields.append(label)
+    if original['is_active'] != user.is_active:
+        changed_fields.append('status')
+    if original['is_staff'] != user.is_staff:
+        changed_fields.append('staff role')
+    if original['is_superuser'] != user.is_superuser:
+        changed_fields.append('superuser role')
+    if original['groups'] != list(user.groups.values_list('id', flat=True)):
+        changed_fields.append('groups')
+    if original['perms'] != list(user.user_permissions.values_list('id', flat=True)):
+        changed_fields.append('permissions')
+    if original['has_password'] != user.has_usable_password() or pw1:
+        changed_fields.append('password')
+
+    if changed_fields:
+        target = 'admin profile' if user == request.user else f'user "{user.username}"'
+        log_admin_event(
+            request.user,
+            user,
+            CHANGE,
+            f'Updated {target}: {", ".join(changed_fields)}',
+        )
+
     msg = f'User "{user.username}" updated successfully.'
     messages.success(request, msg)
 
@@ -629,6 +764,7 @@ def user_delete(request, user_id):
         messages.error(request, "You cannot delete your own account.")
         return redirect('users')
     username = user.username
+    log_admin_event(request.user, user, DELETION, f'Deleted user "{username}"')
     user.delete()
 
     msg = f'User "{username}" deleted.'
@@ -649,6 +785,7 @@ def user_toggle_active(request, user_id):
     user.is_active = not user.is_active
     user.save(update_fields=['is_active'])
     state = 'activated' if user.is_active else 'deactivated'
+    log_admin_event(request.user, user, CHANGE, f'User "{user.username}" {state}')
     messages.success(request, f'User "{user.username}" {state}.')
     return redirect('users')
 
@@ -673,6 +810,8 @@ def group_add(request):
     if perm_ids:
         group.permissions.set(Permission.objects.filter(id__in=perm_ids))
 
+    log_admin_event(request.user, group, ADDITION, f'Created group "{name}"')
+
     msg = f'Group "{name}" created.'
     messages.success(request, msg)
 
@@ -685,6 +824,8 @@ def group_add(request):
 @require_POST
 def group_edit(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
+    original_name = group.name
+    original_perms = list(group.permissions.values_list('id', flat=True))
 
     def err(msg):
         if _is_ajax(request):
@@ -702,6 +843,9 @@ def group_edit(request, group_id):
     group.save()
     group.permissions.set(Permission.objects.filter(id__in=request.POST.getlist('permissions')))
 
+    if original_name != group.name or original_perms != list(group.permissions.values_list('id', flat=True)):
+        log_admin_event(request.user, group, CHANGE, f'Updated group "{group.name}"')
+
     msg = f'Group "{name}" updated.'
     messages.success(request, msg)
 
@@ -715,6 +859,7 @@ def group_edit(request, group_id):
 def group_delete(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
     name = group.name
+    log_admin_event(request.user, group, DELETION, f'Deleted group "{name}"')
     group.delete()
 
     msg = f'Group "{name}" deleted.'
@@ -736,6 +881,7 @@ def admin_login(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            log_admin_event(user, user, ADDITION, 'Logged in')
             return redirect('dashboard')
 
     return render(request, 'feedback_admin/login.html', {'form': form})
@@ -743,6 +889,8 @@ def admin_login(request):
 # ── LOGOUT ────────────────────────────────────────────────────────────
 @require_POST
 def admin_logout(request):
+    if request.user.is_authenticated:
+        log_admin_event(request.user, request.user, CHANGE, 'Logged out')
     logout(request)
     messages.success(request, 'You have been signed out.')
     return redirect('admin_login')
@@ -793,6 +941,7 @@ def change_password(request):
     request.user.set_password(new_password1)
     request.user.save()
     update_session_auth_hash(request, request.user)
+    log_admin_event(request.user, request.user, CHANGE, 'Password updated')
     messages.success(request, 'Password updated successfully.', extra_tags='pw_field')
     return redirect('settings_page')
 
@@ -802,10 +951,19 @@ from feedback.services import reanalyze_pending_entries
 @login_required
 @require_POST
 def update_sentiment_settings(request):
+    old_value = FeedbackConfiguration.get_solo().auto_analysis_enabled
     auto_analysis_enabled = request.POST.get('auto_analysis_enabled') == 'on'
     config = FeedbackConfiguration.get_solo()
     config.auto_analysis_enabled = auto_analysis_enabled
     config.save(update_fields=['auto_analysis_enabled', 'updated_at'])
+
+    if old_value != auto_analysis_enabled:
+        log_admin_event(
+            request.user,
+            config,
+            CHANGE,
+            f'Auto-analysis {"enabled" if auto_analysis_enabled else "disabled"}',
+        )
 
     state = 'enabled' if auto_analysis_enabled else 'disabled'
     return JsonResponse({
@@ -819,6 +977,13 @@ def update_sentiment_settings(request):
 @require_POST
 def reanalyze_sentiment_view(request):
     total, processed = reanalyze_pending_entries(force=False)
+    config = FeedbackConfiguration.get_solo()
+    log_admin_event(
+        request.user,
+        config,
+        CHANGE,
+        f'Batch re-analysis: scanned {total}, updated {processed}',
+    )
     if total == 0:
         message = 'Nothing to process — no pending entries with comments found.'
     else:
