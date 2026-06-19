@@ -953,20 +953,6 @@ def admin_logout(request):
     messages.success(request, 'You have been signed out.')
     return redirect('admin_login')
 
-
-@login_required
-def feedback_detail(request):
-    context = {
-        'entry': {
-            'id': 123,
-            'experience': 'vsat',
-            'comment': 'Great service!',
-            'created_at': '2024-01-01 12:34:56',
-        }
-    }
-    return render(request, 'feedback_admin/feedback.html', context)
-
-
 @login_required
 def settings_page(request):
     context = {

@@ -8,7 +8,6 @@ urlpatterns = [
 
     # ── Dashboard & pages ─────────────────────────────────────────────
     path('',                            views.dashboard,          name='dashboard'),
-    path('responses/',                  views.responses,          name='responses'),
     path('responses/<int:entry_id>/status/', views.response_status_update, name='response_status_update'),
     path('responses/<int:entry_id>/category/', views.response_category_update, name='response_category_update'),
     path('responses/<int:entry_id>/notes/add/', views.response_note_add, name='response_note_add'),
@@ -30,7 +29,7 @@ urlpatterns = [
     path('groups/<int:group_id>/delete/', views.group_delete, name='group_delete'),
 
     # ── Management ──────────────────────────────────────────────
-    path('feedback/', views.feedback_detail, name='feedback_detail'),
+    path('responses/', views.responses, name='responses'),
     path('settings/', views.settings_page, name='settings_page'),
     path('settings/sentiment/', views.update_sentiment_settings, name='update_sentiment_settings'),
 
