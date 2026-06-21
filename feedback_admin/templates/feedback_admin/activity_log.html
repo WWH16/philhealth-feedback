@@ -1,7 +1,7 @@
 {% extends 'feedback_admin/base.html' %}
 {% load static %}
 
-{% block title %}Audit Trail — PhilHealth Cauayan City{% endblock %}
+{% block title %}Activity Logs — PhilHealth Cauayan City{% endblock %}
 
 {% block nav_activity_log %}active{% endblock %}
 
@@ -81,7 +81,7 @@
           <span class="material-icons-round">verified_user</span>
           Accountability &amp; Transparency
         </div>
-        <h1 class="page-title">Audit Trail</h1>
+        <h1 class="page-title">Activity Logs</h1>
         <p class="page-subtitle">A permanent record of every admin login, logout, setting change, and feedback action, by admin and timestamp.</p>
       </div>
       <button class="btn-ph btn-ph-primary" onclick="exportActivityCSV()">
@@ -94,7 +94,7 @@
     <div class="filter-panel-row">
       <div class="search-box">
         <span class="material-icons-round">search</span>
-        <input type="text" id="actSearch" placeholder="Search admin, action, object, or details…" oninput="applyActFilters()" aria-label="Search audit trail">
+        <input type="text" id="actSearch" placeholder="Search admin, action, object, or details…" oninput="applyActFilters()" aria-label="Search audit logs">
       </div>
       <div class="date-range-inputs">
         <span class="filter-sep">From</span>
@@ -125,7 +125,7 @@
 
   <div class="card-block">
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-      <table class="ph-table" id="actTable" aria-label="Audit trail of feedback actions">
+      <table class="ph-table" id="actTable" aria-label="Activity logs of feedback actions">
         <thead>
           <tr>
             <th style="min-width:120px">Date &amp; Time</th>
@@ -313,7 +313,7 @@ function exportActivityCSV() {
   ])];
   const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
   Object.assign(document.createElement('a'), {
-    href: URL.createObjectURL(blob), download: 'philhealth-audit-trail.csv'
+    href: URL.createObjectURL(blob), download: 'philhealth-activity-logs.csv'
   }).click();
 }
 
