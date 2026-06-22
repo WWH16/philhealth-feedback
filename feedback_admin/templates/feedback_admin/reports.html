@@ -202,22 +202,23 @@
 <!-- CHARTS ROW -->
 <div class="row g-3 mb-4">
 
-  <!-- RESPONSE TREND -->
-  <div class="col-12 col-lg-7">
-    <div class="card-block h-100">
-      <div class="card-block-head">
-        <h2 class="card-block-title">
-          <span class="material-icons-round">show_chart</span>
-          Response Trend
-        </h2>
-      </div>
-      <div class="card-block-body">
-        <div class="chart-wrap" style="height: 260px;">
-          <canvas id="reportTrendChart" aria-label="Response trend chart" role="img"></canvas>
+    <!-- RESPONSE TREND -->
+    <div class="col-12 col-lg-7">
+      <div class="card-block h-100">
+        <div class="card-block-head">
+          <h2 class="card-block-title">
+            <span class="material-icons-round">show_chart</span>
+            Response Trend
+          </h2>
+          <span class="table-info" id="trendRangeCaption">—</span>
+        </div>
+        <div class="card-block-body">
+          <div class="chart-wrap" style="height: 260px;">
+            <canvas id="reportTrendChart" aria-label="Response trend chart" role="img"></canvas>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
   <!-- SUMMARY STATISTICS -->
   <div class="col-12 col-lg-5">
@@ -312,8 +313,17 @@ function setReportPeriod(btn, period) {
   updateReport();
 }
 
+const TREND_CAPTIONS = {
+  daily: 'Hourly · Today',
+  weekly: 'Daily · Last 7 days',
+  monthly: 'Daily · Last 30 days',
+  quarterly: 'Weekly · Last 90 days',
+  annual: 'Monthly · Last 12 months',
+};
+
 function updateReport() {
   const data = REPORT_DATA[currentPeriod];
+  document.getElementById('trendRangeCaption').textContent = TREND_CAPTIONS[currentPeriod];
 
   // Update metrics
   document.getElementById('metricTotal').textContent = data.total.toLocaleString();
@@ -411,21 +421,27 @@ function initReportTrendChart(data) {
 
   if (reportTrendChart) reportTrendChart.destroy();
   reportTrendChart = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
       labels: data.trendLabels,
       datasets: [{
         label: 'Responses',
         data: data.trendData,
-        backgroundColor: '#23A455',
-        borderColor: '#1F964B',
-        borderWidth: 1.5
+        borderColor: '#23A455',
+        backgroundColor: 'rgba(35,164,85,0.08)',
+        tension: 0.35,
+        fill: true,
+        pointBackgroundColor: '#23A455',
+        pointRadius: data.trendData.length > 40 ? 0 : 3,
+        pointHoverRadius: 5,
+        borderWidth: 2,
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
       scales: {
-        x: { grid: { display: false }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10, weight: '600' } }, border: { display: false } },
+        x: { grid: { display: false }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10, weight: '600' }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 }, border: { display: false } },
         y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10 } }, border: { display: false } }
       },
       plugins: {

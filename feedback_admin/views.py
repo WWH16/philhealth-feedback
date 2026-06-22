@@ -554,13 +554,73 @@ def reports(request):
     quarterly_data = get_period_data(quarterly_qs)
     annual_data = get_period_data(annual_qs)
 
-    # Simplified trends (just totals for now to match UI expectations)
-    def get_trend(qs, periods, truncate_func, label_format):
-        trend_rows = qs.annotate(p=truncate_func('created_at')).values('p').annotate(t=Count('id')).order_by('p')
-        data_map = {r['p']: r['t'] for r in trend_rows}
-        # This is a bit complex for a quick fix, so we'll just mock the trend structure
-        # but keep it consistent with the period labels.
-        return [0] * periods, [""] * periods
+    def _hourly_trend(qs):
+        """Buckets entries by hour-of-day (0–23) — for a single day's queryset."""
+        counts = [0] * 24
+        for entry in qs:
+            counts[timezone.localtime(entry.created_at).hour] += 1
+        labels = [datetime(2000, 1, 1, hour).strftime('%I %p').lstrip('0') for hour in range(24)]
+        return labels, counts
+
+    def _daily_trend(qs, start_date, end_date):
+        """Buckets entries by calendar day across an inclusive date range."""
+        counts = defaultdict(int)
+        for entry in qs:
+            counts[timezone.localtime(entry.created_at).date()] += 1
+
+        days, cursor = [], start_date
+        while cursor <= end_date:
+            days.append(cursor)
+            cursor += timedelta(days=1)
+
+        labels = [f'{day:%b} {day.day}' for day in days]
+        data = [counts.get(day, 0) for day in days]
+        return labels, data
+
+    def _weekly_trend(qs, start_date, end_date):
+        """Buckets entries by ISO week (Mon–Sun) across an inclusive date range."""
+        counts = defaultdict(int)
+        for entry in qs:
+            local_day = timezone.localtime(entry.created_at).date()
+            counts[local_day - timedelta(days=local_day.weekday())] += 1
+
+        first_week = start_date - timedelta(days=start_date.weekday())
+        last_week = end_date - timedelta(days=end_date.weekday())
+
+        weeks, cursor = [], first_week
+        while cursor <= last_week:
+            weeks.append(cursor)
+            cursor += timedelta(days=7)
+
+        labels = [f'{week:%b} {week.day}' for week in weeks]
+        data = [counts.get(week, 0) for week in weeks]
+        return labels, data
+
+    def _monthly_trend(qs, months_back):
+        """Buckets entries by calendar month for the trailing `months_back` months."""
+        counts = defaultdict(int)
+        for entry in qs:
+            counts[timezone.localtime(entry.created_at).date().replace(day=1)] += 1
+
+        months, cursor = [], timezone.localdate().replace(day=1)
+        for _ in range(months_back):
+            months.append(cursor)
+            cursor = (cursor - timedelta(days=1)).replace(day=1)
+        months.reverse()
+
+        labels = [f'{month:%b %Y}' for month in months]
+        data = [counts.get(month, 0) for month in months]
+        return labels, data
+
+    # ── Response trend, bucketed at a granularity that fits each period ──
+    daily_data['trendLabels'], daily_data['trendData'] = _hourly_trend(daily_qs)
+    weekly_data['trendLabels'], weekly_data['trendData'] = _daily_trend(
+        weekly_qs, (now - timedelta(days=6)).date(), today)
+    monthly_data['trendLabels'], monthly_data['trendData'] = _daily_trend(
+        monthly_qs, (now - timedelta(days=29)).date(), today)
+    quarterly_data['trendLabels'], quarterly_data['trendData'] = _weekly_trend(
+        quarterly_qs, (now - timedelta(days=89)).date(), today)
+    annual_data['trendLabels'], annual_data['trendData'] = _monthly_trend(annual_qs, 12)
 
     # For now, let's just use the basic stats in context
     context = {
@@ -603,11 +663,6 @@ def reports(request):
             'annual': annual_data,
         }
     }
-
-    # Add default trends to JSON (so JS doesn't break)
-    for k in context['report_json']:
-        context['report_json'][k]['trendData'] = [0, 0, 0, 0, 0]
-        context['report_json'][k]['trendLabels'] = ['P1', 'P2', 'P3', 'P4', 'P5']
 
     return render(request, 'feedback_admin/reports.html', context)
 
