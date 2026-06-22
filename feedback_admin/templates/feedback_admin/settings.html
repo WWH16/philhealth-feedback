@@ -98,40 +98,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 .danger-section .settings-section-icon .material-icons-round { color: var(--red); }
 [data-theme="dark"] .danger-section .settings-section-head { background: rgba(192,0,26,0.06); }
 
-/* ── EMOTION PREVIEW ── */
-.emotion-preview {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
-}
-@media (max-width: 420px) {
-  .emotion-preview { grid-template-columns: 1fr; gap: 8px; }
-}
-@media (min-width: 421px) and (max-width: 575px) {
-  .emotion-preview { grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .emotion-preview-btn { padding: 10px 4px !important; font-size: 9px !important; }
-  .emotion-preview-btn .material-icons-round { font-size: 20px !important; }
-}
-
-.emotion-preview-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px;
-  border: 1.5px solid var(--border); background: var(--surface-page);
-  cursor: default; font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
-  transition: all 150ms;
-}
-.emotion-preview-btn .material-icons-round { font-size: 24px; }
-.emotion-preview-btn.pos { border-color: var(--g-primary); color: var(--g-forest); background: var(--g-xlight); }
-.emotion-preview-btn.neu { border-color: var(--gold);      color: #7a5500;          background: var(--gold-light); }
-.emotion-preview-btn.neg { border-color: var(--red);       color: var(--red);       background: var(--red-bg); }
-
-[data-theme="dark"] .emotion-preview-btn.pos { border-color: #5fcf8a; color: #5fcf8a; background: rgba(35,164,85,0.15); }
-[data-theme="dark"] .emotion-preview-btn.neu { border-color: #d4a840; color: #d4a840; background: rgba(184,147,58,0.15); }
-[data-theme="dark"] .emotion-preview-btn.neg { border-color: #f06070; color: #f06070; background: rgba(192,0,26,0.15); }
-
 .backup-log-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap; }
 .backup-log-item:last-child { border-bottom: none; }
 .backup-log-name { font-size: 12px; font-weight: 600; color: var(--text-primary); font-family: var(--mono); }
@@ -230,8 +196,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
   .settings-section-body { padding: 14px 12px; }
   .settings-row { flex-direction: column; gap: 10px; }
   .settings-input { min-width: 0; width: 100%; }
-  .btn-row-toggle-input { flex-wrap: wrap; gap: 8px !important; }
-  .btn-row-toggle-input input.settings-input { flex: 1; min-width: 0; }
 }
 {% endblock %}
 
@@ -495,102 +459,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 </div>
                 <div style="width:100%">
                   <textarea class="settings-textarea" id="offlineMsg" style="width:100%;margin-top:8px;">Ang feedback system ay pansamantalang hindi available. Pakisubukan muli mamaya.</textarea>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <div class="settings-section-head">
-              <div class="settings-section-icon"><span class="material-icons-round">quiz</span></div>
-              <div>
-                <div class="settings-section-title">Edit Survey Questions</div>
-                <div class="settings-section-desc">Customize the heading and sub-text shown on the feedback form.</div>
-              </div>
-            </div>
-            <div class="settings-section-body">
-              <div class="settings-row">
-                <div class="settings-row-info">
-                  <div class="settings-row-label">Main Question</div>
-                  <div class="settings-row-hint">The primary question displayed to citizens.</div>
-                </div>
-                <div style="width:100%;margin-top:6px;">
-                  <textarea class="settings-textarea" id="mainQuestion">How satisfied are you with the service you received today?</textarea>
-                </div>
-              </div>
-              <div class="settings-row">
-                <div class="settings-row-info">
-                  <div class="settings-row-label">Sub-text / Instruction</div>
-                  <div class="settings-row-hint">Short instruction line shown below the main question.</div>
-                </div>
-                <div style="width:100%;margin-top:6px;">
-                  <input class="settings-input" id="surveySubtext" type="text" value="Please pick your reaction below." style="width:100%">
-                </div>
-              </div>
-              <div class="settings-row">
-                <div class="settings-row-info">
-                  <div class="settings-row-label">Comment Prompt</div>
-                  <div class="settings-row-hint">Label for the optional additional comment field.</div>
-                </div>
-                <div style="width:100%;margin-top:6px;">
-                  <input class="settings-input" id="commentPrompt" type="text" value="Additional concern" style="width:100%">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <div class="settings-section-head">
-              <div class="settings-section-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
-              <div>
-                <div class="settings-section-title">Manage Emotion Buttons</div>
-                <div class="settings-section-desc">Configure the labels and visibility of the three reaction buttons.</div>
-              </div>
-            </div>
-            <div class="settings-section-body">
-              <div class="settings-row">
-                <div class="settings-row-info">
-                  <div class="settings-row-label">Button: Very Satisfactory</div>
-                  <div class="settings-row-hint">Label for the positive (green) reaction button.</div>
-                </div>
-                <div class="btn-row-toggle-input" style="display:flex;align-items:center;gap:8px;">
-                  <label class="toggle-switch" aria-label="Show button"><input type="checkbox" checked><span class="toggle-track"></span></label>
-                  <input class="settings-input" type="text" value="Very Satisfactory" style="width:180px">
-                </div>
-              </div>
-              <div class="settings-row">
-                <div class="settings-row-info">
-                  <div class="settings-row-label">Button: Satisfactory</div>
-                  <div class="settings-row-hint">Label for the neutral (gold) reaction button.</div>
-                </div>
-                <div class="btn-row-toggle-input" style="display:flex;align-items:center;gap:8px;">
-                  <label class="toggle-switch" aria-label="Show button"><input type="checkbox" checked><span class="toggle-track"></span></label>
-                  <input class="settings-input" type="text" value="Satisfactory" style="width:180px">
-                </div>
-              </div>
-              <div class="settings-row">
-                <div class="settings-row-info">
-                  <div class="settings-row-label">Button: Unsatisfactory</div>
-                  <div class="settings-row-hint">Label for the negative (red) reaction button.</div>
-                </div>
-                <div class="btn-row-toggle-input" style="display:flex;align-items:center;gap:8px;">
-                  <label class="toggle-switch" aria-label="Show button"><input type="checkbox" checked><span class="toggle-track"></span></label>
-                  <input class="settings-input" type="text" value="Unsatisfactory" style="width:180px">
-                </div>
-              </div>
-
-              <div class="emotion-preview">
-                <div class="emotion-preview-btn pos">
-                  <span class="material-icons-round">sentiment_satisfied_alt</span>
-                  <span>Very Satisfactory</span>
-                </div>
-                <div class="emotion-preview-btn neu">
-                  <span class="material-icons-round">sentiment_neutral</span>
-                  <span>Satisfactory</span>
-                </div>
-                <div class="emotion-preview-btn neg">
-                  <span class="material-icons-round">sentiment_dissatisfied</span>
-                  <span>Unsatisfactory</span>
                 </div>
               </div>
             </div>
