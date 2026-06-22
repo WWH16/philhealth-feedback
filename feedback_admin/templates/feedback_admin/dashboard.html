@@ -25,10 +25,10 @@
   <!-- FILTER TABS -->
   <div style="margin-bottom:20px;">
     <div class="filter-tabs" style="display:inline-flex;max-width:480px;width:100%">
-      <button class="filter-tab active" onclick="setFilter(this,'today')">Today</button>
+      <button class="filter-tab" onclick="setFilter(this,'today')">Today</button>
       <button class="filter-tab" onclick="setFilter(this,'week')">This Week</button>
       <button class="filter-tab" onclick="setFilter(this,'month')">This Month</button>
-      <button class="filter-tab" onclick="setFilter(this,'all')">All Time</button>
+      <button class="filter-tab active" onclick="setFilter(this,'all')">All Time</button>
     </div>
   </div>
 
@@ -97,37 +97,37 @@
                 <div class="pie-legend-item">
                   <div class="pie-legend-dot" style="background:var(--g-primary)"></div>
                   <span class="pie-legend-label">Very Sat.</span>
-                  <span class="pie-legend-value">{{ very_satisfactory }}</span>
-                  <span class="pie-legend-pct">{{ very_satisfactory_pct }}%</span>
+                  <span class="pie-legend-value" id="legendVsatVal">{{ very_satisfactory }}</span>
+                  <span class="pie-legend-pct" id="legendVsatPct">{{ very_satisfactory_pct }}%</span>
                 </div>
                 <div class="pie-legend-item">
                   <div class="pie-legend-dot" style="background:var(--gold)"></div>
                   <span class="pie-legend-label">Satisfactory</span>
-                  <span class="pie-legend-value">{{ satisfactory }}</span>
-                  <span class="pie-legend-pct">{{ satisfactory_pct }}%</span>
+                  <span class="pie-legend-value" id="legendSatVal">{{ satisfactory }}</span>
+                  <span class="pie-legend-pct" id="legendSatPct">{{ satisfactory_pct }}%</span>
                 </div>
                 <div class="pie-legend-item">
                   <div class="pie-legend-dot" style="background:var(--red)"></div>
                   <span class="pie-legend-label">Unsat.</span>
-                  <span class="pie-legend-value">{{ unsatisfactory }}</span>
-                  <span class="pie-legend-pct">{{ unsatisfactory_pct }}%</span>
+                  <span class="pie-legend-value" id="legendUnsatVal">{{ unsatisfactory }}</span>
+                  <span class="pie-legend-pct" id="legendUnsatPct">{{ unsatisfactory_pct }}%</span>
                 </div>
               </div>
               <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
                 <div class="mini-stat" style="padding-top:0">
                   <div class="mini-stat-label">Very Sat.</div>
-                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" style="width:{{ very_satisfactory_pct }}%;background:var(--g-primary)"></div></div>
-                  <div class="mini-stat-val">{{ very_satisfactory_pct }}%</div>
+                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" id="miniBarVsat" style="width:{{ very_satisfactory_pct }}%;background:var(--g-primary)"></div></div>
+                  <div class="mini-stat-val" id="miniValVsat">{{ very_satisfactory_pct }}%</div>
                 </div>
                 <div class="mini-stat">
                   <div class="mini-stat-label">Satisfactory</div>
-                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" style="width:{{ satisfactory_pct }}%;background:var(--gold)"></div></div>
-                  <div class="mini-stat-val">{{ satisfactory_pct }}%</div>
+                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" id="miniBarSat" style="width:{{ satisfactory_pct }}%;background:var(--gold)"></div></div>
+                  <div class="mini-stat-val" id="miniValSat">{{ satisfactory_pct }}%</div>
                 </div>
                 <div class="mini-stat">
                   <div class="mini-stat-label">Unsat.</div>
-                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" style="width:{{ unsatisfactory_pct }}%;background:var(--red)"></div></div>
-                  <div class="mini-stat-val">{{ unsatisfactory_pct }}%</div>
+                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" id="miniBarUnsat" style="width:{{ unsatisfactory_pct }}%;background:var(--red)"></div></div>
+                  <div class="mini-stat-val" id="miniValUnsat">{{ unsatisfactory_pct }}%</div>
                 </div>
               </div>
             </div>
@@ -197,9 +197,12 @@ const RATING_CONFIG = {
 const RECENT_DATA = JSON.parse(document.getElementById('recent-entries-data').textContent);
 const FILTER_DATA = JSON.parse(document.getElementById('filter-data').textContent);
 const TREND_LABELS = {{ trend_labels|safe }};
+const TREND_DATES  = {{ trend_dates|safe }};
 const TREND_VSAT = {{ trend_very_satisfactory|safe }};
 const TREND_SAT = {{ trend_satisfactory|safe }};
 const TREND_UNSAT = {{ trend_unsatisfactory|safe }};
+
+let currentFilterPeriod = 'all';
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -230,7 +233,9 @@ function renderRecent() {
 /* ── CHARTS ── */
 let pieChart, lineChart;
 
-function initPieChart() {
+function pctOf(value, total) { return total ? Math.round((value / total) * 100) : 0; }
+
+function initPieChart(data) {
   const ctx    = document.getElementById('pieChart').getContext('2d');
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   if (pieChart) pieChart.destroy();
@@ -238,32 +243,55 @@ function initPieChart() {
     type: 'doughnut',
     data: {
       labels: ['Very Satisfactory', 'Satisfactory', 'Unsatisfactory'],
-      datasets: [{ data: [FILTER_DATA.all.vsat, FILTER_DATA.all.sat, FILTER_DATA.all.unsat], backgroundColor: ['#23A455','#b8933a','#c0001a'], borderColor: isDark ? '#1a1e24' : '#ffffff', borderWidth: 3, hoverOffset: 6 }]
+      datasets: [{ data: [data.vsat, data.sat, data.unsat], backgroundColor: ['#23A455','#b8933a','#c0001a'], borderColor: isDark ? '#1a1e24' : '#ffffff', borderWidth: 3, hoverOffset: 6 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => { const t = ctx.dataset.data.reduce((a,b)=>a+b,0); return `  ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/t*100)}%)`; } }, backgroundColor: isDark ? '#2a2e35' : '#1c1e22', titleColor:'#ffffff', bodyColor:'rgba(255,255,255,0.75)', padding:10, cornerRadius:0, titleFont:{family:"'IBM Plex Sans'",weight:'700',size:11}, bodyFont:{family:"'IBM Plex Sans'",size:12} }
+        tooltip: { callbacks: { label: ctx => { const t = ctx.dataset.data.reduce((a,b)=>a+b,0); return `  ${ctx.label}: ${ctx.parsed} (${t ? Math.round(ctx.parsed/t*100) : 0}%)`; } }, backgroundColor: isDark ? '#2a2e35' : '#1c1e22', titleColor:'#ffffff', bodyColor:'rgba(255,255,255,0.75)', padding:10, cornerRadius:0, titleFont:{family:"'IBM Plex Sans'",weight:'700',size:11}, bodyFont:{family:"'IBM Plex Sans'",size:12} }
       }
     }
   });
 }
 
-function initLineChart() {
-  const ctx      = document.getElementById('lineChart').getContext('2d');
-  const isDark   = document.documentElement.getAttribute('data-theme') === 'dark';
+function updatePieAndLegend(data) {
+  const total    = data.total || (data.vsat + data.sat + data.unsat);
+  const vsatPct  = pctOf(data.vsat, total);
+  const satPct   = pctOf(data.sat, total);
+  const unsatPct = pctOf(data.unsat, total);
+
+  initPieChart(data);
+
+  document.getElementById('legendVsatVal').textContent  = data.vsat;
+  document.getElementById('legendVsatPct').textContent  = vsatPct + '%';
+  document.getElementById('legendSatVal').textContent   = data.sat;
+  document.getElementById('legendSatPct').textContent   = satPct + '%';
+  document.getElementById('legendUnsatVal').textContent = data.unsat;
+  document.getElementById('legendUnsatPct').textContent = unsatPct + '%';
+
+  document.getElementById('miniBarVsat').style.width  = vsatPct + '%';
+  document.getElementById('miniValVsat').textContent   = vsatPct + '%';
+  document.getElementById('miniBarSat').style.width    = satPct + '%';
+  document.getElementById('miniValSat').textContent    = satPct + '%';
+  document.getElementById('miniBarUnsat').style.width  = unsatPct + '%';
+  document.getElementById('miniValUnsat').textContent  = unsatPct + '%';
+}
+
+function initLineChart(labels, vsat, sat, unsat) {
+  const ctx       = document.getElementById('lineChart').getContext('2d');
+  const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
   const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
   const textColor = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
   if (lineChart) lineChart.destroy();
   lineChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: TREND_LABELS,
+      labels: labels,
       datasets: [
-        { label:'Very Satisfactory', data:TREND_VSAT,  borderColor:'#23A455', backgroundColor:'rgba(35,164,85,0.08)', tension:0.4, fill:true,  pointBackgroundColor:'#23A455', pointRadius:4, pointHoverRadius:6, borderWidth:2 },
-        { label:'Satisfactory',      data:TREND_SAT,   borderColor:'#b8933a', backgroundColor:'rgba(184,147,58,0.06)', tension:0.4, fill:false, pointBackgroundColor:'#b8933a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
-        { label:'Unsatisfactory',    data:TREND_UNSAT, borderColor:'#c0001a', backgroundColor:'rgba(192,0,26,0.05)',    tension:0.4, fill:false, pointBackgroundColor:'#c0001a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
+        { label:'Very Satisfactory', data:vsat,  borderColor:'#23A455', backgroundColor:'rgba(35,164,85,0.08)', tension:0.4, fill:true,  pointBackgroundColor:'#23A455', pointRadius:4, pointHoverRadius:6, borderWidth:2 },
+        { label:'Satisfactory',      data:sat,   borderColor:'#b8933a', backgroundColor:'rgba(184,147,58,0.06)', tension:0.4, fill:false, pointBackgroundColor:'#b8933a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
+        { label:'Unsatisfactory',    data:unsat, borderColor:'#c0001a', backgroundColor:'rgba(192,0,26,0.05)',    tension:0.4, fill:false, pointBackgroundColor:'#c0001a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
       ]
     },
     options: {
@@ -281,18 +309,60 @@ function initLineChart() {
   });
 }
 
+/* picks the slice of the trend arrays that matches the selected tab */
+function filterTrendByPeriod(period) {
+  if (period === 'all' || TREND_DATES.length === 0) {
+    return { labels: TREND_LABELS, vsat: TREND_VSAT, sat: TREND_SAT, unsat: TREND_UNSAT };
+  }
+
+  if (period === 'today') {
+    const todayStr = new Date().toLocaleDateString('en-CA'); // local YYYY-MM-DD
+    const idx = TREND_DATES.reduce((acc, d, i) => { if (d === todayStr) acc.push(i); return acc; }, []);
+    return {
+      labels: idx.map(i => TREND_LABELS[i]),
+      vsat:   idx.map(i => TREND_VSAT[i]),
+      sat:    idx.map(i => TREND_SAT[i]),
+      unsat:  idx.map(i => TREND_UNSAT[i]),
+    };
+  }
+
+  const days   = period === 'week' ? 7 : 30; // matches the backend's own week/month windows
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  const idx    = TREND_DATES.reduce((acc, d, i) => { if (new Date(d + 'T00:00:00').getTime() >= cutoff) acc.push(i); return acc; }, []);
+  return {
+    labels: idx.map(i => TREND_LABELS[i]),
+    vsat:   idx.map(i => TREND_VSAT[i]),
+    sat:    idx.map(i => TREND_SAT[i]),
+    unsat:  idx.map(i => TREND_UNSAT[i]),
+  };
+}
+
+function renderTrendForPeriod(period) {
+  const f = filterTrendByPeriod(period);
+  if (f.labels.length === 0) {
+    initLineChart(['No data yet'], [0], [0], [0]);
+  } else {
+    initLineChart(f.labels, f.vsat, f.sat, f.unsat);
+  }
+}
+
 function setFilter(btn, period) {
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
+  currentFilterPeriod = period;
+
   const d = FILTER_DATA[period];
   animateCount('totalVal', d.total);
   animateCount('vsatVal',  d.vsat);
   animateCount('satVal',   d.sat);
-  animateCount('negVal',   d.neg);
+  animateCount('unsatVal', d.unsat);   // was the broken 'negVal' / d.neg
+
+  updatePieAndLegend(d);
+  renderTrendForPeriod(period);
 }
 
-function onThemeChange() { initPieChart(); initLineChart(); }
-function onResize()       { initPieChart(); initLineChart(); }
+function onThemeChange() { updatePieAndLegend(FILTER_DATA[currentFilterPeriod]); renderTrendForPeriod(currentFilterPeriod); }
+function onResize()       { updatePieAndLegend(FILTER_DATA[currentFilterPeriod]); renderTrendForPeriod(currentFilterPeriod); }
 
 function tickClock() {
   const now         = new Date();
@@ -307,8 +377,8 @@ function tickClock() {
 function pageInit() {
   tickClock();
   setInterval(tickClock, 1000);
-  initPieChart();
-  initLineChart();
+  updatePieAndLegend(FILTER_DATA.all);
+  renderTrendForPeriod('all');
   renderRecent();
 }
 </script>

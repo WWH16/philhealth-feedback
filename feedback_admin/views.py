@@ -327,6 +327,7 @@ def dashboard(request):
             'all': _experience_counts(qs),
         },
         'trend_labels': [f'{day:%b} {day.day}' for day in trend_dates],
+        'trend_dates': [day.isoformat() for day in trend_dates],
         'trend_very_satisfactory': trend_for(FeedbackEntry.VERY_SATISFACTORY),
         'trend_satisfactory': trend_for(FeedbackEntry.SATISFACTORY),
         'trend_unsatisfactory': trend_for(FeedbackEntry.UNSATISFACTORY),
