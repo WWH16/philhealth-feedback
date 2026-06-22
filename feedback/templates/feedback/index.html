@@ -32,29 +32,28 @@
 
       <div class="p-[20px] sm:p-[28px] mb-[6px] border" style="background:var(--white);border-color:var(--ink7)">
         <p class="text-[13px] mb-[16px] leading-[1.55]" style="color:var(--ink5)">Select your satisfaction rating. This is recorded separately from the sentiment of your comment.</p>
-        <div class="grid grid-cols-3 gap-[8px]" role="group" aria-label="Rate your experience">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-[16px]" role="group" aria-label="Rate your experience">
+          <!-- VERY SATISFACTORY -->
           <button type="button" class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
             id="btn-vsat" onclick="selectExperience('vsat')" aria-pressed="false" aria-label="Very satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
-            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
-              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--g-primary)" aria-hidden="true">sentiment_satisfied_alt</span>
-            </div>
+            <span class="material-icons-round transition-all duration-[120ms] group-hover:scale-[1.1]" style="color:var(--g-primary)" aria-hidden="true">sentiment_satisfied_alt</span>
             <span>Very satisfactory</span>
           </button>
+
+          <!-- SATISFACTORY -->
           <button type="button" class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
             id="btn-sat" onclick="selectExperience('sat')" aria-pressed="false" aria-label="Satisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
-            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
-              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--gold)" aria-hidden="true">sentiment_neutral</span>
-            </div>
+            <span class="material-icons-round transition-all duration-[120ms] group-hover:scale-[1.1]" style="color:var(--gold)" aria-hidden="true">sentiment_neutral</span>
             <span>Satisfactory</span>
           </button>
+
+          <!-- UNSATISFACTORY -->
           <button type="button" class="reaction-btn group cursor-pointer font-bold uppercase transition-all duration-[120ms] select-none relative hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-offset-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-transparent after:transition-colors after:duration-[120ms]"
             id="btn-unsat" onclick="selectExperience('unsat')" aria-pressed="false" aria-label="Unsatisfactory"
             style="border:1.5px solid var(--ink6);background:var(--ink9);color:var(--ink4);border-radius:0">
-            <div class="border-[1.5px] transition-all duration-[120ms] group-hover:scale-[1.06]" style="border-color:var(--ink6);background:var(--white)">
-              <span class="material-icons-round transition-colors duration-[120ms]" style="color:var(--red)" aria-hidden="true">sentiment_dissatisfied</span>
-            </div>
+            <span class="material-icons-round transition-all duration-[120ms] group-hover:scale-[1.1]" style="color:var(--red)" aria-hidden="true">sentiment_dissatisfied</span>
             <span>Unsatisfactory</span>
           </button>
         </div>

@@ -65,58 +65,122 @@ body {
   color: var(--white);
 }
 
-/* ── REACTION BUTTONS ───────────────────────────────────────────────────── */
+/* ── REACTION BUTTONS (ACCESSIBILITY OPTIMIZED) ─────────────────────────── */
 .reaction-btn {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
+  justify-content: center !important;
   cursor: pointer !important;
   text-transform: uppercase !important;
   font-weight: 700 !important;
   user-select: none !important;
   position: relative !important;
   transition: all 120ms !important;
-  border-radius: 0 !important;
-  font-size: 8px !important;
-  letter-spacing: -0.03em !important;
-  gap: 6px !important;
-  padding: 12px 2px 10px 2px !important;
+  letter-spacing: 0.02em !important;
+
+  /* Massive mobile baseline */
+  gap: 12px !important;
+  padding: 24px 12px !important;
+  font-size: 14px !important; /* Increased from 8px */
 }
+
 .reaction-btn span {
   text-align: center !important;
-  line-height: 1.15 !important;
+  line-height: 1.3 !important;
   display: block !important;
   width: 100% !important;
   word-break: break-word !important;
   overflow-wrap: anywhere !important;
 }
-.reaction-btn > div {
-  width: 32px !important; height: 32px !important;
-  display: flex !important; align-items: center !important; justify-content: center !important;
-  transition: all 120ms !important;
-}
-.reaction-btn > div .material-icons-round { font-size: 18px !important; }
 
-@media (min-width: 360px) {
-  .reaction-btn { font-size: 9px !important; letter-spacing: -0.02em !important; gap: 8px !important; padding: 14px 4px 12px 4px !important; }
-  .reaction-btn > div { width: 38px !important; height: 38px !important; }
-  .reaction-btn > div .material-icons-round { font-size: 20px !important; }
+/* Icon Container */
+.reaction-btn > div {
+  /* Creating a large circular target for the icon */
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 120ms !important;
+
+  /* Mobile size */
+  width: 56px !important;
+  height: 56px !important;
 }
-@media (min-width: 400px) {
-  .reaction-btn { font-size: 9.5px !important; letter-spacing: -0.01em !important; gap: 8px !important; padding: 16px 6px 14px 6px !important; }
-  .reaction-btn > div { width: 42px !important; height: 42px !important; }
-  .reaction-btn > div .material-icons-round { font-size: 22px !important; }
+
+.reaction-btn > div .material-icons-round {
+  font-size: 32px !important; /* Increased from 18px */
 }
+
+/* ── REACTION BUTTONS (GIANT ICONS) ─────────────────────────────────────── */
+.reaction-btn {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  user-select: none !important;
+  position: relative !important;
+  transition: all 120ms !important;
+  letter-spacing: 0.02em !important;
+
+  /* Mobile baseline spacing */
+  gap: 12px !important;
+  padding: 24px 12px !important;
+  font-size: 14px !important;
+}
+
+/* Restricting the span styling only to the text, ignoring the icon */
+.reaction-btn span:not(.material-icons-round) {
+  text-align: center !important;
+  line-height: 1.3 !important;
+  display: block !important;
+  width: 100% !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* The Icon Itself - Massive sizes */
+.reaction-btn .material-icons-round {
+  font-size: 64px !important; /* Huge on mobile */
+  line-height: 1 !important;
+}
+
+/* ── REACTION BUTTONS — RESPONSIVE SCALING ──────────────────────────────── */
 @media (min-width: 480px) {
-  .reaction-btn { font-size: 10.5px !important; letter-spacing: 0.02em !important; gap: 10px !important; padding: 20px 8px 16px 8px !important; }
-  .reaction-btn > div { width: 48px !important; height: 48px !important; }
-  .reaction-btn > div .material-icons-round { font-size: 24px !important; }
+  .reaction-btn {
+    font-size: 15px !important;
+    gap: 16px !important;
+    padding: 28px 16px !important;
+  }
+  .reaction-btn .material-icons-round {
+    font-size: 76px !important; /* Larger on tablets */
+  }
 }
+
 @media (min-width: 640px) {
-  .reaction-btn { font-size: 12px !important; letter-spacing: 0.05em !important; gap: 12px !important; padding: 28px 12px 22px 12px !important; }
-  .reaction-btn > div { width: 60px !important; height: 60px !important; }
-  .reaction-btn > div .material-icons-round { font-size: 30px !important; }
+  .reaction-btn {
+    font-size: 16px !important;
+    letter-spacing: 0.05em !important;
+    gap: 20px !important;
+    padding: 36px 16px 32px 16px !important;
+  }
+  .reaction-btn .material-icons-round {
+    font-size: 92px !important; /* Giant on desktop */
+  }
 }
+
+/* ── REACTION BUTTONS — STATE MODIFIERS (UPDATED) ───────────────────────── */
+.reaction-btn.sel-pos { border-color: var(--g-primary) !important; background: var(--g-xlight) !important; color: var(--g-forest) !important; }
+.reaction-btn.sel-pos::after { background: var(--g-primary) !important; }
+
+.reaction-btn.sel-neu { border-color: #c08a1a !important; background: #fffbeb !important; color: #7a5500 !important; }
+.reaction-btn.sel-neu::after { background: var(--gold) !important; }
+
+.reaction-btn.sel-neg { border-color: var(--red) !important; background: var(--red-bg) !important; color: #7a0011 !important; }
+.reaction-btn.sel-neg::after { background: var(--red) !important; }
 
 /* ── REACTION BUTTONS — STATE MODIFIERS ─────────────────────────────────── */
 .reaction-btn.sel-pos { border-color: var(--g-primary) !important; background: var(--g-xlight) !important; color: var(--g-forest) !important; }
