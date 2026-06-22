@@ -174,6 +174,48 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 .restore-file-pill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 [data-theme="dark"] .restore-file-pill { border-color: #5fcf8a; background: rgba(35,164,85,0.12); color: #5fcf8a; }
 
+/* ── Drop-zone restore ── */
+.restore-drop-zone {
+  border: 2px dashed var(--border); padding: 28px 20px 24px;
+  text-align: center; cursor: pointer; user-select: none;
+  transition: border-color 150ms, background 150ms;
+}
+.restore-drop-zone:hover, .restore-drop-zone.drag-over {
+  border-color: var(--g-primary); background: var(--g-xlight);
+}
+[data-theme="dark"] .restore-drop-zone:hover,
+[data-theme="dark"] .restore-drop-zone.drag-over { background: rgba(35,164,85,0.08); }
+.restore-drop-icon {
+  font-size: 38px !important; color: var(--text-muted);
+  display: block; margin-bottom: 10px; transition: color 150ms, transform 200ms;
+}
+.restore-drop-zone:hover .restore-drop-icon,
+.restore-drop-zone.drag-over .restore-drop-icon { color: var(--g-primary); transform: translateY(-4px); }
+.restore-drop-label { font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; }
+.restore-drop-hint { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.03em; }
+.restore-file-selected {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; text-align: left; padding: 12px 14px;
+  background: var(--g-xlight); border: 1.5px solid var(--g-primary);
+}
+[data-theme="dark"] .restore-file-selected { background: rgba(35,164,85,0.10); border-color: #5fcf8a; }
+.restore-file-icon { font-size: 24px !important; color: var(--g-primary); flex-shrink: 0; }
+[data-theme="dark"] .restore-file-icon { color: #5fcf8a; }
+.restore-file-details { flex: 1; min-width: 0; }
+.restore-file-name-text {
+  font-size: 12px; font-weight: 700; color: var(--text-primary);
+  font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.restore-file-size-text { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+.restore-file-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.restore-remove-btn {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(192,0,26,0.35); background: transparent; color: var(--red);
+  cursor: pointer; transition: all 120ms;
+}
+.restore-remove-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+.restore-remove-btn .material-icons-round { font-size: 15px; }
+
 @media (max-width: 991px) {
   .settings-nav {
     flex-direction: row; overflow-x: auto; position: sticky; top: var(--topbar-h);
@@ -614,29 +656,40 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
               <span class="material-icons-round" style="color:var(--red);font-size:18px;flex-shrink:0;margin-top:1px">warning</span>
               <div style="font-size:12px;color:#7a0011;font-weight:600;line-height:1.6">This permanently replaces all current data with the uploaded file. A safety backup is taken automatically first, but plan for brief downtime.</div>
             </div>
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Upload Backup File</div>
-                <div class="settings-row-hint">Upload a .sql backup file to restore. Select a file first, then click Restore.</div>
+<input type="file" accept=".sql" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
+            <div id="restoreDropZone" class="restore-drop-zone"
+              ondrop="handleRestoreDrop(event)"
+              ondragover="handleRestoreDragOver(event)"
+              ondragleave="handleRestoreDragLeave(event)"
+              onclick="document.getElementById('restoreFile').click()">
+              <div id="restoreDropIdle">
+                <span class="material-icons-round restore-drop-icon">cloud_upload</span>
+                <div class="restore-drop-label">Drop your .sql backup file here</div>
+                <div class="restore-drop-hint">or click to browse &nbsp;·&nbsp; .sql files only</div>
               </div>
-              {# TASK 2: added restore-file-pill to show selected filename visually #}
-              <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                  <input type="file" accept=".sql" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
-                  <button class="btn-ph" onclick="document.getElementById('restoreFile').click()">
-                    <span class="material-icons-round">upload</span> Choose File
-                  </button>
-                  {# TASK 4: uses openRestoreModal() instead of submitRestore() directly #}
-                  <button class="btn-ph" id="restoreBtn" disabled style="border-color:var(--red);color:var(--red);" onclick="openRestoreModal()">
-                    <span class="ph-loader"></span>
-                    <span class="material-icons-round">restore</span> Restore
-                  </button>
-                </div>
-                <div class="restore-file-pill" id="restoreFilePill">
-                  <span class="material-icons-round">description</span>
-                  <span id="restoreFileName">—</span>
+              <div id="restoreDropSelected" style="display:none;" onclick="event.stopPropagation()">
+                <div class="restore-file-selected">
+                  <span class="material-icons-round restore-file-icon">description</span>
+                  <div class="restore-file-details">
+                    <div class="restore-file-name-text" id="restoreFileName">—</div>
+                    <div class="restore-file-size-text" id="restoreFileSize">—</div>
+                  </div>
+                  <div class="restore-file-actions">
+                    <button class="btn-ph btn-ph-sm" onclick="document.getElementById('restoreFile').click()" title="Pick a different file">
+                      <span class="material-icons-round">autorenew</span> Replace
+                    </button>
+                  </div>
                 </div>
               </div>
+            </div>
+            <div style="margin-top:10px;display:flex;justify-content:flex-end;gap:8px;">
+              <button class="btn-ph" id="restoreRemoveBtn" style="display:none;" onclick="clearRestoreFile(event)" title="Remove selected file">
+                <span class="material-icons-round">delete</span> Remove
+              </button>
+              <button class="btn-ph" id="restoreBtn" disabled style="border-color:var(--red);color:var(--red);" onclick="openRestoreModal()">
+                <span class="ph-loader"></span>
+                <span class="material-icons-round">restore</span> Restore Database
+              </button>
             </div>
           </div>
         </div>
@@ -1155,24 +1208,62 @@ function executeDeleteBackup() {
     });
 }
 
-/* ── TASK 2: Restore file selection — show pill with filename ── */
+/* ── Restore file — drag-and-drop + click to browse ── */
 let pendingRestoreFile = null;
 
-function onRestoreFileSelected(input) {
-  pendingRestoreFile = input.files[0] || null;
-  const pill = document.getElementById('restoreFilePill');
-  const nameEl = document.getElementById('restoreFileName');
-  const restoreBtn = document.getElementById('restoreBtn');
+function _humanBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(1) + ' MB';
+}
 
-  if (pendingRestoreFile) {
-    nameEl.textContent = pendingRestoreFile.name;
-    pill.classList.add('visible');
-    restoreBtn.disabled = false;
-  } else {
-    nameEl.textContent = '—';
-    pill.classList.remove('visible');
-    restoreBtn.disabled = true;
+function applyRestoreFile(file) {
+  if (!file) return;
+  pendingRestoreFile = file;
+  document.getElementById('restoreFileName').textContent = file.name;
+  document.getElementById('restoreFileSize').textContent = _humanBytes(file.size);
+  document.getElementById('restoreDropIdle').style.display = 'none';
+  document.getElementById('restoreDropSelected').style.display = '';
+  document.getElementById('restoreBtn').disabled = false;
+  document.getElementById('restoreRemoveBtn').style.display = '';
+}
+
+function onRestoreFileSelected(input) {
+  applyRestoreFile(input.files[0] || null);
+}
+
+function clearRestoreFile(e) {
+  if (e) e.stopPropagation();
+  pendingRestoreFile = null;
+  document.getElementById('restoreFile').value = '';
+  document.getElementById('restoreDropIdle').style.display = '';
+  document.getElementById('restoreDropSelected').style.display = 'none';
+  document.getElementById('restoreBtn').disabled = true;
+  document.getElementById('restoreRemoveBtn').style.display = 'none';
+}
+
+function handleRestoreDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('restoreDropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.sql')) {
+    showToast('Only .sql files are accepted for restore.', 'error');
+    return;
   }
+  applyRestoreFile(file);
+}
+
+function handleRestoreDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('restoreDropZone').classList.add('drag-over');
+}
+
+function handleRestoreDragLeave(e) {
+  e.preventDefault();
+  document.getElementById('restoreDropZone').classList.remove('drag-over');
 }
 
 /* ── TASK 4: Restore confirmation modal ── */
