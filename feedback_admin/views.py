@@ -18,9 +18,14 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
 from django.db.models.functions import TruncDate
-
 from feedback.models import FeedbackConfiguration, FeedbackEntry
 
+from django.http import FileResponse, Http404
+from django.core.exceptions import SuspiciousFileOperation
+
+from feedback_admin.backup_utils import (
+    create_backup, list_backups, resolve_backup_path, delete_backup, restore_backup,
+)
 
 # ── Activity log helpers (built on Django's built-in django_admin_log table) ──
 
@@ -216,6 +221,15 @@ def _format_audit_row(log, entry=None):
         elif message.startswith('Batch re-analysis'):
             action_label = 'Batch Re-analyze'
             action_type = 'settings'
+        elif message.startswith('Created backup'):
+            action_label = 'Backup Created'
+            action_type = 'backup'
+        elif message.startswith('Deleted backup'):
+            action_label = 'Backup Deleted'
+            action_type = 'backup'
+        elif message.startswith('Restored database'):
+            action_label = 'Database Restored'
+            action_type = 'backup'
         else:
             action_label = 'Settings Update'
             action_type = 'settings'
@@ -955,9 +969,18 @@ def admin_logout(request):
 
 @login_required
 def settings_page(request):
+    try:
+        backups = list_backups()
+        backup_error = None
+    except NotImplementedError as e:
+        backups = []
+        backup_error = str(e)
+
     context = {
         'users': User.objects.all().order_by('-date_joined'),
         'feedback_config': FeedbackConfiguration.get_solo(),
+        'backups': backups,
+        'backup_error': backup_error,
     }
     return render(request, 'feedback_admin/settings.html', context)
 
@@ -1033,3 +1056,78 @@ def reanalyze_sentiment_view(request):
     else:
         message = f'Re-analysis complete: {processed} of {total} pending entries categorized.'
     return JsonResponse({'ok': True, 'message': message, 'processed': processed, 'total': total})
+
+@login_required
+@require_POST
+def backup_create(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'ok': False, 'error': 'Only superusers can create backups.'}, status=403)
+    try:
+        result = create_backup()
+    except NotImplementedError as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+    except RuntimeError as e:
+        return JsonResponse({'ok': False, 'error': f'Backup failed: {e}'}, status=500)
+    except Exception:
+        return JsonResponse({'ok': False, 'error': 'Backup failed. Check server logs.'}, status=500)
+
+    log_admin_event(request.user, FeedbackConfiguration.get_solo(), ADDITION,
+                     f'Created backup "{result["filename"]}"')
+
+    return JsonResponse({'ok': True, 'message': f'Backup created: {result["filename"]}'})
+
+
+@login_required
+def backup_download(request, filename):
+    if not request.user.is_superuser:
+        raise Http404()
+    try:
+        path = resolve_backup_path(filename)
+    except (SuspiciousFileOperation, FileNotFoundError):
+        raise Http404()
+    return FileResponse(open(path, 'rb'), as_attachment=True, filename=filename)
+
+
+@login_required
+@require_POST
+def backup_delete(request, filename):
+    if not request.user.is_superuser:
+        return JsonResponse({'ok': False, 'error': 'Only superusers can delete backups.'}, status=403)
+    try:
+        delete_backup(filename)
+    except (SuspiciousFileOperation, FileNotFoundError):
+        return JsonResponse({'ok': False, 'error': 'Backup not found.'}, status=404)
+
+    log_admin_event(request.user, FeedbackConfiguration.get_solo(), DELETION,
+                     f'Deleted backup "{filename}"')
+    return JsonResponse({'ok': True, 'message': f'Backup "{filename}" deleted.'})
+
+
+@login_required
+@require_POST
+def backup_restore(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'ok': False, 'error': 'Only superusers can restore backups.'}, status=403)
+
+    uploaded = request.FILES.get('backup_file')
+    if not uploaded:
+        return JsonResponse({'ok': False, 'error': 'No file uploaded.'}, status=400)
+
+    try:
+        safety = restore_backup(uploaded)
+    except ValueError as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+    except RuntimeError as e:
+        return JsonResponse({'ok': False, 'error': f'Restore failed: {e}'}, status=500)
+    except Exception:
+        return JsonResponse({'ok': False, 'error': 'Restore failed. Check server logs.'}, status=500)
+
+    log_admin_event(request.user, FeedbackConfiguration.get_solo(), CHANGE,
+                     f'Restored database from upload (safety backup: "{safety["filename"]}")')
+
+    return JsonResponse({
+        'ok': True,
+        'message': (
+            f'Database restored from SQL dump. The previous data was saved as "{safety["filename"]}".'
+        ),
+    })

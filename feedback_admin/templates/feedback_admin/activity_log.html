@@ -115,6 +115,7 @@
         <option value="category">Category Updates</option>
         <option value="note">Notes / Replies</option>
         <option value="event">Other Events</option>
+        <option value="backup">Backups</option>
       </select>
       <select class="btn-ph" id="adminFilter" onchange="applyActFilters()" aria-label="Filter by admin">
         <option value="">All Admins</option>
@@ -177,6 +178,7 @@ const ACTION_META = {
   profile:  { label: 'Profile Change',  icon: 'badge',      cls: 'act-status' },
   settings: { label: 'Settings',        icon: 'tune',       cls: 'act-status' },
   event:    { label: 'Event',           icon: 'info',       cls: 'act-event' },
+  backup:   { label: 'Backup',          icon: 'backup',     cls: 'act-status' },
 };
 
 let filteredLogs = [...ALL_LOGS];

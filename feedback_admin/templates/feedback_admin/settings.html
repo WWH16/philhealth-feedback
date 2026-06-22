@@ -239,71 +239,71 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
       <div class="settings-panel active" id="panel-user-management">
 
         <!-- ADD Staff -->
-        <div class="settings-section">
-          <div class="settings-section-head">
-            <div class="settings-section-icon"><span class="material-icons-round">person_add</span></div>
-            <div>
-              <div class="settings-section-title">Add Staff User</div>
-              <div class="settings-section-desc">Create a new administrator account with staff access.</div>
-            </div>
+    <div class="settings-section">
+      <div class="settings-section-head">
+        <div class="settings-section-icon"><span class="material-icons-round">person_add</span></div>
+        <div>
+          <div class="settings-section-title">Add Staff User</div>
+          <div class="settings-section-desc">Create a new administrator account with staff access.</div>
+        </div>
+      </div>
+      <div class="settings-section-body">
+        <form id="addAdminForm" method="post" action="{% url 'user_add' %}" style="display:none">
+          {% csrf_token %}
+          <input type="hidden" name="is_active"    value="on">
+          <input type="hidden" name="is_staff"     value="on">
+          <input type="hidden" id="fa-username"  name="username">
+          <input type="hidden" id="fa-email"     name="email">
+          <input type="hidden" id="fa-first"     name="first_name">
+          <input type="hidden" id="fa-last"      name="last_name">
+          <input type="hidden" id="fa-pw1"       name="password1">
+          <input type="hidden" id="fa-pw2"       name="password2">
+        </form>
+
+        <div class="row g-3">
+          <div class="col-12 col-sm-6">
+            <label class="form-label" for="newUsername">Username <span style="color:var(--red)">*</span></label>
+            <input class="settings-input w-100" type="text" id="newUsername" placeholder="e.g. admin.santos" autocomplete="off">
           </div>
-          <div class="settings-section-body">
-            <form id="addAdminForm" method="post" action="{% url 'user_add' %}" style="display:none">
-              {% csrf_token %}
-              <input type="hidden" name="is_active"    value="on">
-              <input type="hidden" name="is_staff"     value="on">
-              <input type="hidden" id="fa-username"  name="username">
-              <input type="hidden" id="fa-email"     name="email">
-              <input type="hidden" id="fa-first"     name="first_name">
-              <input type="hidden" id="fa-last"      name="last_name">
-              <input type="hidden" id="fa-pw1"       name="password1">
-              <input type="hidden" id="fa-pw2"       name="password2">
-            </form>
-
-            <div class="row g-3">
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newUsername">Username <span style="color:var(--red)">*</span></label>
-                <input class="settings-input w-100" type="text" id="newUsername" placeholder="e.g. admin.santos" autocomplete="off">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newEmail">Email Address</label>
-                <input class="settings-input w-100" type="email" id="newEmail" placeholder="user@philhealth.gov.ph">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newFirst">First Name</label>
-                <input class="settings-input w-100" type="text" id="newFirst" placeholder="Maria">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newLast">Last Name</label>
-                <input class="settings-input w-100" type="text" id="newLast" placeholder="Santos">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newPw">Password <span style="color:var(--red)">*</span></label>
-                <input class="settings-input w-100" type="password" id="newPw" placeholder="Min. 8 characters" autocomplete="new-password">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newPw2">Confirm Password <span style="color:var(--red)">*</span></label>
-                <input class="settings-input w-100" type="password" id="newPw2" placeholder="Repeat password" autocomplete="new-password">
-              </div>
-              <div class="col-12">
-                <button type="button" class="btn-ph btn-ph-primary" id="addAdminBtn" onclick="submitAddAdmin()">
-                  <span class="ph-loader"></span>
-                  <span class="material-icons-round">person_add</span> Add Staff
-                </button>
-              </div>
-            </div>
-
-            {% if messages %}
-              {% for message in messages %}
-                {% if message.tags == 'error' %}
-                  <div class="settings-field-err" style="margin-top:12px;">
-                    <span class="material-icons-round">error</span> {{ message }}
-                  </div>
-                {% endif %}
-              {% endfor %}
-            {% endif %}
+          <div class="col-12 col-sm-6">
+            <label class="form-label" for="newEmail">Email Address</label>
+            <input class="settings-input w-100" type="email" id="newEmail" placeholder="user@philhealth.gov.ph">
+          </div>
+          <div class="col-12 col-sm-6">
+            <label class="form-label" for="newFirst">First Name</label>
+            <input class="settings-input w-100" type="text" id="newFirst" placeholder="Maria">
+          </div>
+          <div class="col-12 col-sm-6">
+            <label class="form-label" for="newLast">Last Name</label>
+            <input class="settings-input w-100" type="text" id="newLast" placeholder="Santos">
+          </div>
+          <div class="col-12 col-sm-6">
+            <label class="form-label" for="newPw">Password <span style="color:var(--red)">*</span></label>
+            <input class="settings-input w-100" type="password" id="newPw" placeholder="Min. 8 characters" autocomplete="new-password">
+          </div>
+          <div class="col-12 col-sm-6">
+            <label class="form-label" for="newPw2">Confirm Password <span style="color:var(--red)">*</span></label>
+            <input class="settings-input w-100" type="password" id="newPw2" placeholder="Repeat password" autocomplete="new-password">
+          </div>
+          <div class="col-12">
+            <button type="button" class="btn-ph btn-ph-primary" id="addAdminBtn" onclick="submitAddAdmin()">
+              <span class="ph-loader"></span>
+              <span class="material-icons-round">person_add</span> Add Staff
+            </button>
           </div>
         </div>
+
+        {% if messages %}
+          {% for message in messages %}
+            {% if message.tags == 'error' %}
+              <div class="settings-field-err" style="margin-top:12px;">
+                <span class="material-icons-round">error</span> {{ message }}
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
 
         <!-- EXISTING ADMINS TABLE -->
         <div class="settings-section">
@@ -647,49 +647,47 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
             <div class="settings-section-icon"><span class="material-icons-round">backup</span></div>
             <div>
               <div class="settings-section-title">Backup Database</div>
-              <div class="settings-section-desc">Download a full backup of the feedback database.</div>
+              <div class="settings-section-desc">Create a manual backup of the feedback database. No automatic schedule — this only runs when you click it.</div>
             </div>
           </div>
           <div class="settings-section-body">
+            {% if backup_error %}
+              <div class="settings-field-err"><span class="material-icons-round">error</span>{{ backup_error }}</div>
+            {% else %}
             <div class="settings-row">
               <div class="settings-row-info">
                 <div class="settings-row-label">Create Backup Now</div>
                 <div class="settings-row-hint">Generates a full database backup. Recommended before any major changes.</div>
               </div>
-              <div class="settings-row-control" style="gap:8px;flex-wrap:wrap;">
-                <button class="btn-ph btn-ph-primary" onclick="showToast('Backup created: backup_2026-06-12_14-32.sqlite3','success')">
+              <div class="settings-row-control">
+                <button class="btn-ph btn-ph-primary" id="createBackupBtn" onclick="createBackup()">
+                  <span class="ph-loader"></span>
                   <span class="material-icons-round">backup</span> Backup Now
                 </button>
-                <button class="btn-ph" onclick="showToast('Downloading backup…','success')">
-                  <span class="material-icons-round">download</span> Download Last
-                </button>
-              </div>
-            </div>
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Auto-Backup Schedule</div>
-                <div class="settings-row-hint">Automatically create backups on a regular schedule.</div>
-              </div>
-              <div class="settings-row-control">
-                <select class="btn-ph" aria-label="Backup schedule">
-                  <option>Daily at midnight</option>
-                  <option>Every 12 hours</option>
-                  <option>Weekly on Sunday</option>
-                  <option>Disabled</option>
-                </select>
               </div>
             </div>
             <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
               <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Recent Backups</div>
-              <div class="backup-log-item">
-                <div><div class="backup-log-name">backup_2026-06-12_00-00.sqlite3</div><div class="backup-log-date">June 12, 2026 · 12:00 AM</div></div>
-                <div style="display:flex;align-items:center;gap:8px;"><span class="backup-log-size">1.2 MB</span><button class="btn-ph btn-ph-sm"><span class="material-icons-round">download</span></button></div>
-              </div>
-              <div class="backup-log-item">
-                <div><div class="backup-log-name">backup_2026-06-11_00-00.sqlite3</div><div class="backup-log-date">June 11, 2026 · 12:00 AM</div></div>
-                <div style="display:flex;align-items:center;gap:8px;"><span class="backup-log-size">1.1 MB</span><button class="btn-ph btn-ph-sm"><span class="material-icons-round">download</span></button></div>
+              <div id="backupLogList">
+                {% for b in backups %}
+                <div class="backup-log-item">
+                  <div><div class="backup-log-name">{{ b.filename }}</div><div class="backup-log-date">{{ b.created_display }}</div></div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="backup-log-size">{{ b.size_display }}</span>
+                    <a class="btn-ph btn-ph-sm" href="{% url 'backup_download' b.filename %}" title="Download">
+                      <span class="material-icons-round">download</span>
+                    </a>
+                    <button class="btn-ph btn-ph-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteBackup('{{ b.filename }}')" title="Delete">
+                      <span class="material-icons-round">delete</span>
+                    </button>
+                  </div>
+                </div>
+                {% empty %}
+                <div style="font-size:12px;color:var(--text-muted);font-style:italic;">No backups yet. Click "Backup Now" to create the first one.</div>
+                {% endfor %}
               </div>
             </div>
+            {% endif %}
           </div>
         </div>
 
@@ -704,20 +702,20 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
           <div class="settings-section-body">
             <div style="padding:12px 14px;background:var(--red-bg);border:1px solid #fca5a5;border-left:3px solid var(--red);display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;border-radius:0;">
               <span class="material-icons-round" style="color:var(--red);font-size:18px;flex-shrink:0;margin-top:1px">warning</span>
-              <div style="font-size:12px;color:#7a0011;font-weight:600;line-height:1.6">This will permanently replace all current data. Create a backup first. This cannot be undone.</div>
+              <div style="font-size:12px;color:#7a0011;font-weight:600;line-height:1.6">This permanently replaces all current data with the uploaded file. A safety backup is taken automatically first, but plan for brief downtime.</div>
             </div>
             <div class="settings-row">
               <div class="settings-row-info">
                 <div class="settings-row-label">Upload Backup File</div>
-                <div class="settings-row-hint">Upload a .sqlite3 or .json backup file to restore.</div>
+                <div class="settings-row-hint">Upload a .sql backup file to restore.</div>
               </div>
               <div class="settings-row-control" style="gap:8px;">
-                <input type="file" accept=".sqlite3,.json" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
+                <input type="file" accept=".sql" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
                 <button class="btn-ph" onclick="document.getElementById('restoreFile').click()">
                   <span class="material-icons-round">upload</span> Choose File
                 </button>
-                <button class="btn-ph" style="border-color:var(--red);color:var(--red);"
-                  onclick="if(confirm('Are you sure? This will overwrite all current data.')) showToast('Restore initiated.','success')">
+                <button class="btn-ph" id="restoreBtn" disabled style="border-color:var(--red);color:var(--red);" onclick="submitRestore()">
+                  <span class="ph-loader"></span>
                   <span class="material-icons-round">restore</span> Restore
                 </button>
               </div>
@@ -1110,10 +1108,79 @@ function onToggleSurvey(cb) {
 }
 
 /* ── RESTORE FILE ── */
+function createBackup() {
+  const btn = document.getElementById('createBackupBtn');
+  btn.classList.add('is-loading');
+  fetch("{% url 'backup_create' %}", {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(data => {
+      btn.classList.remove('is-loading');
+      showToast(data.message || data.error, data.ok ? 'success' : 'error');
+      if (data.ok) setTimeout(() => location.reload(), 800);
+    })
+    .catch(() => {
+      btn.classList.remove('is-loading');
+      showToast('Network error while creating backup.', 'error');
+    });
+}
+
+function deleteBackup(filename) {
+  if (!confirm(`Delete backup "${filename}"? This cannot be undone.`)) return;
+  fetch(`/dashboard/settings/backup/${encodeURIComponent(filename)}/delete/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(data => {
+      showToast(data.message || data.error, data.ok ? 'success' : 'error');
+      if (data.ok) setTimeout(() => location.reload(), 600);
+    })
+    .catch(() => showToast('Network error while deleting backup.', 'error'));
+}
+
+let pendingRestoreFile = null;
+
 function onRestoreFileSelected(input) {
-  if (input.files.length) {
-    showToast('File selected: ' + input.files[0].name + '. Press Restore to proceed.', 'success');
+  pendingRestoreFile = input.files[0] || null;
+  document.getElementById('restoreBtn').disabled = !pendingRestoreFile;
+  if (pendingRestoreFile) {
+    showToast('File selected: ' + pendingRestoreFile.name + '. Press Restore to proceed.', 'success');
   }
+}
+
+function submitRestore() {
+  if (!pendingRestoreFile) return;
+  if (!confirm('Are you sure? This will overwrite all current data. A safety backup is taken first, but this cannot be easily undone.')) return;
+
+  const btn = document.getElementById('restoreBtn');
+  btn.classList.add('is-loading');
+
+  const fd = new FormData();
+  fd.append('backup_file', pendingRestoreFile);
+
+  fetch("{% url 'backup_restore' %}", {
+    method: 'POST',
+    body: fd,
+    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
+  })
+    .then(r => r.json())
+    .then(data => {
+      btn.classList.remove('is-loading');
+      showToast(data.message || data.error, data.ok ? 'success' : 'error');
+      if (data.ok) {
+        pendingRestoreFile = null;
+        document.getElementById('restoreFile').value = '';
+        document.getElementById('restoreBtn').disabled = true;
+        setTimeout(() => location.reload(), 1500);
+      }
+    })
+    .catch(() => {
+      btn.classList.remove('is-loading');
+      showToast('Network error during restore.', 'error');
+    });
 }
 
 /* ── TOAST ── */

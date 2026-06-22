@@ -35,4 +35,10 @@ urlpatterns = [
 
     # ── Sentiment trigger ──────────────────────────────────────────────
     path('settings/reanalyze/', views.reanalyze_sentiment_view, name='reanalyze_sentiment'),
+
+    # ── Backup / restore ─────────────────────────────────────────────
+    path('settings/backup/create/', views.backup_create, name='backup_create'),
+    path('settings/backup/restore/', views.backup_restore, name='backup_restore'),
+    path('settings/backup/<str:filename>/download/', views.backup_download, name='backup_download'),
+    path('settings/backup/<str:filename>/delete/', views.backup_delete, name='backup_delete'),
 ]
