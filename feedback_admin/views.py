@@ -1,5 +1,7 @@
 import json
-from datetime import timedelta
+from datetime import datetime, time, timedelta
+from collections import defaultdict
+
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User, Group, Permission
@@ -290,23 +292,24 @@ def dashboard(request):
     very_satisfactory = qs.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count()
     satisfactory = qs.filter(experience=FeedbackEntry.SATISFACTORY).count()
     unsatisfactory = qs.filter(experience=FeedbackEntry.UNSATISFACTORY).count()
-    trend_rows = list(
-        qs.annotate(day=TruncDate('created_at'))
-        .values('day', 'experience')
-        .annotate(total=Count('id'))
-        .order_by('day')
-    )
-    trend_dates = sorted({row['day'] for row in trend_rows})
+    trend_data_map = defaultdict(lambda: defaultdict(int))
+    for entry in qs:
+        local_day = timezone.localtime(entry.created_at).date()
+        trend_data_map[local_day][entry.experience] += 1
+
+    trend_dates = sorted(trend_data_map.keys())
 
     def pct(value):
         return round((value / total) * 100) if total else 0
 
     def trend_for(experience):
-        counts = {row['day']: row['total'] for row in trend_rows if row['experience'] == experience}
-        return [counts.get(day, 0) for day in trend_dates]
+        return [trend_data_map[day][experience] for day in trend_dates]
 
     recent_entries_data = list(recent_entries)
     recent_activity = _build_feedback_activity_map([entry.pk for entry in recent_entries_data])
+
+    today_start = timezone.make_aware(datetime.combine(today, time.min))
+    today_end = timezone.make_aware(datetime.combine(today, time.max))
 
     context = {
         'total': total,
@@ -318,7 +321,7 @@ def dashboard(request):
         'unsatisfactory_pct': pct(unsatisfactory),
         'recent_entries_data': [_entry_to_row(entry, recent_activity) for entry in recent_entries_data],
         'filter_data': {
-            'today': _experience_counts(qs.filter(created_at__date=today)),
+            'today': _experience_counts(qs.filter(created_at__range=(today_start, today_end))),
             'week': _experience_counts(qs.filter(created_at__gte=week_start)),
             'month': _experience_counts(qs.filter(created_at__gte=month_start)),
             'all': _experience_counts(qs),
@@ -471,19 +474,16 @@ def sentiment_analysis(request):
     def pct(n):
         return round((n / total) * 100) if total else 0
 
-    trend_rows = list(
-        entries.exclude(sentiment=FeedbackEntry.PENDING)
-        .annotate(day=TruncDate('created_at'))
-        .values('day', 'sentiment')
-        .annotate(total=Count('id'))
-        .order_by('day')
-    )
-    trend_dates = sorted({row['day'] for row in trend_rows})
+    trend_data_map = defaultdict(lambda: defaultdict(int))
+    for entry in entries.exclude(sentiment=FeedbackEntry.PENDING):
+        local_day = timezone.localtime(entry.created_at).date()
+        trend_data_map[local_day][entry.sentiment] += 1
+
+    trend_dates = sorted(trend_data_map.keys())
     trend_labels = [f'{day:%b} {day.day}' for day in trend_dates]
 
     def trend_for(sentiment):
-        counts = {row['day']: row['total'] for row in trend_rows if row['sentiment'] == sentiment}
-        return [counts.get(day, 0) for day in trend_dates]
+        return [trend_data_map[day][sentiment] for day in trend_dates]
 
     context = {
         'total': total,
@@ -539,7 +539,9 @@ def reports(request):
         }
 
     # Basic stats for templates
-    daily_qs = FeedbackEntry.objects.filter(created_at__date=today)
+    today_start = timezone.make_aware(datetime.combine(today, time.min))
+    today_end = timezone.make_aware(datetime.combine(today, time.max))
+    daily_qs = FeedbackEntry.objects.filter(created_at__range=(today_start, today_end))
     weekly_qs = FeedbackEntry.objects.filter(created_at__gte=week_start)
     monthly_qs = FeedbackEntry.objects.filter(created_at__gte=month_start)
     quarterly_qs = FeedbackEntry.objects.filter(created_at__gte=quarter_start)
