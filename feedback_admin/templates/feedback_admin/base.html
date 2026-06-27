@@ -278,7 +278,24 @@ input:not(:checked) + .slider .sun {
 
 /* ── PAGE HEADER ──────────────────────────────────────────────────────── */
 .page-header { margin-bottom: 28px; }
-.page-eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--g-primary); margin-bottom: 8px; }
+.page-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--g-deep);
+  background: var(--g-xlight);
+  border: 1.5px solid rgba(35, 164, 85, 0.25);
+  padding: 4px 10px;
+  margin-bottom: 12px;
+}
+[data-theme="dark"] .page-eyebrow {
+  color: #5fcf8a;
+  border-color: rgba(95, 207, 138, 0.25);
+}
 .page-eyebrow .material-icons-round { font-size: 13px; }
 .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.04em; color: var(--text-primary); margin: 0 0 6px; line-height: 1.1; }
 .page-subtitle { font-size: 13px; color: var(--text-secondary); margin: 0; }
@@ -484,8 +501,7 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
 }
 .ph-toast {
   background: var(--surface-card) !important;
-  border: 1px solid var(--border) !important;
-  border-left: 4px solid var(--toast-color) !important;
+  border: 1.5px solid var(--toast-color) !important;
   box-shadow: 0 12px 32px rgba(0,0,0,0.12) !important;
   position: relative;
   overflow: hidden;
