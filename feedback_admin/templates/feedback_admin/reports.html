@@ -418,6 +418,7 @@ function initReportTrendChart(data) {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const grid = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
   const tick = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
+  const ptBgColor = isDark ? '#1a1e24' : '#ffffff';
 
   if (reportTrendChart) reportTrendChart.destroy();
   reportTrendChart = new Chart(ctx, {
@@ -428,12 +429,17 @@ function initReportTrendChart(data) {
         label: 'Responses',
         data: data.trendData,
         borderColor: '#23A455',
-        backgroundColor: 'rgba(35,164,85,0.08)',
+        backgroundColor: 'rgba(35,164,85,0.06)',
         tension: 0.35,
         fill: true,
         pointBackgroundColor: '#23A455',
+        pointBorderColor: ptBgColor,
+        pointBorderWidth: data.trendData.length > 40 ? 0 : 1.5,
         pointRadius: data.trendData.length > 40 ? 0 : 3,
-        pointHoverRadius: 5,
+        pointHoverRadius: data.trendData.length > 40 ? 4 : 5,
+        pointHoverBackgroundColor: '#23A455',
+        pointHoverBorderColor: ptBgColor,
+        pointHoverBorderWidth: 2.5,
         borderWidth: 2,
       }]
     },
@@ -446,7 +452,17 @@ function initReportTrendChart(data) {
       },
       plugins: {
         legend: { display: false },
-        tooltip: { backgroundColor: isDark ? '#2a2e35' : '#1c1e22', titleColor: '#fff', bodyColor: 'rgba(255,255,255,0.7)', padding: 12, cornerRadius: 0, titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, bodyFont: { family: "'IBM Plex Sans'", size: 12 } }
+        tooltip: { 
+          backgroundColor: isDark ? '#2a2e35' : '#1c1e22', 
+          titleColor: '#ffffff', 
+          bodyColor: 'rgba(255,255,255,0.75)', 
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
+          borderWidth: 1,
+          padding: 12, 
+          cornerRadius: 0, 
+          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, 
+          bodyFont: { family: "'IBM Plex Sans'", size: 12 } 
+        }
       }
     }
   });

@@ -277,27 +277,87 @@ function initLineChart(labels, vsat, sat, unsat) {
   const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
   const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
   const textColor = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
+  const ptBgColor = isDark ? '#1a1e24' : '#ffffff';
+
   if (lineChart) lineChart.destroy();
   lineChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
       datasets: [
-        { label:'Very Satisfactory', data:vsat,  borderColor:'#23A455', backgroundColor:'rgba(35,164,85,0.08)', tension:0.4, fill:true,  pointBackgroundColor:'#23A455', pointRadius:4, pointHoverRadius:6, borderWidth:2 },
-        { label:'Satisfactory',      data:sat,   borderColor:'#b8933a', backgroundColor:'rgba(184,147,58,0.06)', tension:0.4, fill:false, pointBackgroundColor:'#b8933a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
-        { label:'Unsatisfactory',    data:unsat, borderColor:'#c0001a', backgroundColor:'rgba(192,0,26,0.05)',    tension:0.4, fill:false, pointBackgroundColor:'#c0001a', pointRadius:3, pointHoverRadius:5, borderWidth:2 },
+        { 
+          label: 'Very Satisfactory', 
+          data: vsat,  
+          borderColor: '#23A455', 
+          backgroundColor: 'rgba(35,164,85,0.06)', 
+          tension: 0.35, 
+          fill: true,  
+          pointBackgroundColor: '#23A455', 
+          pointBorderColor: ptBgColor,
+          pointBorderWidth: 1.5,
+          pointRadius: 4, 
+          pointHoverRadius: 6, 
+          pointHoverBackgroundColor: '#23A455',
+          pointHoverBorderColor: ptBgColor,
+          pointHoverBorderWidth: 2.5,
+          borderWidth: 2 
+        },
+        { 
+          label: 'Satisfactory',      
+          data: sat,   
+          borderColor: '#b8933a', 
+          backgroundColor: 'rgba(184,147,58,0.04)', 
+          tension: 0.35, 
+          fill: false, 
+          pointBackgroundColor: '#b8933a', 
+          pointBorderColor: ptBgColor,
+          pointBorderWidth: 1.5,
+          pointRadius: 3, 
+          pointHoverRadius: 5, 
+          pointHoverBackgroundColor: '#b8933a',
+          pointHoverBorderColor: ptBgColor,
+          pointHoverBorderWidth: 2.5,
+          borderWidth: 2 
+        },
+        { 
+          label: 'Unsatisfactory',    
+          data: unsat, 
+          borderColor: '#c0001a', 
+          backgroundColor: 'rgba(192,0,26,0.04)',    
+          tension: 0.35, 
+          fill: false, 
+          pointBackgroundColor: '#c0001a', 
+          pointBorderColor: ptBgColor,
+          pointBorderWidth: 1.5,
+          pointRadius: 3, 
+          pointHoverRadius: 5, 
+          pointHoverBackgroundColor: '#c0001a',
+          pointHoverBorderColor: ptBgColor,
+          pointHoverBorderWidth: 2.5,
+          borderWidth: 2 
+        },
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      interaction: { mode:'index', intersect:false },
+      interaction: { mode: 'index', intersect: false },
       scales: {
-        x: { grid:{color:gridColor}, ticks:{color:textColor,font:{family:"'IBM Plex Sans'",size:10},maxTicksLimit:7}, border:{display:false} },
-        y: { beginAtZero:true, grid:{color:gridColor}, ticks:{color:textColor,font:{family:"'IBM Plex Sans'",size:10},stepSize:5}, border:{display:false} }
+        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 10 }, maxTicksLimit: 7 }, border: { display: false } },
+        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 10 }, stepSize: 5 }, border: { display: false } }
       },
       plugins: {
-        legend: { position:'top', align:'end', labels:{ color:textColor, font:{family:"'IBM Plex Sans'",size:10,weight:'700'}, boxWidth:10, boxHeight:10, padding:14, usePointStyle:true, pointStyle:'circle' } },
-        tooltip: { backgroundColor: isDark?'#2a2e35':'#1c1e22', titleColor:'#ffffff', bodyColor:'rgba(255,255,255,0.7)', padding:12, cornerRadius:0, titleFont:{family:"'IBM Plex Sans'",weight:'700',size:11}, bodyFont:{family:"'IBM Plex Sans'",size:12} }
+        legend: { position: 'top', align: 'end', labels: { color: textColor, font: { family: "'IBM Plex Sans'", size: 10, weight: '700' }, boxWidth: 10, boxHeight: 10, padding: 14, usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: { 
+          backgroundColor: isDark ? '#2a2e35' : '#1c1e22', 
+          titleColor: '#ffffff', 
+          bodyColor: 'rgba(255,255,255,0.75)', 
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
+          borderWidth: 1,
+          padding: 12, 
+          cornerRadius: 0, 
+          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, 
+          bodyFont: { family: "'IBM Plex Sans'", size: 12 } 
+        }
       }
     }
   });
