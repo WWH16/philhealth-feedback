@@ -190,8 +190,8 @@
         <p class="page-subtitle">Manage admin users, permissions, and groups.</p>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <button class="btn-ph btn-ph-primary" onclick="openUserModal()">
-          <span class="material-icons-round">person_add</span> Add User
+        <button type="button" class="btn-ph btn-ph-primary" onclick="openUserModal()">
+          <span class="material-icons-round" aria-hidden="true">person_add</span> Add User
         </button>
       </div>
     </div>
@@ -204,7 +204,7 @@
         <div class="stat-card-icon"><span class="material-icons-round" style="color:var(--g-primary);background:var(--g-xlight)">people</span></div>
         <div class="stat-value">{{ total_users }}</div>
         <div class="stat-label">Total Users</div>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">people</span></div>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">people</span></div>
       </div>
     </div>
     <div class="col-6 col-md-3">
@@ -212,7 +212,7 @@
         <div class="stat-card-icon"><span class="material-icons-round">verified_user</span></div>
         <div class="stat-value">{{ active_users }}</div>
         <div class="stat-label">Active</div>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">verified_user</span></div>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">verified_user</span></div>
       </div>
     </div>
     <div class="col-6 col-md-3">
@@ -220,7 +220,7 @@
         <div class="stat-card-icon"><span class="material-icons-round">admin_panel_settings</span></div>
         <div class="stat-value">{{ staff_users }}</div>
         <div class="stat-label">Staff / Admin</div>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">admin_panel_settings</span></div>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">admin_panel_settings</span></div>
       </div>
     </div>
     <div class="col-6 col-md-3">
@@ -228,20 +228,20 @@
         <div class="stat-card-icon" style="background:#fef9ee"><span class="material-icons-round" style="color:var(--gold)">groups</span></div>
         <div class="stat-value">{{ total_groups }}</div>
         <div class="stat-label">Groups</div>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">groups</span></div>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">groups</span></div>
       </div>
     </div>
   </div>
 
   <!-- TAB BAR -->
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('users', this)">
-      <span class="material-icons-round">person</span>
+    <button type="button" class="tab-btn active" onclick="switchTab('users', this)">
+      <span class="material-icons-round" aria-hidden="true">person</span>
       Users
       <span class="tab-count">{{ total_users }}</span>
     </button>
-    <button class="tab-btn" onclick="switchTab('groups', this)">
-      <span class="material-icons-round">groups</span>
+    <button type="button" class="tab-btn" onclick="switchTab('groups', this)">
+      <span class="material-icons-round" aria-hidden="true">groups</span>
       Groups
       <span class="tab-count">{{ total_groups }}</span>
     </button>
