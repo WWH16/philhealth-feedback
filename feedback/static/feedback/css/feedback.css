@@ -115,25 +115,36 @@ body {
   shrink: 0;
 }
 
-/* ── SQD MATRIX TABLE & MOBILE STICKY COLUMN ─────────────────────────── */
+/* ── SQD MATRIX TABLE & MOBILE HORIZONTAL SCROLL ──────────────────────── */
 .paper-sqd-wrap {
   position: relative;
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  border: 1px solid #1e293b;
+  border-radius: 2px;
 }
 
 .paper-sqd-table {
   width: 100%;
-  min-width: 680px;
-  border-collapse: collapse;
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 11.5px;
 }
 
 .paper-sqd-table th, .paper-sqd-table td {
-  border: 1px solid #1e293b;
-  padding: 10px 8px;
+  border-right: 1px solid #1e293b;
+  border-bottom: 1px solid #1e293b;
+  padding: 10px 10px;
   vertical-align: middle;
+}
+
+.paper-sqd-table tr:last-child td {
+  border-bottom: none;
+}
+.paper-sqd-table th:last-child, .paper-sqd-table td:last-child {
+  border-right: none;
 }
 
 .paper-sqd-table th {
@@ -143,25 +154,10 @@ body {
   text-align: center;
 }
 
-/* Sticky first column on mobile scroll */
-.sqd-col-sticky {
-  position: sticky;
-  left: 0;
-  background: #ffffff;
-  z-index: 10;
-  box-shadow: 2px 0 5px -2px rgba(15, 23, 42, 0.1);
-}
-
-.paper-sqd-table th.sqd-col-sticky {
-  background: #f8fafc;
-}
-
-.paper-sqd-table tbody tr:nth-child(even) td.sqd-col-sticky {
-  background-color: #f8fafc;
-}
-
-.paper-sqd-table tbody tr:hover td.sqd-col-sticky {
-  background-color: #f0fdf4;
+/* Question Column (full width, scrollable together with choices) */
+.sqd-col-statement {
+  min-width: 260px;
+  text-align: left;
 }
 
 .paper-sqd-table tbody tr:nth-child(even) {
@@ -174,12 +170,13 @@ body {
 
 .sqd-cell-center {
   text-align: center;
+  min-width: 80px;
 }
 
 .sqd-cell-center input[type="radio"] {
   accent-color: var(--g-primary);
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   cursor: pointer;
 }
 .sqd-cell-center input[type="radio"]:focus-visible {
