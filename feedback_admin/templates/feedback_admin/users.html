@@ -576,7 +576,7 @@
             </div>
           </div>
 
-          <div class="form-section">
+          <div class="form-section" style="margin-bottom:0;">
             <div class="form-section-label">
               <span class="material-icons-round">security</span> Permissions
             </div>
@@ -606,46 +606,6 @@
                   <div class="perm-item-module">Designates that this user has all permissions without explicitly assigning them.</div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <div class="form-section-label">
-              <span class="material-icons-round">groups</span> Groups
-            </div>
-            <p class="form-hint" style="margin-bottom:10px;">Users in a group inherit all permissions of that group.</p>
-            <div class="perm-grid" id="groupPickerList">
-              {% for g in groups %}
-              <div class="perm-item" onclick="togglePermItem(this)">
-                <input type="checkbox" name="groups" value="{{ g.id }}"
-                  onclick="event.stopPropagation();this.closest('.perm-item').classList.toggle('checked',this.checked)"
-                  style="accent-color:var(--g-primary)">
-                <div>
-                  <div class="perm-item-label">{{ g.name }}</div>
-                  <div class="perm-item-module">{{ g.member_count }} member{{ g.member_count|pluralize }} · {{ g.permissions.count }} permission{{ g.permissions.count|pluralize }}</div>
-                </div>
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-
-          <div class="form-section" style="margin-bottom:0;">
-            <div class="form-section-label">
-              <span class="material-icons-round">tune</span> User Permissions
-            </div>
-            <p class="form-hint" style="margin-bottom:10px;">Specific permissions for this user beyond their group permissions.</p>
-            <div class="perm-grid" id="permPickerList">
-              {% for p in permissions %}
-              <div class="perm-item" onclick="togglePermItem(this)">
-                <input type="checkbox" name="user_permissions" value="{{ p.id }}"
-                  onclick="event.stopPropagation();this.closest('.perm-item').classList.toggle('checked',this.checked)"
-                  style="accent-color:var(--g-primary)">
-                <div style="flex:1;min-width:0;">
-                  <div class="perm-item-label">{{ p.name }}</div>
-                  <div class="perm-item-module">{{ p.content_type.app_label }} | {{ p.codename }}</div>
-                </div>
-              </div>
-              {% endfor %}
             </div>
           </div>
 
