@@ -1,11 +1,10 @@
 {% extends 'feedback_admin/base.html' %}
 {% load static %}
 
-{% block title %}Sentiment Analysis | PhilHealth Cauayan City{% endblock %}
+{% block title %}AI Sentiment Analytics | PhilHealth Cauayan City{% endblock %}
 
 {% block head_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 {% endblock %}
 
 {% block nav_sentiment %}active{% endblock %}
@@ -18,10 +17,10 @@
       <div>
         <div class="page-eyebrow">
           <span class="material-icons-round">psychology</span>
-          Automated Sentiment Detection
+          Automated Sentiment Intelligence
         </div>
-        <h1 class="page-title">Sentiment Analysis</h1>
-        <p class="page-subtitle">Feedback automatically categorized as Positive, Neutral, or Negative.</p>
+        <h1 class="page-title">AI Sentiment Analytics</h1>
+        <p class="page-subtitle">Feedback automatically categorized as Positive, Neutral, or Negative using NLP analysis.</p>
       </div>
     </div>
   </div>
@@ -33,8 +32,8 @@
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
         <div class="stat-value">{{ positive }}</div>
         <div class="stat-label">Total Positive Feedback</div>
-        <span class="stat-delta up"><span class="material-icons-round">arrow_upward</span>{{ positive_pct }}% of total</span>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
+        <span class="stat-delta up"><span class="material-icons-round" aria-hidden="true">arrow_upward</span>{{ positive_pct }}% of total</span>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
       </div>
     </div>
     <div class="col-12 col-md-4">
@@ -42,8 +41,8 @@
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_neutral</span></div>
         <div class="stat-value">{{ neutral }}</div>
         <div class="stat-label">Total Neutral Feedback</div>
-        <span class="stat-delta flat"><span class="material-icons-round">remove</span>{{ neutral_pct }}% of total</span>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_neutral</span></div>
+        <span class="stat-delta flat"><span class="material-icons-round" aria-hidden="true">remove</span>{{ neutral_pct }}% of total</span>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">sentiment_neutral</span></div>
       </div>
     </div>
     <div class="col-12 col-md-4">
@@ -51,8 +50,8 @@
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
         <div class="stat-value">{{ negative }}</div>
         <div class="stat-label">Total Negative Feedback</div>
-        <span class="stat-delta down"><span class="material-icons-round">arrow_downward</span>{{ negative_pct }}% of total</span>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
+        <span class="stat-delta down"><span class="material-icons-round" aria-hidden="true">arrow_downward</span>{{ negative_pct }}% of total</span>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">sentiment_dissatisfied</span></div>
       </div>
     </div>
   </div>
@@ -65,7 +64,7 @@
       <div class="card-block h-100">
         <div class="card-block-head">
           <h2 class="card-block-title">
-            <span class="material-icons-round">donut_large</span>
+            <span class="material-icons-round" aria-hidden="true">donut_large</span>
             Sentiment Distribution
           </h2>
         </div>
@@ -79,19 +78,19 @@
             <div class="pie-legend-col">
               <div class="pie-legend">
                 <div class="pie-legend-item">
-                  <div class="pie-legend-dot" style="background:var(--g-primary)"></div>
+                  <div class="pie-legend-dot" style="background:#169651"></div>
                   <span class="pie-legend-label">Positive</span>
                   <span class="pie-legend-value">{{ positive }}</span>
                   <span class="pie-legend-pct">{{ positive_pct }}%</span>
                 </div>
                 <div class="pie-legend-item">
-                  <div class="pie-legend-dot" style="background:var(--gold)"></div>
+                  <div class="pie-legend-dot" style="background:#d97706"></div>
                   <span class="pie-legend-label">Neutral</span>
                   <span class="pie-legend-value">{{ neutral }}</span>
                   <span class="pie-legend-pct">{{ neutral_pct }}%</span>
                 </div>
                 <div class="pie-legend-item">
-                  <div class="pie-legend-dot" style="background:var(--red)"></div>
+                  <div class="pie-legend-dot" style="background:#dc2626"></div>
                   <span class="pie-legend-label">Negative</span>
                   <span class="pie-legend-value">{{ negative }}</span>
                   <span class="pie-legend-pct">{{ negative_pct }}%</span>
@@ -108,7 +107,7 @@
       <div class="card-block h-100">
         <div class="card-block-head">
           <h2 class="card-block-title">
-            <span class="material-icons-round">bar_chart</span>
+            <span class="material-icons-round" aria-hidden="true">bar_chart</span>
             Sentiment Totals
           </h2>
         </div>
@@ -128,7 +127,7 @@
       <div class="card-block">
         <div class="card-block-head">
           <h2 class="card-block-title">
-            <span class="material-icons-round">show_chart</span>
+            <span class="material-icons-round" aria-hidden="true">show_chart</span>
             Sentiment Trends
           </h2>
         </div>
@@ -145,13 +144,10 @@
 
 {% block page_scripts %}
 <script>
-// Register the datalabels plugin globally
-Chart.register(ChartDataLabels);
-
 const SENTIMENT_DATA = {
-  positive: {{ positive }},
-  neutral: {{ neutral }},
-  negative: {{ negative }},
+  positive: {{ positive|default:0 }},
+  neutral:  {{ neutral|default:0 }},
+  negative: {{ negative|default:0 }}
 };
 
 const TREND_LABELS   = {{ trend_labels|safe }};
@@ -162,36 +158,127 @@ const TREND_NEGATIVE = {{ trend_negative|safe }};
 let sentimentPieChart, sentimentBarChart, sentimentTrendChart;
 
 function initSentimentPie() {
-  const ctx    = document.getElementById('sentimentPieChart').getContext('2d');
+  const canvas = document.getElementById('sentimentPieChart');
+  if (!canvas) return;
+  const ctx    = canvas.getContext('2d');
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const total  = SENTIMENT_DATA.positive + SENTIMENT_DATA.neutral + SENTIMENT_DATA.negative;
+
   if (sentimentPieChart) sentimentPieChart.destroy();
+
+  const centerTextPlugin = {
+    id: 'centerSentimentText',
+    afterDraw(chart) {
+      if (!chart.chartArea) return;
+      const ctx = chart.ctx;
+      ctx.save();
+      const posPct = total ? Math.round((SENTIMENT_DATA.positive / total) * 100) : 0;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+      const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+
+      ctx.font = '700 22px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = isDark ? '#f8fafc' : '#0f172a';
+      ctx.fillText(`${posPct}%`, centerX, centerY - 8);
+
+      ctx.font = '600 10px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.fillText('Positive', centerX, centerY + 12);
+      ctx.restore();
+    }
+  };
+
   sentimentPieChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Positive', 'Neutral', 'Negative'],
       datasets: [{
         data: [SENTIMENT_DATA.positive, SENTIMENT_DATA.neutral, SENTIMENT_DATA.negative],
-        backgroundColor: ['#23A455', '#b8933a', '#c0001a'],
-        borderColor: isDark ? '#1a1e24' : '#ffffff',
-        borderWidth: 3,
+        backgroundColor: ['#169651', '#d97706', '#dc2626'],
+        borderColor: isDark ? '#1e293b' : '#ffffff',
+        borderWidth: 2,
         hoverOffset: 6
       }]
     },
+    plugins: [centerTextPlugin],
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '72%',
+      animation: { animateRotate: true, animateScale: true },
       plugins: {
         legend: { display: false },
-        datalabels: { display: false }, // Disable for pie chart to keep it clean
         tooltip: {
+          backgroundColor: isDark ? '#0f172a' : '#1e293b',
+          titleColor: '#ffffff',
+          bodyColor: '#f1f5f9',
+          padding: 10,
+          cornerRadius: 4,
+          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 },
+          bodyFont: { family: "'IBM Plex Sans'", size: 12 },
           callbacks: {
-            label: ctx => {
-              const t = ctx.dataset.data.reduce((a,b)=>a+b,0);
-              return `  ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed/t*100)}%)`;
+            label: function(ctx) {
+              const t = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = t ? Math.round((ctx.parsed / t) * 100) : 0;
+              return `  ${ctx.label}: ${ctx.parsed} (${pct}%)`;
             }
-          },
-          backgroundColor: isDark ? '#2a2e35' : '#1c1e22',
-          titleColor: '#ffffff', bodyColor: 'rgba(255,255,255,0.75)',
-          padding: 10, cornerRadius: 0,
+          }
+        }
+      }
+    }
+  });
+}
+
+function initSentimentBar() {
+  const canvas = document.getElementById('sentimentBarChart');
+  if (!canvas) return;
+  const ctx       = canvas.getContext('2d');
+  const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
+  const textColor = isDark ? '#cbd5e1' : '#475569';
+
+  if (sentimentBarChart) sentimentBarChart.destroy();
+
+  const maxVal = Math.max(SENTIMENT_DATA.positive, SENTIMENT_DATA.neutral, SENTIMENT_DATA.negative, 1);
+
+  sentimentBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Positive', 'Neutral', 'Negative'],
+      datasets: [{
+        label: 'Feedback Count',
+        data: [SENTIMENT_DATA.positive, SENTIMENT_DATA.neutral, SENTIMENT_DATA.negative],
+        backgroundColor: ['#169651', '#d97706', '#dc2626'],
+        borderRadius: 4,
+        barPercentage: 0.55
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 11, weight: '600' } },
+          border: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: gridColor, borderDash: [], drawTicks: false },
+          ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 11, weight: '600' } },
+          border: { display: false },
+          suggestedMax: Math.ceil(maxVal * 1.15)
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark ? '#0f172a' : '#1e293b',
+          titleColor: '#ffffff',
+          bodyColor: '#f1f5f9',
+          padding: 12,
+          cornerRadius: 4,
           titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 },
           bodyFont: { family: "'IBM Plex Sans'", size: 12 }
         }
@@ -200,149 +287,149 @@ function initSentimentPie() {
   });
 }
 
-function initSentimentBar() {
-  const ctx    = document.getElementById('sentimentBarChart').getContext('2d');
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const grid   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const tick   = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
-  if (sentimentBarChart) sentimentBarChart.destroy();
-  sentimentBarChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['Positive', 'Neutral', 'Negative'],
-      datasets: [{
-        label: 'Feedback Count',
-        data: [SENTIMENT_DATA.positive, SENTIMENT_DATA.neutral, SENTIMENT_DATA.negative],
-        backgroundColor: ['#23A455', '#b8933a', '#c0001a'],
-        borderRadius: 2,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        x: { grid: { display: false }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 11, weight: '600' } }, border: { display: false } },
-        y: {
-          beginAtZero: true,
-          grid: { color: grid },
-          ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10 } },
-          border: { display: false },
-          suggestedMax: Math.max(SENTIMENT_DATA.positive, SENTIMENT_DATA.neutral, SENTIMENT_DATA.negative) * 1.15 // Add some head room for labels
-        }
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: { backgroundColor: isDark ? '#2a2e35' : '#1c1e22', titleColor: '#fff', bodyColor: 'rgba(255,255,255,0.7)', padding: 12, cornerRadius: 0, titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, bodyFont: { family: "'IBM Plex Sans'", size: 12 } },
-        datalabels: {
-          anchor: 'end',
-          align: 'top',
-          color: isDark ? '#ffffff' : '#1c1e22',
-          font: { family: "'IBM Plex Sans'", size: 12, weight: '700' },
-          formatter: (value) => value
-        }
-      }
-    }
-  });
-}
-
 function initSentimentTrend() {
-  const ctx      = document.getElementById('sentimentTrendChart').getContext('2d');
-  const isDark   = document.documentElement.getAttribute('data-theme') === 'dark';
-  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const textColor = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
-  const ptBgColor = isDark ? '#1a1e24' : '#ffffff';
+  const canvas = document.getElementById('sentimentTrendChart');
+  if (!canvas) return;
+  const ctx       = canvas.getContext('2d');
+  const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
+  const textColor = isDark ? '#cbd5e1' : '#475569';
+  const ptBgColor = isDark ? '#0f172a' : '#ffffff';
+
+  // Area gradients
+  const gradPos = ctx.createLinearGradient(0, 0, 0, 240);
+  gradPos.addColorStop(0, 'rgba(22, 150, 81, 0.22)');
+  gradPos.addColorStop(1, 'rgba(22, 150, 81, 0.0)');
+
+  const gradNeu = ctx.createLinearGradient(0, 0, 0, 240);
+  gradNeu.addColorStop(0, 'rgba(217, 119, 6, 0.18)');
+  gradNeu.addColorStop(1, 'rgba(217, 119, 6, 0.0)');
+
+  const gradNeg = ctx.createLinearGradient(0, 0, 0, 240);
+  gradNeg.addColorStop(0, 'rgba(220, 38, 38, 0.18)');
+  gradNeg.addColorStop(1, 'rgba(220, 38, 38, 0.0)');
 
   if (sentimentTrendChart) sentimentTrendChart.destroy();
+
   sentimentTrendChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: TREND_LABELS,
       datasets: [
-        { 
-          label: 'Positive', 
-          data: TREND_POSITIVE, 
-          borderColor: '#23A455', 
-          backgroundColor: 'rgba(35,164,85,0.06)', 
-          tension: 0.35, 
-          fill: true,  
-          pointBackgroundColor: '#23A455', 
+        {
+          label: 'Positive',
+          data: TREND_POSITIVE,
+          borderColor: '#169651',
+          backgroundColor: gradPos,
+          tension: 0.35,
+          fill: true,
+          pointBackgroundColor: '#169651',
           pointBorderColor: ptBgColor,
-          pointBorderWidth: 1.5,
-          pointRadius: 4, 
-          pointHoverRadius: 6, 
-          pointHoverBackgroundColor: '#23A455',
+          pointBorderWidth: 2,
+          pointRadius: 0,
+          pointHitRadius: 10,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#169651',
           pointHoverBorderColor: ptBgColor,
           pointHoverBorderWidth: 2.5,
-          borderWidth: 2 
+          borderWidth: 2.5
         },
-        { 
-          label: 'Neutral',  
-          data: TREND_NEUTRAL,  
-          borderColor: '#b8933a', 
-          backgroundColor: 'rgba(184,147,58,0.04)', 
-          tension: 0.35, 
-          fill: false, 
-          pointBackgroundColor: '#b8933a', 
+        {
+          label: 'Neutral',
+          data: TREND_NEUTRAL,
+          borderColor: '#d97706',
+          backgroundColor: gradNeu,
+          tension: 0.35,
+          fill: true,
+          pointBackgroundColor: '#d97706',
           pointBorderColor: ptBgColor,
-          pointBorderWidth: 1.5,
-          pointRadius: 3, 
-          pointHoverRadius: 5, 
-          pointHoverBackgroundColor: '#b8933a',
+          pointBorderWidth: 2,
+          pointRadius: 0,
+          pointHitRadius: 10,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#d97706',
           pointHoverBorderColor: ptBgColor,
           pointHoverBorderWidth: 2.5,
-          borderWidth: 2 
+          borderWidth: 2.5
         },
-        { 
-          label: 'Negative', 
-          data: TREND_NEGATIVE, 
-          borderColor: '#c0001a', 
-          backgroundColor: 'rgba(192,0,26,0.04)',   
-          tension: 0.35, 
-          fill: false, 
-          pointBackgroundColor: '#c0001a', 
+        {
+          label: 'Negative',
+          data: TREND_NEGATIVE,
+          borderColor: '#dc2626',
+          backgroundColor: gradNeg,
+          tension: 0.35,
+          fill: true,
+          pointBackgroundColor: '#dc2626',
           pointBorderColor: ptBgColor,
-          pointBorderWidth: 1.5,
-          pointRadius: 3, 
-          pointHoverRadius: 5, 
-          pointHoverBackgroundColor: '#c0001a',
+          pointBorderWidth: 2,
+          pointRadius: 0,
+          pointHitRadius: 10,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#dc2626',
           pointHoverBorderColor: ptBgColor,
           pointHoverBorderWidth: 2.5,
-          borderWidth: 2 
-        },
+          borderWidth: 2.5
+        }
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 10 }, maxTicksLimit: 7 }, border: { display: false } },
-        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 10 }, stepSize: 5 }, border: { display: false } }
+        x: {
+          grid: { color: gridColor, borderDash: [], drawTicks: false },
+          ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 11, weight: '600' }, maxTicksLimit: 8 },
+          border: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: gridColor, borderDash: [], drawTicks: false },
+          ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 11, weight: '600' }, stepSize: 5 },
+          border: { display: false }
+        }
       },
       plugins: {
-        legend: { position: 'top', align: 'end', labels: { color: textColor, font: { family: "'IBM Plex Sans'", size: 10, weight: '700' }, boxWidth: 10, boxHeight: 10, padding: 14, usePointStyle: true, pointStyle: 'circle' } },
-        datalabels: { display: false }, // Disable for trend chart
-        tooltip: { 
-          backgroundColor: isDark ? '#2a2e35' : '#1c1e22', 
-          titleColor: '#ffffff', 
-          bodyColor: 'rgba(255,255,255,0.75)', 
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
+        legend: {
+          position: 'top',
+          align: 'end',
+          labels: {
+            color: textColor,
+            font: { family: "'IBM Plex Sans'", size: 11, weight: '700' },
+            boxWidth: 8,
+            boxHeight: 8,
+            padding: 14,
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#0f172a' : '#1e293b',
+          titleColor: '#ffffff',
+          bodyColor: '#f1f5f9',
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
           borderWidth: 1,
-          padding: 12, 
-          cornerRadius: 0, 
-          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, 
-          bodyFont: { family: "'IBM Plex Sans'", size: 12 } 
+          padding: 12,
+          cornerRadius: 4,
+          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 },
+          bodyFont: { family: "'IBM Plex Sans'", size: 12 }
         }
       }
     }
   });
 }
 
-function onThemeChange() { initSentimentPie(); initSentimentBar(); initSentimentTrend(); }
-function onResize()       { initSentimentPie(); initSentimentBar(); initSentimentTrend(); }
-
-function pageInit() {
+function renderAllSentimentCharts() {
   initSentimentPie();
   initSentimentBar();
   initSentimentTrend();
+}
+
+function onThemeChange() { renderAllSentimentCharts(); }
+function onResize()       { renderAllSentimentCharts(); }
+
+function pageInit() {
+  renderAllSentimentCharts();
 }
 </script>
 {% endblock %}
