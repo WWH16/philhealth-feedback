@@ -151,20 +151,20 @@
           <option value="week">This Week</option>
           <option value="month">This Month</option>
         </select>
-        <button class="btn-ph btn-ph-primary" onclick="exportCSV()">
-          <span class="material-icons-round">download</span> Export CSV
+        <button type="button" class="btn-ph btn-ph-primary" onclick="exportCSV()">
+          <span class="material-icons-round" aria-hidden="true">download</span> Export CSV
         </button>
       </div>
     </div>
 
     <div class="bulk-bar" id="bulkBar">
-      <span class="material-icons-round">check_box</span>
+      <span class="material-icons-round" aria-hidden="true">check_box</span>
       <span id="bulkCount">0 selected</span>
-      <button class="btn-ph btn-ph-sm" onclick="clearSelection()">
-        <span class="material-icons-round">close</span> Deselect
+      <button type="button" class="btn-ph btn-ph-sm" onclick="clearSelection()">
+        <span class="material-icons-round" aria-hidden="true">close</span> Deselect
       </button>
-      <button class="btn-ph btn-ph-sm btn-ph-primary" onclick="exportSelected()">
-        <span class="material-icons-round">download</span> Export selected
+      <button type="button" class="btn-ph btn-ph-sm btn-ph-primary" onclick="exportSelected()">
+        <span class="material-icons-round" aria-hidden="true">download</span> Export selected
       </button>
     </div>
 
@@ -485,9 +485,9 @@ function renderTable() {
         </td>
         <td class="comment-cell">${preview}</td>
         <td style="padding:13px 12px 13px 4px;text-align:center;">
-          <button class="expand-btn" onclick="toggleExpand(${r.id})"
-            title="${expanded ? 'Collapse' : 'Expand'}" aria-expanded="${expanded}">
-            <span class="material-icons-round">${expanded ? 'expand_less' : 'expand_more'}</span>
+          <button type="button" class="expand-btn" onclick="toggleExpand(${r.id})"
+            title="${expanded ? 'Collapse' : 'Expand'}" aria-label="${expanded ? 'Collapse details for response #' + r.id : 'Expand details for response #' + r.id}" aria-expanded="${expanded}">
+            <span class="material-icons-round" aria-hidden="true">${expanded ? 'expand_less' : 'expand_more'}</span>
           </button>
         </td>
       </tr>`;
@@ -502,7 +502,7 @@ function renderTable() {
                     <div style="font-size:13px;color:var(--text-primary);white-space:pre-wrap;margin-bottom:20px;line-height:1.6;">${escHtml(r.comment || 'No additional comment provided.')}</div>
                     
                     <div style="font-weight:700;margin-bottom:12px;text-transform:uppercase;font-size:10px;color:var(--text-muted);letter-spacing:0.05em;display:flex;align-items:center;gap:6px;">
-                      <span class="material-icons-round" style="font-size:14px">description</span>
+                      <span class="material-icons-round" style="font-size:14px" aria-hidden="true">description</span>
                       Internal Administrative Notes
                     </div>
                     <div id="notes-list-${r.id}" style="margin-bottom:16px;">
@@ -517,13 +517,13 @@ function renderTable() {
                       `).join('') || '<div style="font-size:12px;font-style:italic;color:var(--text-muted);margin-bottom:12px;">No internal notes yet.</div>'}
                     </div>
                     <div style="display:flex;gap:8px;">
-                      <input type="text" id="note-input-${r.id}" placeholder="Type administrative note..." style="flex:1;font-size:12px;padding:8px 12px;border:1.5px solid var(--border);background:var(--surface-page);outline:none;border-radius:0;">
-                      <button class="btn-ph btn-ph-sm btn-ph-primary" onclick="addNote(${r.id})">Add Note</button>
+                      <input type="text" id="note-input-${r.id}" placeholder="Type administrative note..." aria-label="Type administrative note for response #${r.id}" style="flex:1;font-size:12px;padding:8px 12px;border:1.5px solid var(--border);background:var(--surface-page);outline:none;border-radius:0;">
+                      <button type="button" class="btn-ph btn-ph-sm btn-ph-primary" onclick="addNote(${r.id})">Add Note</button>
                     </div>
                   </div>
                   <div>
                     <div style="font-weight:700;margin-bottom:12px;text-transform:uppercase;font-size:10px;color:var(--text-muted);letter-spacing:0.05em;display:flex;align-items:center;gap:6px;">
-                      <span class="material-icons-round" style="font-size:14px">history</span>
+                      <span class="material-icons-round" style="font-size:14px" aria-hidden="true">history</span>
                       Status History
                     </div>
                     <div style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;padding-right:4px;">
@@ -532,7 +532,7 @@ function renderTable() {
                           <div style="font-weight:700;margin-bottom:4px;color:var(--text-primary);">${h.at}</div>
                           <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
                             <span class="status-select s-${h.old.toLowerCase()}" style="padding:1px 5px;font-size:9px;pointer-events:none;">${h.old}</span>
-                            <span class="material-icons-round" style="font-size:14px;color:var(--text-muted)">arrow_forward</span>
+                            <span class="material-icons-round" style="font-size:14px;color:var(--text-muted)" aria-hidden="true">arrow_forward</span>
                             <span class="status-select s-${h.new.toLowerCase()}" style="padding:1px 5px;font-size:9px;pointer-events:none;">${h.new}</span>
                           </div>
                           <div style="color:var(--text-muted);font-size:10px;">Changed by <strong>${h.by}</strong></div>
@@ -562,8 +562,8 @@ function renderPagination() {
   const container = document.getElementById('paginationBtns');
   document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.max(total,1)}`;
 
-  let html = `<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage<=1?'disabled':''} aria-label="Previous page">
-    <span class="material-icons-round" style="font-size:16px">chevron_left</span></button>`;
+  let html = `<button type="button" class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage<=1?'disabled':''} aria-label="Previous page">
+    <span class="material-icons-round" style="font-size:16px" aria-hidden="true">chevron_left</span></button>`;
 
   const pages = [];
   if (total <= 7) { for (let i=1;i<=total;i++) pages.push(i); }
@@ -576,11 +576,11 @@ function renderPagination() {
   }
   pages.forEach(p => {
     html += p==='…'
-      ? `<button class="pg-btn" disabled style="cursor:default">…</button>`
-      : `<button class="pg-btn ${p===currentPage?'active':''}" onclick="goPage(${p})" aria-label="Page ${p}">${p}</button>`;
+      ? `<button type="button" class="pg-btn" disabled style="cursor:default">…</button>`
+      : `<button type="button" class="pg-btn ${p===currentPage?'active':''}" onclick="goPage(${p})" aria-label="Page ${p}">${p}</button>`;
   });
-  html += `<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage>=total?'disabled':''} aria-label="Next page">
-    <span class="material-icons-round" style="font-size:16px">chevron_right</span></button>`;
+  html += `<button type="button" class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage>=total?'disabled':''} aria-label="Next page">
+    <span class="material-icons-round" style="font-size:16px" aria-hidden="true">chevron_right</span></button>`;
   container.innerHTML = html;
 }
 
