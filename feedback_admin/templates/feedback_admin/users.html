@@ -199,7 +199,7 @@
 
   <!-- STAT CARDS -->
   <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
+    <div class="col-12 col-md-4">
       <div class="stat-card card-sat">
         <div class="stat-card-icon"><span class="material-icons-round" style="color:var(--g-primary);background:var(--g-xlight)">people</span></div>
         <div class="stat-value">{{ total_users }}</div>
@@ -207,15 +207,15 @@
         <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">people</span></div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-12 col-md-4">
       <div class="stat-card card-vsat">
         <div class="stat-card-icon"><span class="material-icons-round">verified_user</span></div>
         <div class="stat-value">{{ active_users }}</div>
-        <div class="stat-label">Active</div>
+        <div class="stat-label">Active Users</div>
         <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">verified_user</span></div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-12 col-md-4">
       <div class="stat-card card-neu">
         <div class="stat-card-icon"><span class="material-icons-round">admin_panel_settings</span></div>
         <div class="stat-value">{{ staff_users }}</div>
@@ -223,31 +223,9 @@
         <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">admin_panel_settings</span></div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="stat-card card-sat" style="border-top-color:var(--gold)">
-        <div class="stat-card-icon" style="background:#fef9ee"><span class="material-icons-round" style="color:var(--gold)">groups</span></div>
-        <div class="stat-value">{{ total_groups }}</div>
-        <div class="stat-label">Groups</div>
-        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">groups</span></div>
-      </div>
-    </div>
   </div>
 
-  <!-- TAB BAR -->
-  <div class="tab-bar">
-    <button type="button" class="tab-btn active" onclick="switchTab('users', this)">
-      <span class="material-icons-round" aria-hidden="true">person</span>
-      Users
-      <span class="tab-count">{{ total_users }}</span>
-    </button>
-    <button type="button" class="tab-btn" onclick="switchTab('groups', this)">
-      <span class="material-icons-round" aria-hidden="true">groups</span>
-      Groups
-      <span class="tab-count">{{ total_groups }}</span>
-    </button>
-  </div>
-
-  <!-- ── USERS TAB ── -->
+  <!-- ── USERS CONTENT ── -->
   <div id="panel-users">
     <div class="card-block">
 
@@ -415,92 +393,6 @@
     </div>
   </div>
 
-  <!-- ── GROUPS TAB ── -->
-  <div id="panel-groups" style="display:none;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-      <div class="section-title">Permission Groups</div>
-      <button class="btn-ph btn-ph-primary" onclick="openGroupModal()">
-        <span class="material-icons-round">add</span> Add Group
-      </button>
-    </div>
-
-    <div class="card-block">
-      <div style="overflow-x:auto;">
-        <table class="ph-table" aria-label="Permission groups">
-          <thead>
-            <tr>
-              <th style="min-width:180px;">Group Name</th>
-              <th style="min-width:80px;">Members</th>
-              <th>Permissions Assigned</th>
-              <th style="width:100px;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for g in groups %}
-            <tr>
-              <td>
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <div style="width:32px;height:32px;background:var(--g-xlight);border:1.5px solid var(--g-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <span class="material-icons-round" style="font-size:17px;color:var(--g-deep)">groups</span>
-                  </div>
-                  <span style="font-size:13px;font-weight:700;color:var(--text-primary)">{{ g.name }}</span>
-                </div>
-              </td>
-              <td>
-                <span style="font-size:13px;font-weight:700;font-family:var(--mono);color:var(--text-primary)">{{ g.member_count }}</span>
-                <span style="font-size:10px;color:var(--text-muted);margin-left:4px;">user{{ g.member_count|pluralize }}</span>
-              </td>
-              <td>
-                <div style="display:flex;flex-wrap:wrap;gap:4px;">
-                  {% for p in g.permissions.all|slice:":8" %}
-                    <span style="font-size:10px;font-weight:600;font-family:var(--mono);padding:3px 7px;background:var(--surface-page);border:1px solid var(--border);color:var(--text-secondary)">{{ p.codename }}</span>
-                  {% empty %}
-                    <span style="font-size:11px;color:var(--text-muted);font-style:italic">No permissions assigned</span>
-                  {% endfor %}
-                  {% if g.permissions.count > 8 %}
-                    <span style="font-size:10px;font-weight:600;font-family:var(--mono);padding:3px 7px;background:var(--g-xlight);border:1px solid var(--g-light);color:var(--g-forest)">+{{ g.permissions.count|add:"-8" }} more</span>
-                  {% endif %}
-                </div>
-              </td>
-              <td style="white-space:nowrap;">
-                <div style="display:flex;gap:4px;">
-                  <button class="btn-ph btn-ph-sm"
-                    onclick="openGroupModal({{ g.id }}, '{{ g.name }}', [{% for p in g.permissions.all %}'{{ p.id }}'{% if not forloop.last %},{% endif %}{% endfor %}])"
-                    aria-label="Edit {{ g.name }}">
-                    <span class="material-icons-round">edit</span>
-                  </button>
-                  <button type="button" class="btn-ph btn-ph-sm"
-                    style="color:var(--red);border-color:var(--red)"
-                    onclick="triggerDeleteGroup({{ g.id }}, '{{ g.name }}')"
-                    aria-label="Delete {{ g.name }}">
-                    <span class="material-icons-round">delete</span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="4">
-              <div class="empty-state">
-                <span class="material-icons-round">groups</span>
-                <div class="empty-state-title">No groups yet</div>
-                <div class="empty-state-sub">Create a group to assign bulk permissions to users.</div>
-              </div>
-            </td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div style="margin-top:16px;padding:14px 18px;border:1px solid var(--border);background:var(--surface-card);display:flex;align-items:flex-start;gap:12px;">
-      <span class="material-icons-round" style="color:var(--g-primary);font-size:18px;flex-shrink:0;margin-top:1px;">info</span>
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--text-primary);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;">Django Auth Groups</div>
-        <p style="font-size:12px;color:var(--text-secondary);margin:0;line-height:1.7;">
-          Groups categorize users and apply permissions in bulk. A user in a group automatically inherits all permissions granted to that group. Users may belong to any number of groups.
-        </p>
-      </div>
-    </div>
   </div>
 
   <!-- USER MODAL -->
@@ -629,75 +521,7 @@
     </div>
   </div>
 
-  <!-- GROUP MODAL -->
-  <div class="modal-backdrop" id="groupModal" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle"
-    onclick="if(event.target===this) closeModal('groupModal')">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <div class="modal-head">
-        <div class="modal-title">
-          <span class="material-icons-round">groups</span>
-          <span id="groupModalTitle">Add Group</span>
-        </div>
-        <button class="modal-close" onclick="closeModal('groupModal')" aria-label="Close">
-          <span class="material-icons-round">close</span>
-        </button>
-      </div>
 
-      <form id="groupForm" onsubmit="return false;">
-        {% csrf_token %}
-        <input type="hidden" id="groupFormId" name="group_id" value="">
-        <input type="hidden" name="form_type" value="group">
-
-        <div class="modal-body">
-          <div class="form-section">
-            <div class="form-section-label">
-              <span class="material-icons-round">label</span> Group Details
-            </div>
-            <div class="form-row full">
-              <div class="form-group">
-                <label class="form-label" for="fieldGroupName">Group Name <span class="req">*</span></label>
-                <input class="form-input" type="text" id="fieldGroupName" name="name" placeholder="e.g. Feedback Reviewers" required oninput="this.classList.remove('input-error')">
-              </div>
-            </div>
-          </div>
-          <div class="form-section" style="margin-bottom:0;">
-            <div class="form-section-label">
-              <span class="material-icons-round">tune</span> Group Permissions
-            </div>
-            <p class="form-hint" style="margin-bottom:10px;">All members of this group will inherit these permissions.</p>
-            <div class="perm-grid" id="groupPermPickerList">
-              {% for p in permissions %}
-              <div class="perm-item" onclick="togglePermItem(this)">
-                <input type="checkbox" name="permissions" value="{{ p.id }}"
-                  onclick="event.stopPropagation();this.closest('.perm-item').classList.toggle('checked',this.checked)"
-                  style="accent-color:var(--g-primary)">
-                <div style="flex:1;min-width:0;">
-                  <div class="perm-item-label">{{ p.name }}</div>
-                  <div class="perm-item-module">{{ p.content_type.app_label }} | {{ p.codename }}</div>
-                </div>
-              </div>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <div id="groupDangerSection" style="display:none;margin-right:auto;">
-            <button type="button" class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="triggerDeleteGroupFromModal()">
-              <span class="ph-loader"></span>
-              <span class="material-icons-round">delete_forever</span> Delete Group
-            </button>
-          </div>
-          <button type="button" class="btn-ph" onclick="closeModal('groupModal')">Cancel</button>
-          <button type="button" class="btn-ph btn-ph-primary" onclick="submitGroupForm()">
-            <span class="ph-loader"></span>
-            <span class="material-icons-round">save</span>
-            <span id="saveGroupLabel">Add Group</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- DELETE CONFIRMATION MODAL -->
   <div class="modal-backdrop" id="deleteConfirmModal" role="dialog" aria-modal="true" style="z-index: 400;"
