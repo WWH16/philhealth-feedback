@@ -82,19 +82,19 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-900">
               <div class="p-3">
                 <label for="dateTime" class="block text-[11px] font-bold text-slate-900 uppercase mb-1">Date & Time</label>
-                <input type="datetime-local" id="dateTime" name="date_time" class="csm-paper-input font-mono text-slate-900 cursor-pointer">
+                <input type="datetime-local" id="dateTime" name="date_time" class="csm-paper-input font-mono text-slate-900 cursor-pointer" required>
               </div>
               <div class="p-3">
                 <label for="contactNo" class="block text-[11px] font-bold text-slate-900 uppercase mb-1">Contact No.</label>
-                <input type="tel" id="contactNo" name="contact_no" placeholder="e.g. 09171234567" class="csm-paper-input">
+                <input type="tel" id="contactNo" name="contact_no" placeholder="e.g. 09171234567" maxlength="20" autocomplete="tel" pattern="[0-9+\s\-()]*" class="csm-paper-input">
               </div>
               <div class="p-3">
                 <label for="emailAddress" class="block text-[11px] font-bold text-slate-900 uppercase mb-1">Email Address</label>
-                <input type="email" id="emailAddress" name="email_address" placeholder="name@example.com" class="csm-paper-input">
+                <input type="email" id="emailAddress" name="email_address" placeholder="name@example.com" maxlength="100" autocomplete="email" class="csm-paper-input">
               </div>
               <div class="p-3">
                 <label for="clientAge" class="block text-[11px] font-bold text-slate-900 uppercase mb-1">Age</label>
-                <input type="number" id="clientAge" name="age" min="1" max="120" placeholder="35" class="csm-paper-input">
+                <input type="number" id="clientAge" name="age" min="1" max="120" placeholder="35" inputmode="numeric" class="csm-paper-input">
               </div>
             </div>
 
@@ -141,7 +141,7 @@
               <label for="clientName" class="block text-[11px] font-bold text-slate-900 uppercase mb-1">
                 Name of Client <span class="font-normal text-slate-500 lowercase">(optional)</span>:
               </label>
-              <input type="text" id="clientName" name="name_of_client" placeholder="e.g. Juan Dela Cruz" class="csm-paper-input">
+              <input type="text" id="clientName" name="name_of_client" placeholder="e.g. Juan Dela Cruz" maxlength="100" autocomplete="name" class="csm-paper-input">
             </div>
           </div>
         </div>
@@ -464,7 +464,7 @@
           <div class="paper-box">
             <div class="paper-box-header">Comments / Suggestions <span class="font-normal lowercase">(Komento at Mungkahi)</span></div>
             <div class="p-3 bg-white">
-              <textarea id="commentsSuggestions" name="comments_suggestions" rows="4" placeholder="Write any comments or suggestions for improvement..." class="csm-paper-input resize-y"></textarea>
+              <textarea id="commentsSuggestions" name="comments_suggestions" rows="4" maxlength="1000" placeholder="Write any comments or suggestions for improvement..." class="csm-paper-input resize-y"></textarea>
             </div>
           </div>
 
@@ -472,7 +472,7 @@
           <div class="paper-box">
             <div class="paper-box-header">Commendation <span class="font-normal lowercase">(Papuri para Staff o Opisina)</span></div>
             <div class="p-3 bg-white">
-              <textarea id="commendation" name="commendation" rows="4" placeholder="Name specific staff members or express appreciation..." class="csm-paper-input resize-y"></textarea>
+              <textarea id="commendation" name="commendation" rows="4" maxlength="1000" placeholder="Name specific staff members or express appreciation..." class="csm-paper-input resize-y"></textarea>
             </div>
           </div>
         </div>

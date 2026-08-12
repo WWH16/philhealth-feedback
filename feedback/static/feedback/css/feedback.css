@@ -224,6 +224,15 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
   transform: scale(1);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .success-icon {
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 16px;

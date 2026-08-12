@@ -39,6 +39,10 @@ function handleSubmitCSM(event) {
   }
 
   var btnSubmit = document.getElementById('btnSubmitCSM');
+  if (btnSubmit && btnSubmit.disabled) {
+    return; // Hardened against double-click double submission
+  }
+
   var submitIcon = document.getElementById('submitIcon');
   var submitText = document.getElementById('submitText');
 
@@ -55,7 +59,7 @@ function handleSubmitCSM(event) {
     submitText.textContent = 'Submitting CSM...';
   }
 
-  // Frontend simulation / Submission handling
+  // Submission handling with safety delay
   setTimeout(function () {
     var today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     var randomHex = Math.floor(Math.random() * 16777215).toString(16).toUpperCase().padStart(6, '0');
@@ -83,9 +87,9 @@ function handleSubmitCSM(event) {
       submitIcon.classList.remove('animate-spin');
     }
     if (submitText) {
-      submitText.textContent = 'Submit Response';
+      submitText.textContent = 'Submit CSM Form';
     }
-  }, 600);
+  }, 500);
 }
 
 function resetCSMForm() {
@@ -107,4 +111,13 @@ function handleBackdropClick(event) {
 
 document.addEventListener('DOMContentLoaded', function () {
   updateDateTime();
+});
+
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape') {
+    var sw = document.getElementById('successWrap');
+    if (sw && sw.classList.contains('is-open')) {
+      resetCSMForm();
+    }
+  }
 });
