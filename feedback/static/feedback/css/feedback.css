@@ -300,3 +300,33 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
 .success-reset-btn:hover {
   background: #0d743b;
 }
+
+/* ── LOGIN-STYLE BUTTON LOADER ── */
+.btn-submit-csm {
+  position: relative;
+}
+.btn-submit-csm.is-loading {
+  pointer-events: none;
+  color: transparent !important;
+}
+.btn-submit-csm.is-loading .material-icons-round,
+.btn-submit-csm.is-loading #submitText {
+  visibility: hidden;
+}
+.btn-submit-csm .loader {
+  display: none;
+  position: absolute;
+  left: 50%; top: 50%;
+  margin-left: -10px; margin-top: -10px;
+  width: 20px; height: 20px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 0.8s linear infinite;
+}
+.btn-submit-csm.is-loading .loader {
+  display: block;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

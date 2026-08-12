@@ -48,15 +48,7 @@ function handleSubmitCSM(event) {
 
   if (btnSubmit) {
     btnSubmit.disabled = true;
-    btnSubmit.style.opacity = '0.75';
-    btnSubmit.style.cursor = 'not-allowed';
-  }
-  if (submitIcon) {
-    submitIcon.textContent = 'sync';
-    submitIcon.classList.add('animate-spin');
-  }
-  if (submitText) {
-    submitText.textContent = 'Submitting CSM...';
+    btnSubmit.classList.add('is-loading');
   }
 
   // Submission handling with safety delay
@@ -79,15 +71,7 @@ function handleSubmitCSM(event) {
 
     if (btnSubmit) {
       btnSubmit.disabled = false;
-      btnSubmit.style.opacity = '';
-      btnSubmit.style.cursor = '';
-    }
-    if (submitIcon) {
-      submitIcon.textContent = 'send';
-      submitIcon.classList.remove('animate-spin');
-    }
-    if (submitText) {
-      submitText.textContent = 'Submit CSM Form';
+      btnSubmit.classList.remove('is-loading');
     }
   }, 500);
 }
