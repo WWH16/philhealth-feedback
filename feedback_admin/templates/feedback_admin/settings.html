@@ -259,22 +259,22 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
     <div class="col-12 col-lg-3">
       <div class="settings-nav" id="settingsNav">
         <div class="settings-nav-group-label">Account & Users</div>
-        <button id="btn-user-management" class="settings-nav-item is-active" onclick="showPanelNav('user-management', this)">
-          <span class="material-icons-round">manage_accounts</span> User Management
+        <button type="button" id="btn-user-management" class="settings-nav-item is-active" onclick="showPanelNav('user-management', this)">
+          <span class="material-icons-round" aria-hidden="true">manage_accounts</span> User Management
         </button>
 
         <div class="settings-nav-group-label">Configuration</div>
-        <button id="btn-survey-settings" class="settings-nav-item" onclick="showPanelNav('survey-settings', this)">
-          <span class="material-icons-round">quiz</span> Survey Settings
+        <button type="button" id="btn-survey-settings" class="settings-nav-item" onclick="showPanelNav('survey-settings', this)">
+          <span class="material-icons-round" aria-hidden="true">quiz</span> Survey Settings
         </button>
-        <button id="btn-sentiment-analysis" class="settings-nav-item" onclick="showPanelNav('sentiment-analysis', this)">
-          <span class="material-icons-round">psychology</span> Sentiment Analysis
+        <button type="button" id="btn-sentiment-analysis" class="settings-nav-item" onclick="showPanelNav('sentiment-analysis', this)">
+          <span class="material-icons-round" aria-hidden="true">psychology</span> Sentiment Analysis
         </button>
-        <button id="btn-system-settings" class="settings-nav-item" onclick="showPanelNav('system-settings', this)">
-          <span class="material-icons-round">settings</span> System Settings
+        <button type="button" id="btn-system-settings" class="settings-nav-item" onclick="showPanelNav('system-settings', this)">
+          <span class="material-icons-round" aria-hidden="true">settings</span> System Settings
         </button>
-        <button id="btn-notifications" class="settings-nav-item" onclick="showPanelNav('notifications', this)">
-          <span class="material-icons-round">notifications</span> Notifications
+        <button type="button" id="btn-notifications" class="settings-nav-item" onclick="showPanelNav('notifications', this)">
+          <span class="material-icons-round" aria-hidden="true">notifications</span> Notifications
         </button>
       </div>
     </div>
