@@ -1,12 +1,3 @@
-var selectedExperience = null;
-
-var EXPERIENCE_BUTTONS = ['vsat', 'sat', 'unsat'];
-var EXPERIENCE_SELECTED_CLASS = {
-  vsat: 'sel-pos',
-  sat: 'sel-neu',
-  unsat: 'sel-neg'
-};
-
 function getCookie(name) {
   var value = '; ' + document.cookie;
   var parts = value.split('; ' + name + '=');
@@ -14,95 +5,106 @@ function getCookie(name) {
   return '';
 }
 
-function selectExperience(value) {
-  selectedExperience = value;
-  EXPERIENCE_BUTTONS.forEach(function (experience) {
-    var b = document.getElementById('btn-' + experience);
-    b.classList.remove('sel-pos', 'sel-neu', 'sel-neg');
-    b.setAttribute('aria-pressed', 'false');
-  });
-  var btn = document.getElementById('btn-' + value);
-  btn.classList.add(EXPERIENCE_SELECTED_CLASS[value]);
-  btn.setAttribute('aria-pressed', 'true');
-  document.getElementById('reactionErr').classList.add('hidden');
-  document.getElementById('reactionErr').classList.remove('flex');
+function updateDateTime() {
+  var dtInput = document.getElementById('dateTime');
+  if (dtInput) {
+    var now = new Date();
+    var year = now.getFullYear();
+    var month = String(now.getMonth() + 1).padStart(2, '0');
+    var day = String(now.getDate()).padStart(2, '0');
+    var hours = String(now.getHours()).padStart(2, '0');
+    var mins = String(now.getMinutes()).padStart(2, '0');
+    dtInput.value = year + '-' + month + '-' + day + ' ' + hours + ':' + mins;
+  }
 }
 
-function updateCount() {
-  var ta = document.getElementById('concern');
-  document.getElementById('charCount').textContent = ta.value.length + ' / 500';
+function handleCC1Change(optionValue) {
+  if (optionValue === 4) {
+    // If option 4 (do not know CC), specification mandates answering "N/A" on CC2 (value 5) and CC3 (value 4)
+    var cc2NA = document.querySelector('input[name="cc2"][value="5"]');
+    if (cc2NA) cc2NA.checked = true;
+
+    var cc3NA = document.querySelector('input[name="cc3"][value="4"]');
+    if (cc3NA) cc3NA.checked = true;
+  }
 }
 
-function handleSubmit(event) {
-  if (!selectedExperience) {
-    document.getElementById('reactionErr').classList.remove('hidden');
-    document.getElementById('reactionErr').classList.add('flex');
+function handleSubmitCSM(event) {
+  if (event) event.preventDefault();
+
+  var privacyConsent = document.getElementById('privacyConsent');
+  if (privacyConsent && !privacyConsent.checked) {
+    alert('Please confirm your privacy consent before submitting.');
     return;
   }
-  var submitButton = event && event.currentTarget ? event.currentTarget : null;
-  if (submitButton) {
-    submitButton.disabled = true;
-    submitButton.style.opacity = '0.7';
+
+  var btnSubmit = document.getElementById('btnSubmitCSM');
+  var submitIcon = document.getElementById('submitIcon');
+  var submitText = document.getElementById('submitText');
+
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.style.opacity = '0.75';
+    btnSubmit.style.cursor = 'not-allowed';
+  }
+  if (submitIcon) {
+    submitIcon.textContent = 'sync';
+    submitIcon.classList.add('animate-spin');
+  }
+  if (submitText) {
+    submitText.textContent = 'Submitting CSM...';
   }
 
-  fetch(window.FEEDBACK_SUBMIT_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': getCookie('csrftoken'),
-      'X-Requested-With': 'XMLHttpRequest'
-    },
-    body: JSON.stringify({
-      experience: selectedExperience,
-      comment: document.getElementById('concern').value
-    })
-  })
-    .then(function (response) {
-      return response.json().then(function (data) {
-        if (!response.ok || !data.ok) throw new Error(data.error || 'Unable to submit feedback.');
-        return data;
-      });
-    })
-    .then(function (data) {
-      document.getElementById('successDetailText').textContent = data.experience;
-      document.getElementById('successMetaText').textContent =
-        'Tracking code: ' + data.tracking_code + ' · Status: ' + data.status;
-      document.getElementById('headerArea').style.display = 'none';
-      document.getElementById('formArea').style.display = 'none';
-      var sw = document.getElementById('successWrap');
+  // Frontend simulation / Submission handling
+  setTimeout(function () {
+    var today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    var randomHex = Math.floor(Math.random() * 16777215).toString(16).toUpperCase().padStart(6, '0');
+    var trackingCode = 'CSM-' + today + '-' + randomHex;
+
+    var detailEl = document.getElementById('successDetailText');
+    if (detailEl) detailEl.textContent = 'PhilHealth LHIO Cauayan City';
+
+    var metaEl = document.getElementById('successMetaText');
+    if (metaEl) metaEl.textContent = 'Tracking ID: ' + trackingCode + ' · Recorded: Just now';
+
+    var sw = document.getElementById('successWrap');
+    if (sw) {
       sw.classList.add('is-open');
-      document.body.style.overflow = 'hidden';
-    })
-    .catch(function (err) {
-      alert(err.message);
-    })
-    .finally(function () {
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.style.opacity = '';
-      }
-    });
+    }
+    document.body.style.overflow = 'hidden';
+
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.style.opacity = '';
+      btnSubmit.style.cursor = '';
+    }
+    if (submitIcon) {
+      submitIcon.textContent = 'send';
+      submitIcon.classList.remove('animate-spin');
+    }
+    if (submitText) {
+      submitText.textContent = 'Submit Response';
+    }
+  }, 600);
 }
 
-function resetForm() {
-  selectedExperience = null;
-  document.getElementById('concern').value = '';
-  document.getElementById('charCount').textContent = '0 / 500';
-  EXPERIENCE_BUTTONS.forEach(function (experience) {
-    var b = document.getElementById('btn-' + experience);
-    b.classList.remove('sel-pos', 'sel-neu', 'sel-neg');
-    b.setAttribute('aria-pressed', 'false');
-  });
-  document.getElementById('reactionErr').classList.add('hidden');
-  document.getElementById('reactionErr').classList.remove('flex');
-  document.getElementById('headerArea').style.display = 'block';
-  document.getElementById('formArea').style.display = 'block';
-  document.getElementById('successWrap').classList.remove('is-open');
-  document.getElementById('successMetaText').textContent = '—';
+function resetCSMForm() {
+  var form = document.getElementById('csmForm');
+  if (form) form.reset();
+
+  updateDateTime();
+
+  var sw = document.getElementById('successWrap');
+  if (sw) sw.classList.remove('is-open');
+
   document.body.style.overflow = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function handleBackdropClick(event) {
-  resetForm();
+  resetCSMForm();
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  updateDateTime();
+});

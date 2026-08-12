@@ -224,3 +224,8 @@ __marimo__/
 .env
 /backups
 .agents
+
+
+# md files
+PhilHealth_CSM_Paperless_Form_Specification.md
+PRODUCT.md
