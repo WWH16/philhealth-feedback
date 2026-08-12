@@ -81,7 +81,7 @@ body {
 
 .csm-paper-input {
   width: 100%;
-  padding: 4px 8px;
+  padding: 5px 8px;
   font-size: 13px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
@@ -92,6 +92,16 @@ body {
   outline: none;
   border-color: var(--g-primary);
   box-shadow: 0 0 0 2px rgba(22, 150, 81, 0.2);
+}
+
+input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 2px;
+  transition: opacity 0.15s ease;
+}
+input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:hover {
+  background-color: #f1f5f9;
 }
 
 /* ── CHECKBOXES & RADIOS (FORM STYLING & TOUCH TARGETS) ───────────────── */
