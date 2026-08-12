@@ -230,20 +230,80 @@ let pieChart, lineChart;
 function pctOf(value, total) { return total ? Math.round((value / total) * 100) : 0; }
 
 function initPieChart(data) {
-  const ctx    = document.getElementById('pieChart').getContext('2d');
+  const canvas = document.getElementById('pieChart');
+  if (!canvas) return;
+  const ctx    = canvas.getContext('2d');
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const total  = data.total || (data.vsat + data.sat + data.unsat);
+
   if (pieChart) pieChart.destroy();
+
+  // Center text plugin for Donut Chart
+  const centerTextPlugin = {
+    id: 'centerText',
+    beforeDraw(chart) {
+      const { width, height, ctx } = chart;
+      ctx.save();
+      const vsatPct = total ? Math.round((data.vsat / total) * 100) : 0;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      ctx.font = '700 22px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = isDark ? '#f8fafc' : '#0f172a';
+      ctx.fillText(`${vsatPct}%`, centerX, centerY - 8);
+
+      ctx.font = '600 10px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.fillText('Satisfaction', centerX, centerY + 12);
+      ctx.restore();
+    }
+  };
+
   pieChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Very Satisfactory', 'Satisfactory', 'Unsatisfactory'],
-      datasets: [{ data: [data.vsat, data.sat, data.unsat], backgroundColor: ['#23A455','#b8933a','#c0001a'], borderColor: isDark ? '#1a1e24' : '#ffffff', borderWidth: 3, hoverOffset: 6 }]
+      datasets: [{
+        data: [data.vsat, data.sat, data.unsat],
+        backgroundColor: [
+          '#169651', // PhilHealth Green
+          '#d97706', // Warm Amber
+          '#dc2626'  // Ruby Red
+        ],
+        borderColor: isDark ? '#1e293b' : '#ffffff',
+        borderWidth: 2,
+        hoverOffset: 6
+      }]
     },
+    plugins: [centerTextPlugin],
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '72%',
+      animation: {
+        animateRotate: true,
+        animateScale: true
+      },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => { const t = ctx.dataset.data.reduce((a,b)=>a+b,0); return `  ${ctx.label}: ${ctx.parsed} (${t ? Math.round(ctx.parsed/t*100) : 0}%)`; } }, backgroundColor: isDark ? '#2a2e35' : '#1c1e22', titleColor:'#ffffff', bodyColor:'rgba(255,255,255,0.75)', padding:10, cornerRadius:0, titleFont:{family:"'IBM Plex Sans'",weight:'700',size:11}, bodyFont:{family:"'IBM Plex Sans'",size:12} }
+        tooltip: {
+          backgroundColor: isDark ? '#0f172a' : '#1e293b',
+          titleColor: '#ffffff',
+          bodyColor: '#f1f5f9',
+          padding: 10,
+          cornerRadius: 4,
+          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 },
+          bodyFont: { family: "'IBM Plex Sans'", size: 12 },
+          callbacks: {
+            label: function(ctx) {
+              const t = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = t ? Math.round((ctx.parsed / t) * 100) : 0;
+              return `  ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+            }
+          }
+        }
       }
     }
   });
@@ -264,99 +324,163 @@ function updatePieAndLegend(data) {
   document.getElementById('legendUnsatVal').textContent = data.unsat;
   document.getElementById('legendUnsatPct').textContent = unsatPct + '%';
 
-  document.getElementById('miniBarVsat').style.width  = vsatPct + '%';
-  document.getElementById('miniValVsat').textContent   = vsatPct + '%';
-  document.getElementById('miniBarSat').style.width    = satPct + '%';
-  document.getElementById('miniValSat').textContent    = satPct + '%';
-  document.getElementById('miniBarUnsat').style.width  = unsatPct + '%';
-  document.getElementById('miniValUnsat').textContent  = unsatPct + '%';
+  const mbVsat = document.getElementById('miniBarVsat');
+  if (mbVsat) mbVsat.style.transform = `scaleX(${vsatPct / 100})`;
+  document.getElementById('miniValVsat').textContent = vsatPct + '%';
+
+  const mbSat = document.getElementById('miniBarSat');
+  if (mbSat) mbSat.style.transform = `scaleX(${satPct / 100})`;
+  document.getElementById('miniValSat').textContent = satPct + '%';
+
+  const mbUnsat = document.getElementById('miniBarUnsat');
+  if (mbUnsat) mbUnsat.style.transform = `scaleX(${unsatPct / 100})`;
+  document.getElementById('miniValUnsat').textContent = unsatPct + '%';
 }
 
 function initLineChart(labels, vsat, sat, unsat) {
-  const ctx       = document.getElementById('lineChart').getContext('2d');
+  const canvas = document.getElementById('lineChart');
+  if (!canvas) return;
+  const ctx       = canvas.getContext('2d');
   const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
-  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const textColor = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
-  const ptBgColor = isDark ? '#1a1e24' : '#ffffff';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
+  const textColor = isDark ? '#cbd5e1' : '#475569';
+  const ptBgColor = isDark ? '#0f172a' : '#ffffff';
+
+  // Crisp area gradients
+  const gradVsat = ctx.createLinearGradient(0, 0, 0, 240);
+  gradVsat.addColorStop(0, 'rgba(22, 150, 81, 0.22)');
+  gradVsat.addColorStop(1, 'rgba(22, 150, 81, 0.0)');
+
+  const gradSat = ctx.createLinearGradient(0, 0, 0, 240);
+  gradSat.addColorStop(0, 'rgba(217, 119, 6, 0.18)');
+  gradSat.addColorStop(1, 'rgba(217, 119, 6, 0.0)');
+
+  const gradUnsat = ctx.createLinearGradient(0, 0, 0, 240);
+  gradUnsat.addColorStop(0, 'rgba(220, 38, 38, 0.18)');
+  gradUnsat.addColorStop(1, 'rgba(220, 38, 38, 0.0)');
 
   if (lineChart) lineChart.destroy();
+
   lineChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
       datasets: [
-        { 
-          label: 'Very Satisfactory', 
-          data: vsat,  
-          borderColor: '#23A455', 
-          backgroundColor: 'rgba(35,164,85,0.06)', 
-          tension: 0.35, 
-          fill: true,  
-          pointBackgroundColor: '#23A455', 
+        {
+          label: 'Very Satisfactory',
+          data: vsat,
+          borderColor: '#169651',
+          backgroundColor: gradVsat,
+          tension: 0.35,
+          fill: true,
+          pointBackgroundColor: '#169651',
           pointBorderColor: ptBgColor,
-          pointBorderWidth: 1.5,
-          pointRadius: 4, 
-          pointHoverRadius: 6, 
-          pointHoverBackgroundColor: '#23A455',
+          pointBorderWidth: 2,
+          pointRadius: 0,
+          pointHitRadius: 10,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#169651',
           pointHoverBorderColor: ptBgColor,
           pointHoverBorderWidth: 2.5,
-          borderWidth: 2 
+          borderWidth: 2.5
         },
-        { 
-          label: 'Satisfactory',      
-          data: sat,   
-          borderColor: '#b8933a', 
-          backgroundColor: 'rgba(184,147,58,0.04)', 
-          tension: 0.35, 
-          fill: false, 
-          pointBackgroundColor: '#b8933a', 
+        {
+          label: 'Satisfactory',
+          data: sat,
+          borderColor: '#d97706',
+          backgroundColor: gradSat,
+          tension: 0.35,
+          fill: true,
+          pointBackgroundColor: '#d97706',
           pointBorderColor: ptBgColor,
-          pointBorderWidth: 1.5,
-          pointRadius: 3, 
-          pointHoverRadius: 5, 
-          pointHoverBackgroundColor: '#b8933a',
+          pointBorderWidth: 2,
+          pointRadius: 0,
+          pointHitRadius: 10,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#d97706',
           pointHoverBorderColor: ptBgColor,
           pointHoverBorderWidth: 2.5,
-          borderWidth: 2 
+          borderWidth: 2.5
         },
-        { 
-          label: 'Unsatisfactory',    
-          data: unsat, 
-          borderColor: '#c0001a', 
-          backgroundColor: 'rgba(192,0,26,0.04)',    
-          tension: 0.35, 
-          fill: false, 
-          pointBackgroundColor: '#c0001a', 
+        {
+          label: 'Unsatisfactory',
+          data: unsat,
+          borderColor: '#dc2626',
+          backgroundColor: gradUnsat,
+          tension: 0.35,
+          fill: true,
+          pointBackgroundColor: '#dc2626',
           pointBorderColor: ptBgColor,
-          pointBorderWidth: 1.5,
-          pointRadius: 3, 
-          pointHoverRadius: 5, 
-          pointHoverBackgroundColor: '#c0001a',
+          pointBorderWidth: 2,
+          pointRadius: 0,
+          pointHitRadius: 10,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#dc2626',
           pointHoverBorderColor: ptBgColor,
           pointHoverBorderWidth: 2.5,
-          borderWidth: 2 
-        },
+          borderWidth: 2.5
+        }
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 10 }, maxTicksLimit: 7 }, border: { display: false } },
-        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 10 }, stepSize: 5 }, border: { display: false } }
+        x: {
+          grid: {
+            color: gridColor,
+            borderDash: [], // Solid grid lines for maximum legibility
+            drawTicks: false
+          },
+          ticks: {
+            color: textColor,
+            font: { family: "'IBM Plex Sans'", size: 11, weight: '600' },
+            maxTicksLimit: 8,
+            padding: 8
+          },
+          border: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: gridColor,
+            borderDash: [], // Solid grid lines for clear reading
+            drawTicks: false
+          },
+          ticks: {
+            color: textColor,
+            font: { family: "'IBM Plex Sans'", size: 11, weight: '600' },
+            stepSize: 5,
+            padding: 8
+          },
+          border: { display: false }
+        }
       },
       plugins: {
-        legend: { position: 'top', align: 'end', labels: { color: textColor, font: { family: "'IBM Plex Sans'", size: 10, weight: '700' }, boxWidth: 10, boxHeight: 10, padding: 14, usePointStyle: true, pointStyle: 'circle' } },
-        tooltip: { 
-          backgroundColor: isDark ? '#2a2e35' : '#1c1e22', 
-          titleColor: '#ffffff', 
-          bodyColor: 'rgba(255,255,255,0.75)', 
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
+        legend: {
+          position: 'top',
+          align: 'end',
+          labels: {
+            color: textColor,
+            font: { family: "'IBM Plex Sans'", size: 11, weight: '700' },
+            boxWidth: 10,
+            boxHeight: 10,
+            padding: 16,
+            usePointStyle: true,
+            pointStyle: 'circle'
+          }
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#0f172a' : '#1e293b',
+          titleColor: '#ffffff',
+          bodyColor: '#f1f5f9',
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
           borderWidth: 1,
-          padding: 12, 
-          cornerRadius: 0, 
-          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, 
-          bodyFont: { family: "'IBM Plex Sans'", size: 12 } 
+          padding: 12,
+          cornerRadius: 4,
+          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 },
+          bodyFont: { family: "'IBM Plex Sans'", size: 12 }
         }
       }
     }
