@@ -76,11 +76,11 @@
 <!-- REPORT PERIOD SELECTOR -->
 <div style="margin-bottom: 20px;">
   <div class="filter-tabs" style="display:inline-flex;max-width:560px;width:100%">
-    <button class="filter-tab active" onclick="setReportPeriod(this, 'daily')">Daily</button>
-    <button class="filter-tab" onclick="setReportPeriod(this, 'weekly')">Weekly</button>
-    <button class="filter-tab" onclick="setReportPeriod(this, 'monthly')">Monthly</button>
-    <button class="filter-tab" onclick="setReportPeriod(this, 'quarterly')">Quarterly</button>
-    <button class="filter-tab" onclick="setReportPeriod(this, 'annual')">Annual</button>
+    <button type="button" class="filter-tab active" onclick="setReportPeriod(this, 'daily')">Daily</button>
+    <button type="button" class="filter-tab" onclick="setReportPeriod(this, 'weekly')">Weekly</button>
+    <button type="button" class="filter-tab" onclick="setReportPeriod(this, 'monthly')">Monthly</button>
+    <button type="button" class="filter-tab" onclick="setReportPeriod(this, 'quarterly')">Quarterly</button>
+    <button type="button" class="filter-tab" onclick="setReportPeriod(this, 'annual')">Annual</button>
   </div>
 </div>
 
@@ -274,20 +274,20 @@
       </div>
       <div class="card-block-body">
         <div class="export-btn-group">
-          <button class="btn-ph btn-ph-primary" onclick="exportReportPDF()">
-            <span class="material-icons-round">picture_as_pdf</span>
+          <button type="button" class="btn-ph btn-ph-primary" onclick="exportReportPDF()">
+            <span class="material-icons-round" aria-hidden="true">picture_as_pdf</span>
             Export as PDF
           </button>
-          <button class="btn-ph btn-ph-primary" onclick="exportReportExcel()">
-            <span class="material-icons-round">table_chart</span>
+          <button type="button" class="btn-ph btn-ph-primary" onclick="exportReportExcel()">
+            <span class="material-icons-round" aria-hidden="true">table_chart</span>
             Export as Excel
           </button>
-          <button class="btn-ph" onclick="printReport()">
-            <span class="material-icons-round">print</span>
+          <button type="button" class="btn-ph" onclick="printReport()">
+            <span class="material-icons-round" aria-hidden="true">print</span>
             Print Report
           </button>
-          <button class="btn-ph" onclick="shareReport()">
-            <span class="material-icons-round">share</span>
+          <button type="button" class="btn-ph" onclick="shareReport()">
+            <span class="material-icons-round" aria-hidden="true">share</span>
             Share Report
           </button>
         </div>
@@ -374,39 +374,72 @@ function updateReport() {
 }
 
 function initReportPieChart(data) {
-  const ctx = document.getElementById('reportPieChart').getContext('2d');
+  const canvas = document.getElementById('reportPieChart');
+  if (!canvas) return;
+  const ctx    = canvas.getContext('2d');
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const total  = data.total || (data.vsat + data.sat + data.neg);
+
   if (reportPieChart) reportPieChart.destroy();
+
+  const centerTextPlugin = {
+    id: 'centerReportText',
+    afterDraw(chart) {
+      if (!chart.chartArea) return;
+      const ctx = chart.ctx;
+      ctx.save();
+      const vsatPct = total ? Math.round((data.vsat / total) * 100) : 0;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+      const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+
+      ctx.font = '700 22px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = isDark ? '#f8fafc' : '#0f172a';
+      ctx.fillText(`${vsatPct}%`, centerX, centerY - 8);
+
+      ctx.font = '600 10px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.fillText('Very Sat.', centerX, centerY + 12);
+      ctx.restore();
+    }
+  };
+
   reportPieChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Very Satisfactory', 'Satisfactory', 'Unsatisfactory'],
       datasets: [{
         data: [data.vsat, data.sat, data.neg],
-        backgroundColor: ['#23A455', '#b8933a', '#c0001a'],
-        borderColor: isDark ? '#1a1e24' : '#ffffff',
-        borderWidth: 3,
+        backgroundColor: ['#169651', '#d97706', '#dc2626'],
+        borderColor: isDark ? '#1e293b' : '#ffffff',
+        borderWidth: 2,
         hoverOffset: 6
       }]
     },
+    plugins: [centerTextPlugin],
     options: {
-      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '72%',
+      animation: { animateRotate: true, animateScale: true },
       plugins: {
         legend: { display: false },
         tooltip: {
-          callbacks: {
-            label: ctx => {
-              const t = ctx.dataset.data.reduce((a, b) => a + b, 0);
-              return `  ${ctx.label}: ${ctx.parsed} (${Math.round(ctx.parsed / t * 100)}%)`;
-            }
-          },
-          backgroundColor: isDark ? '#2a2e35' : '#1c1e22',
+          backgroundColor: isDark ? '#0f172a' : '#1e293b',
           titleColor: '#ffffff',
-          bodyColor: 'rgba(255,255,255,0.75)',
+          bodyColor: '#f1f5f9',
           padding: 10,
-          cornerRadius: 0,
+          cornerRadius: 4,
           titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 },
-          bodyFont: { family: "'IBM Plex Sans'", size: 12 }
+          bodyFont: { family: "'IBM Plex Sans'", size: 12 },
+          callbacks: {
+            label: function(ctx) {
+              const t = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = t ? Math.round((ctx.parsed / t) * 100) : 0;
+              return `  ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+            }
+          }
         }
       }
     }
@@ -414,13 +447,20 @@ function initReportPieChart(data) {
 }
 
 function initReportTrendChart(data) {
-  const ctx = document.getElementById('reportTrendChart').getContext('2d');
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const grid = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const tick = isDark ? 'rgba(255,255,255,0.4)' : '#9ea3a9';
-  const ptBgColor = isDark ? '#1a1e24' : '#ffffff';
+  const canvas = document.getElementById('reportTrendChart');
+  if (!canvas) return;
+  const ctx       = canvas.getContext('2d');
+  const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
+  const textColor = isDark ? '#cbd5e1' : '#475569';
+  const ptBgColor = isDark ? '#0f172a' : '#ffffff';
+
+  const gradPos = ctx.createLinearGradient(0, 0, 0, 240);
+  gradPos.addColorStop(0, 'rgba(22, 150, 81, 0.22)');
+  gradPos.addColorStop(1, 'rgba(22, 150, 81, 0.0)');
 
   if (reportTrendChart) reportTrendChart.destroy();
+
   reportTrendChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -428,40 +468,51 @@ function initReportTrendChart(data) {
       datasets: [{
         label: 'Responses',
         data: data.trendData,
-        borderColor: '#23A455',
-        backgroundColor: 'rgba(35,164,85,0.06)',
+        borderColor: '#169651',
+        backgroundColor: gradPos,
         tension: 0.35,
         fill: true,
-        pointBackgroundColor: '#23A455',
+        pointBackgroundColor: '#169651',
         pointBorderColor: ptBgColor,
-        pointBorderWidth: data.trendData.length > 40 ? 0 : 1.5,
-        pointRadius: data.trendData.length > 40 ? 0 : 3,
-        pointHoverRadius: data.trendData.length > 40 ? 4 : 5,
-        pointHoverBackgroundColor: '#23A455',
+        pointBorderWidth: 2,
+        pointRadius: 0,
+        pointHitRadius: 10,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#169651',
         pointHoverBorderColor: ptBgColor,
         pointHoverBorderWidth: 2.5,
-        borderWidth: 2,
+        borderWidth: 2.5
       }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       scales: {
-        x: { grid: { display: false }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10, weight: '600' }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 }, border: { display: false } },
-        y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, font: { family: "'IBM Plex Sans'", size: 10 } }, border: { display: false } }
+        x: {
+          grid: { color: gridColor, borderDash: [], drawTicks: false },
+          ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 11, weight: '600' }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 },
+          border: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: gridColor, borderDash: [], drawTicks: false },
+          ticks: { color: textColor, font: { family: "'IBM Plex Sans'", size: 11, weight: '600' } },
+          border: { display: false }
+        }
       },
       plugins: {
         legend: { display: false },
-        tooltip: { 
-          backgroundColor: isDark ? '#2a2e35' : '#1c1e22', 
-          titleColor: '#ffffff', 
-          bodyColor: 'rgba(255,255,255,0.75)', 
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
+        tooltip: {
+          backgroundColor: isDark ? '#0f172a' : '#1e293b',
+          titleColor: '#ffffff',
+          bodyColor: '#f1f5f9',
+          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
           borderWidth: 1,
-          padding: 12, 
-          cornerRadius: 0, 
-          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 }, 
-          bodyFont: { family: "'IBM Plex Sans'", size: 12 } 
+          padding: 12,
+          cornerRadius: 4,
+          titleFont: { family: "'IBM Plex Sans'", weight: '700', size: 11 },
+          bodyFont: { family: "'IBM Plex Sans'", size: 12 }
         }
       }
     }
