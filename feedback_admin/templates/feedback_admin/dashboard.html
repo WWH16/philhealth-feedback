@@ -25,10 +25,10 @@
   <!-- FILTER TABS -->
   <div style="margin-bottom:20px;">
     <div class="filter-tabs" style="display:inline-flex;max-width:480px;width:100%">
-      <button class="filter-tab" onclick="setFilter(this,'today')">Today</button>
-      <button class="filter-tab" onclick="setFilter(this,'week')">This Week</button>
-      <button class="filter-tab" onclick="setFilter(this,'month')">This Month</button>
-      <button class="filter-tab active" onclick="setFilter(this,'all')">All Time</button>
+      <button type="button" class="filter-tab" onclick="setFilter(this,'today')">Today</button>
+      <button type="button" class="filter-tab" onclick="setFilter(this,'week')">This Week</button>
+      <button type="button" class="filter-tab" onclick="setFilter(this,'month')">This Month</button>
+      <button type="button" class="filter-tab active" onclick="setFilter(this,'all')">All Time</button>
     </div>
   </div>
 
@@ -39,8 +39,8 @@
         <div class="stat-card-icon"><span class="material-icons-round" style="color:var(--g-primary);background:var(--g-xlight)">forum</span></div>
         <div class="stat-value" id="totalVal">{{ total }}</div>
         <div class="stat-label">Total Responses</div>
-        <span class="stat-delta flat"><span class="material-icons-round">remove</span>Live database total</span>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">forum</span></div>
+        <span class="stat-delta flat"><span class="material-icons-round" aria-hidden="true">remove</span>Live database total</span>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">forum</span></div>
       </div>
     </div>
     <div class="col-6 col-lg-3">
@@ -48,8 +48,8 @@
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
         <div class="stat-value" id="vsatVal">{{ very_satisfactory }}</div>
         <div class="stat-label">Very Satisfactory</div>
-        <span class="stat-delta flat"><span class="material-icons-round">remove</span>{{ very_satisfactory_pct }}% of total</span>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
+        <span class="stat-delta flat"><span class="material-icons-round" aria-hidden="true">remove</span>{{ very_satisfactory_pct }}% of total</span>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
       </div>
     </div>
     <div class="col-6 col-lg-3">
@@ -57,8 +57,8 @@
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_neutral</span></div>
         <div class="stat-value" id="satVal">{{ satisfactory }}</div>
         <div class="stat-label">Satisfactory</div>
-        <span class="stat-delta flat"><span class="material-icons-round">remove</span>{{ satisfactory_pct }}% of total</span>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_neutral</span></div>
+        <span class="stat-delta flat"><span class="material-icons-round" aria-hidden="true">remove</span>{{ satisfactory_pct }}% of total</span>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">sentiment_neutral</span></div>
       </div>
     </div>
     <div class="col-6 col-lg-3">
@@ -66,8 +66,8 @@
         <div class="stat-card-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
         <div class="stat-value" id="unsatVal">{{ unsatisfactory }}</div>
         <div class="stat-label">Unsatisfactory</div>
-        <span class="stat-delta flat"><span class="material-icons-round">remove</span>{{ unsatisfactory_pct }}% of total</span>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
+        <span class="stat-delta flat"><span class="material-icons-round" aria-hidden="true">remove</span>{{ unsatisfactory_pct }}% of total</span>
+        <div class="stat-card-bg-icon" aria-hidden="true"><span class="material-icons-round">sentiment_dissatisfied</span></div>
       </div>
     </div>
   </div>
