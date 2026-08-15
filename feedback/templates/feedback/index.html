@@ -71,7 +71,8 @@
         </p>
       </div>
 
-      <form id="csmForm" onsubmit="handleSubmitCSM(event)" class="space-y-6">
+      <form id="csmForm" onsubmit="handleSubmitCSM(event)" class="space-y-6" novalidate>
+
 
         <!-- ── 3. RESPONDENT INFORMATION BLOCK ────────────────────────────── -->
         <div class="paper-box">
@@ -99,7 +100,7 @@
             </div>
 
             <!-- ROW 2: CLIENT TYPE -->
-            <div class="p-3">
+            <div class="p-3" id="group-clientType">
               <div class="text-[11px] font-bold text-slate-900 uppercase mb-2">Client Type:</div>
               <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-6">
                 <label class="paper-option">
@@ -118,7 +119,7 @@
             </div>
 
             <!-- ROW 3: SEX -->
-            <div class="p-3">
+            <div class="p-3" id="group-sex">
               <div class="text-[11px] font-bold text-slate-900 uppercase mb-2">Sex:</div>
               <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-6">
                 <label class="paper-option">
@@ -206,7 +207,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <!-- CC1 -->
-              <div class="p-3 border border-slate-900 bg-slate-50 space-y-2">
+              <div class="p-3 border border-slate-900 bg-slate-50 space-y-2" id="cc1Block">
                 <div class="text-xs font-bold text-slate-900">CC1</div>
                 <div class="text-xs text-slate-800 leading-snug">Which of the following best describes your awareness of a Citizen's Charter (CC)?</div>
                 <div class="space-y-1.5 pt-1">
@@ -328,7 +329,7 @@
                 </thead>
                 <tbody>
                   <!-- SQD0 -->
-                  <tr>
+                  <tr id="sqdRow-sqd0">
                     <td class="font-medium text-slate-900 sqd-col-statement">
                       <div class="font-bold">SQD0. Overall Satisfaction</div>
                       <div class="text-[11px] text-slate-700">I am satisfied with the service that I availed.</div>
@@ -342,7 +343,7 @@
                   </tr>
 
                   <!-- SQD1 -->
-                  <tr>
+                  <tr id="sqdRow-sqd1">
                     <td class="font-medium text-slate-900 sqd-col-statement">
                       <div class="font-bold">SQD1. Responsiveness</div>
                       <div class="text-[11px] text-slate-700">I spent reasonable amount of time for my transaction. <em class="text-slate-500">(Mula matawag sa Front Desk hanggang matapos)</em></div>
@@ -356,7 +357,7 @@
                   </tr>
 
                   <!-- SQD2 -->
-                  <tr>
+                  <tr id="sqdRow-sqd2">
                     <td class="font-medium text-slate-900 sqd-col-statement">
                       <div class="font-bold">SQD2. Reliability</div>
                       <div class="text-[11px] text-slate-700">The office followed the transaction's requirements and steps.</div>
@@ -370,7 +371,7 @@
                   </tr>
 
                   <!-- SQD3 -->
-                  <tr>
+                  <tr id="sqdRow-sqd3">
                     <td class="font-medium text-slate-900 sqd-col-statement">
                       <div class="font-bold">SQD3. Access & Facility</div>
                       <div class="text-[11px] text-slate-700">The steps (including payment) I needed to do for my transaction were easy and simple.</div>
@@ -384,7 +385,7 @@
                   </tr>
 
                   <!-- SQD4 -->
-                  <tr>
+                  <tr id="sqdRow-sqd4">
                     <td class="font-medium text-slate-900 sqd-col-statement">
                       <div class="font-bold">SQD4. Communication</div>
                       <div class="text-[11px] text-slate-700">I easily found information about my transaction from the office or its website.</div>
@@ -398,7 +399,7 @@
                   </tr>
 
                   <!-- SQD5 -->
-                  <tr>
+                  <tr id="sqdRow-sqd5">
                     <td class="font-medium text-slate-900 sqd-col-statement">
                       <div class="font-bold">SQD5. Costs</div>
                       <div class="text-[11px] text-slate-700">I paid a reasonable amount of fees for my transaction. <em class="text-slate-500">(Check "NOT APPLICABLE" kung walang binayaran)</em></div>
@@ -412,7 +413,7 @@
                   </tr>
 
                   <!-- SQD6 -->
-                  <tr>
+                  <tr id="sqdRow-sqd6">
                     <td class="font-medium text-slate-900 sqd-col-statement">
                       <div class="font-bold">SQD6. Integrity</div>
                       <div class="text-[11px] text-slate-700">I feel the office was fair to everyone or "walang palakasan" during my transaction.</div>
@@ -426,7 +427,7 @@
                   </tr>
 
                   <!-- SQD7 -->
-                  <tr>
+                  <tr id="sqdRow-sqd7">
                     <td class="font-medium text-slate-900 sqd-col-statement">
                       <div class="font-bold">SQD7. Assurance</div>
                       <div class="text-[11px] text-slate-700">I was treated courteously by the staff and the staff was helpful. <em class="text-slate-500">(Pangalanan ang Staff sa Commendation box)</em></div>
@@ -440,7 +441,7 @@
                   </tr>
 
                   <!-- SQD8 -->
-                  <tr>
+                  <tr id="sqdRow-sqd8">
                     <td class="font-medium text-slate-900 sqd-col-statement">
                       <div class="font-bold">SQD8. Outcome</div>
                       <div class="text-[11px] text-slate-700">I got what I needed from the government office or (if denied) denial of request was sufficiently explained to me.</div>
@@ -479,11 +480,13 @@
 
         <!-- ── 8. CONSENT & SUBMIT FOOTER ───────────────────────────────────── -->
         <div class="paper-box p-4 bg-slate-100 space-y-4">
-          <div class="flex items-start gap-2.5">
-            <input type="checkbox" id="privacyConsent" required class="mt-0.5 accent-emerald-600 w-4 h-4 cursor-pointer">
-            <label for="privacyConsent" class="text-xs text-slate-800 leading-relaxed cursor-pointer font-medium">
-              By submitting this form, I am providing PhilHealth my consent to collect and process my personal information in accordance with the Data Privacy Act of 2012 (RA 10173).
-            </label>
+          <div id="group-privacyConsent">
+            <div class="flex items-start gap-2.5">
+              <input type="checkbox" id="privacyConsent" required class="mt-0.5 accent-emerald-600 w-4 h-4 cursor-pointer">
+              <label for="privacyConsent" class="text-xs text-slate-800 leading-relaxed cursor-pointer font-medium">
+                By submitting this form, I am providing PhilHealth my consent to collect and process my personal information in accordance with the Data Privacy Act of 2012 (RA 10173).
+              </label>
+            </div>
           </div>
 
           <button type="submit" id="btnSubmitCSM" class="btn-submit-csm w-full h-12 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white text-xs font-black tracking-widest uppercase cursor-pointer flex items-center justify-center gap-2 transition-colors duration-150 border border-emerald-900 shadow relative">

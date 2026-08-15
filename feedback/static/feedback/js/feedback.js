@@ -26,15 +26,163 @@ function handleCC1Change(optionValue) {
 
     var cc3NA = document.querySelector('input[name="cc3"][value="4"]');
     if (cc3NA) cc3NA.checked = true;
+
+    clearFieldErrorByGroupId('cc2Block');
+    clearFieldErrorByGroupId('cc3Block');
   }
+}
+
+/* ── SUBMIT VALIDATION UX ────────────────────────────────────────────────
+   Native `required` validation is unreliable here: radio/checkbox groups
+   are scattered across a horizontally-scrolling table (SQD matrix) and a
+   long paper-form layout, so the browser's default "jump to first invalid
+   field" often leaves the field off-screen or mid-scroll. This builds an
+   explicit list of required fields, highlights every one that's missing
+   (not just the first), shows a summary banner naming each, and scrolls/
+   focuses the first offender - including handling the table's horizontal
+   scroll for the SQD rows. */
+
+var REQUIRED_FIELDS = [
+  { kind: 'input', id: 'dateTime', label: 'Date & Time' },
+  { kind: 'input', id: 'contactNo', label: 'Contact No.' },
+  { kind: 'input', id: 'emailAddress', label: 'Email Address' },
+  { kind: 'input', id: 'clientAge', label: 'Age' },
+  { kind: 'radio', name: 'client_type', groupId: 'group-clientType', label: 'Client Type' },
+  { kind: 'radio', name: 'sex', groupId: 'group-sex', label: 'Sex' },
+  { kind: 'radio', name: 'cc1', groupId: 'cc1Block', label: 'CC1 Answer' },
+  { kind: 'radio', name: 'cc2', groupId: 'cc2Block', label: 'CC2 Answer' },
+  { kind: 'radio', name: 'cc3', groupId: 'cc3Block', label: 'CC3 Answer' },
+  { kind: 'radio', name: 'sqd0', groupId: 'sqdRow-sqd0', label: 'SQD0. Overall Satisfaction', isRow: true },
+  { kind: 'radio', name: 'sqd1', groupId: 'sqdRow-sqd1', label: 'SQD1. Responsiveness', isRow: true },
+  { kind: 'radio', name: 'sqd2', groupId: 'sqdRow-sqd2', label: 'SQD2. Reliability', isRow: true },
+  { kind: 'radio', name: 'sqd3', groupId: 'sqdRow-sqd3', label: 'SQD3. Access & Facility', isRow: true },
+  { kind: 'radio', name: 'sqd4', groupId: 'sqdRow-sqd4', label: 'SQD4. Communication', isRow: true },
+  { kind: 'radio', name: 'sqd5', groupId: 'sqdRow-sqd5', label: 'SQD5. Costs', isRow: true },
+  { kind: 'radio', name: 'sqd6', groupId: 'sqdRow-sqd6', label: 'SQD6. Integrity', isRow: true },
+  { kind: 'radio', name: 'sqd7', groupId: 'sqdRow-sqd7', label: 'SQD7. Assurance', isRow: true },
+  { kind: 'radio', name: 'sqd8', groupId: 'sqdRow-sqd8', label: 'SQD8. Outcome', isRow: true },
+  { kind: 'checkbox', id: 'privacyConsent', groupId: 'group-privacyConsent', label: 'Privacy Consent' }
+];
+
+var validationAttempted = false;
+
+function fieldGroupEl(field) {
+  if (field.kind === 'input') {
+    var input = document.getElementById(field.id);
+    return input ? input.parentElement : null;
+  }
+  return field.groupId ? document.getElementById(field.groupId) : null;
+}
+
+function fieldFocusEl(field) {
+  if (field.kind === 'input') return document.getElementById(field.id);
+  if (field.kind === 'checkbox') return document.getElementById(field.id);
+  var checked = document.querySelector('input[name="' + field.name + '"]:checked');
+  if (checked) return checked;
+  return document.querySelector('input[name="' + field.name + '"]');
+}
+
+function isFieldValid(field) {
+  if (field.kind === 'input') {
+    var input = document.getElementById(field.id);
+    return input ? input.checkValidity() : true;
+  }
+  if (field.kind === 'checkbox') {
+    var box = document.getElementById(field.id);
+    return box ? box.checked : true;
+  }
+  return !!document.querySelector('input[name="' + field.name + '"]:checked');
+}
+
+function ensureErrorMsgEl(field, groupEl) {
+  if (!groupEl) return null;
+  var msg = groupEl.querySelector('.field-error-msg[data-field="' + (field.id || field.name) + '"]');
+  if (msg) return msg;
+
+  msg = document.createElement('p');
+  msg.className = 'field-error-msg';
+  msg.setAttribute('data-field', field.id || field.name);
+  msg.hidden = true;
+  msg.innerHTML = '<span class="material-icons-round" aria-hidden="true">error_outline</span><span class="field-error-text"></span>';
+
+  if (field.isRow) {
+    // Append inside the row's first cell so it stays visible within the
+    // horizontally-scrolling table instead of breaking the row layout.
+    var firstCell = groupEl.querySelector('td');
+    if (firstCell) firstCell.appendChild(msg);
+  } else {
+    groupEl.appendChild(msg);
+  }
+  return msg;
+}
+
+function setFieldInvalid(field, invalid) {
+  var groupEl = fieldGroupEl(field);
+  if (!groupEl) return;
+
+  var msg = ensureErrorMsgEl(field, groupEl);
+
+  if (field.kind === 'input') {
+    var input = document.getElementById(field.id);
+    if (input) {
+      input.classList.toggle('field-invalid-input', invalid);
+      input.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+    }
+  } else if (field.isRow) {
+    groupEl.classList.toggle('field-invalid-row', invalid);
+  } else {
+    groupEl.classList.toggle('field-invalid-group', invalid);
+  }
+
+  if (msg) {
+    var textEl = msg.querySelector('.field-error-text');
+    if (textEl) {
+      textEl.textContent = field.kind === 'checkbox'
+        ? 'Please check this box to continue.'
+        : (field.kind === 'radio' ? 'Please select one option.' : 'This field is required.');
+    }
+    msg.hidden = !invalid;
+  }
+}
+
+function clearFieldErrorByGroupId(groupId) {
+  var field = REQUIRED_FIELDS.filter(function (f) { return f.groupId === groupId; })[0];
+  if (field) setFieldInvalid(field, false);
+}
+
+function scrollToField(field) {
+  var groupEl = fieldGroupEl(field);
+  var focusEl = fieldFocusEl(field);
+  var target = groupEl || focusEl;
+  if (target && target.scrollIntoView) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+  }
+  if (focusEl && focusEl.focus) {
+    setTimeout(function () { focusEl.focus({ preventScroll: true }); }, 260);
+  }
+}
+
+function validateCSMForm(opts) {
+  var silent = opts && opts.onlyIfAttempted && !validationAttempted;
+  var invalidFields = [];
+
+  REQUIRED_FIELDS.forEach(function (field) {
+    var valid = isFieldValid(field);
+    if (!silent) setFieldInvalid(field, !valid);
+    if (!valid) invalidFields.push(field);
+  });
+
+  return invalidFields;
 }
 
 function handleSubmitCSM(event) {
   if (event) event.preventDefault();
 
-  var privacyConsent = document.getElementById('privacyConsent');
-  if (privacyConsent && !privacyConsent.checked) {
-    alert('Please confirm your privacy consent before submitting.');
+  validationAttempted = true;
+  var invalidFields = validateCSMForm();
+
+  if (invalidFields.length > 0) {
+    scrollToField(invalidFields[0]);
     return;
   }
 
@@ -42,9 +190,6 @@ function handleSubmitCSM(event) {
   if (btnSubmit && btnSubmit.disabled) {
     return; // Hardened against double-click double submission
   }
-
-  var submitIcon = document.getElementById('submitIcon');
-  var submitText = document.getElementById('submitText');
 
   if (btnSubmit) {
     btnSubmit.disabled = true;
@@ -82,6 +227,9 @@ function resetCSMForm() {
 
   updateDateTime();
 
+  validationAttempted = false;
+  REQUIRED_FIELDS.forEach(function (field) { setFieldInvalid(field, false); });
+
   var sw = document.getElementById('successWrap');
   if (sw) sw.classList.remove('is-open');
 
@@ -95,6 +243,15 @@ function handleBackdropClick(event) {
 
 document.addEventListener('DOMContentLoaded', function () {
   updateDateTime();
+
+  var form = document.getElementById('csmForm');
+  if (form) {
+    // Live-clear a field's error the moment the user fixes it, without
+    // re-running (or re-annoying the user with) a full validation pass
+    // until they've actually attempted to submit once.
+    form.addEventListener('input', function () { validateCSMForm({ onlyIfAttempted: true }); });
+    form.addEventListener('change', function () { validateCSMForm({ onlyIfAttempted: true }); });
+  }
 });
 
 document.addEventListener('keydown', function (event) {
