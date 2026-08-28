@@ -26,7 +26,14 @@ BACKUP_FILENAME_RE = re.compile(r'^philhealth_backup_\d{8}_\d{6}\.sql$')
 
 def get_backup_dir():
     backup_dir = Path(getattr(settings, 'BACKUP_DIR', settings.BASE_DIR / 'backups'))
-    backup_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        backup_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        backup_dir = Path(tempfile.gettempdir()) / 'backups'
+        try:
+            backup_dir.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
     return backup_dir
 
 
