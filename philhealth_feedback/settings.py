@@ -81,15 +81,12 @@ WSGI_APPLICATION = 'philhealth_feedback.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', 'philhealth_feedback'),
-        'USER': os.environ.get('DB_USER', 'philhealth_app'),
+        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.environ.get('DB_NAME', 'postgres'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '3307'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
+        'PORT': os.environ.get('DB_PORT', '5432'),
         'CONN_MAX_AGE': 60,
     }
 }
