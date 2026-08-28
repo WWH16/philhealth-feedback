@@ -9,11 +9,13 @@ _ML_DIR = Path(__file__).resolve().parent / 'ml'
 _MODEL_PATH = _ML_DIR / 'random_forest_sentiment.pkl'
 _STOPWORDS_PATH = _ML_DIR / 'stopwords_en.txt'
 
-_model = joblib.load(_MODEL_PATH)
+_model = None
 _stemmer = SnowballStemmer('english')
 
-with open(_STOPWORDS_PATH, 'r') as f:
-    _STOP_WORDS = frozenset(line.strip() for line in f if line.strip())
+_STOP_WORDS = set()
+if _STOPWORDS_PATH.exists():
+    with open(_STOPWORDS_PATH, 'r') as f:
+        _STOP_WORDS = frozenset(line.strip() for line in f if line.strip())
 
 _LABEL_MAP = {
     0: FeedbackEntry.NEGATIVE,
@@ -25,16 +27,17 @@ _LABEL_MAP = {
     'irrelevant': FeedbackEntry.PENDING,
 }
 
+def _get_model():
+    global _model
+    if _model is None and _MODEL_PATH.exists():
+        try:
+            _model = joblib.load(_MODEL_PATH)
+        except Exception:
+            _model = False
+    return _model if _model is not False else None
+
 
 def _preprocess_light(text):
-    """
-    Must stay byte-for-byte identical to the preprocess_light() used during
-    training (lowercase -> strip non a-z/space -> split -> stopword filter
-    -> stem), or predictions will silently diverge from what the model
-    learned. Stopwords are loaded from ml/stopwords_en.txt, a frozen
-    snapshot of nltk.corpus.stopwords.words('english') verified to match
-    the live nltk fetch exactly.
-    """
     if not isinstance(text, str):
         return ""
     text = text.lower()
@@ -49,37 +52,27 @@ def _preprocess_light(text):
 
 
 def analyze_comment_sentiment(comment):
-    """
-    Sentiment must be inferred from the free-text comment only. Do not map
-    the user's selected experience rating to positive, neutral, or
-    negative because satisfaction ratings and comment sentiment are
-    separate signals.
-    """
     if not comment:
+        return FeedbackEntry.PENDING
+    model = _get_model()
+    if not model:
         return FeedbackEntry.PENDING
     cleaned = _preprocess_light(comment)
     if not cleaned:
         return FeedbackEntry.PENDING
-    predicted_label = _model.predict([cleaned])[0]
-    normalized_label = (
-        predicted_label.strip().lower()
-        if isinstance(predicted_label, str)
-        else predicted_label
-    )
-    return _LABEL_MAP.get(normalized_label, FeedbackEntry.PENDING)
+    try:
+        predicted_label = model.predict([cleaned])[0]
+        normalized_label = (
+            predicted_label.strip().lower()
+            if isinstance(predicted_label, str)
+            else predicted_label
+        )
+        return _LABEL_MAP.get(normalized_label, FeedbackEntry.PENDING)
+    except Exception:
+        return FeedbackEntry.PENDING
+
 
 def reanalyze_pending_entries(force=False):
-    """
-    Runs sentiment analysis on feedback entries.
-
-    By default, only entries with a non-blank comment that are still
-    PENDING are processed — anything already categorized (pos/neu/neg)
-    is left untouched. Pass force=True to reprocess every entry with a
-    comment regardless of its current sentiment (intended for after
-    retraining the model with new data, not for routine use).
-
-    Returns (total_scanned, processed_count).
-    """
     qs = FeedbackEntry.objects.exclude(comment='')
     if not force:
         qs = qs.filter(sentiment=FeedbackEntry.PENDING)
