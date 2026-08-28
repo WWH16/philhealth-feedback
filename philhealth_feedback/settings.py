@@ -22,10 +22,10 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-xc%qfpi*ofbo(c-=ov^x2a=ta54tx&m27gt#9$a-%k--78wy=w')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*', '165.22.60.115']
 
@@ -131,6 +131,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+WHITENOISE_USE_FINDERS = True
 
 LOGIN_URL          = '/dashboard/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
