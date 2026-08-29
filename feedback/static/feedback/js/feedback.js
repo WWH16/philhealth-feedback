@@ -263,7 +263,17 @@ function handleSubmitCSM(event) {
       btnSubmit.disabled = false;
       btnSubmit.classList.remove('is-loading');
     }
-    alert(err.message || 'Network error. Please check your connection and try again.');
+    // Show inline error banner instead of alert() — keeps context, matches the form's error pattern
+    var existingBanner = document.getElementById('submitErrorBanner');
+    if (existingBanner) existingBanner.remove();
+    var banner = document.createElement('p');
+    banner.id = 'submitErrorBanner';
+    banner.setAttribute('role', 'alert');
+    banner.className = 'field-error-msg';
+    banner.style.cssText = 'justify-content:center; padding:10px 14px; background:#fef2f2; border:1.5px solid #dc2626; border-radius:2px; font-size:12px; margin-top:8px;';
+    banner.innerHTML = '<span class="material-icons-round" aria-hidden="true" style="font-size:16px;">error_outline</span><span>' + (err.message || 'Network error. Please check your connection and try again.') + '</span>';
+    var footer = document.getElementById('btnSubmitCSM');
+    if (footer && footer.parentNode) footer.parentNode.appendChild(banner);
   });
 }
 
@@ -292,11 +302,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var form = document.getElementById('csmForm');
   if (form) {
-    // Live-clear a field's error the moment the user fixes it, without
-    // re-running (or re-annoying the user with) a full validation pass
-    // until they've actually attempted to submit once.
-    form.addEventListener('input', function () { validateCSMForm({ onlyIfAttempted: true }); });
-    form.addEventListener('change', function () { validateCSMForm({ onlyIfAttempted: true }); });
+    // Debounced live validation — clears field errors as the user fixes them,
+    // but batches rapid input events to avoid layout thrashing on every keystroke.
+    var validationTimer = null;
+    function debouncedValidate() {
+      clearTimeout(validationTimer);
+      validationTimer = setTimeout(function () {
+        validateCSMForm({ onlyIfAttempted: true });
+      }, 120);
+    }
+
+    form.addEventListener('input', function () {
+      // Also clear any stale submit-error banner when user starts correcting
+      var banner = document.getElementById('submitErrorBanner');
+      if (banner) banner.remove();
+      debouncedValidate();
+    });
+    form.addEventListener('change', function () {
+      var banner = document.getElementById('submitErrorBanner');
+      if (banner) banner.remove();
+      debouncedValidate();
+    });
   }
 });
 
