@@ -580,7 +580,34 @@ function shareReport() {
 }
 
 /* ── THEME & RESIZE ── */
-function onThemeChange() { updateReport(true); }
+function onThemeChange() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (reportPieChart) {
+    reportPieChart.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
+    if (reportPieChart.options && reportPieChart.options.plugins && reportPieChart.options.plugins.tooltip) {
+      reportPieChart.options.plugins.tooltip.backgroundColor = isDark ? '#0f172a' : '#1e293b';
+    }
+    reportPieChart.update('none');
+  }
+  if (reportTrendChart) {
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
+    const textColor = isDark ? '#cbd5e1' : '#475569';
+    if (reportTrendChart.options && reportTrendChart.options.scales) {
+      if (reportTrendChart.options.scales.x) {
+        reportTrendChart.options.scales.x.grid.color = gridColor;
+        reportTrendChart.options.scales.x.ticks.color = textColor;
+      }
+      if (reportTrendChart.options.scales.y) {
+        reportTrendChart.options.scales.y.grid.color = gridColor;
+        reportTrendChart.options.scales.y.ticks.color = textColor;
+      }
+    }
+    if (reportTrendChart.options && reportTrendChart.options.plugins && reportTrendChart.options.plugins.tooltip) {
+      reportTrendChart.options.plugins.tooltip.backgroundColor = isDark ? '#0f172a' : '#1e293b';
+    }
+    reportTrendChart.update('none');
+  }
+}
 function onResize() {
   // Chart.js automatically handles container resize events smoothly
 }

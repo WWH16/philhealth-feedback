@@ -116,14 +116,10 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
   text-transform: uppercase; padding: 3px 7px; white-space: nowrap;
 }
 .status-chip .material-icons-round { font-size: 11px; }
-.chip-active   { background: var(--g-xlight); color: var(--g-forest); }
-.chip-inactive { background: var(--ink8);     color: var(--ink4); }
-.chip-super    { background: #fffbe6; color: #7a5500; border: 1px solid #f5e4a0; }
-.chip-staff    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-[data-theme="dark"] .chip-active   { background: rgba(35,164,85,0.12);  color: #5fcf8a; }
-[data-theme="dark"] .chip-inactive { background: rgba(255,255,255,0.05); color: var(--ink5); }
-[data-theme="dark"] .chip-super    { background: rgba(184,147,58,0.12); color: #d4a840; border-color: rgba(184,147,58,0.25); }
-[data-theme="dark"] .chip-staff    { background: rgba(59,130,246,0.12); color: #93c5fd; border-color: rgba(59,130,246,0.25); }
+.chip-active   { background: var(--badge-vsat-bg); color: var(--badge-vsat-text); border: 1px solid var(--badge-vsat-border); }
+.chip-inactive { background: var(--surface-page);  color: var(--text-muted);     border: 1px solid var(--border); }
+.chip-super    { background: var(--badge-sat-bg);   color: var(--badge-sat-text);  border: 1px solid var(--badge-sat-border); }
+.chip-staff    { background: var(--badge-blue-bg);  color: var(--badge-blue-text); border: 1px solid var(--badge-blue-border); }
 
 /* ── CONFIRMATION MODALS (backup delete & restore) ── */
 .confirm-modal-backdrop {
@@ -657,7 +653,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
           <div class="settings-section-body">
             <div style="padding:12px 14px;background:var(--red-bg);border:1.5px solid var(--red);display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;border-radius:0;">
               <span class="material-icons-round" style="color:var(--red);font-size:18px;flex-shrink:0;margin-top:1px">warning</span>
-              <div style="font-size:12px;color:#7a0011;font-weight:600;line-height:1.6">This permanently replaces all current data with the uploaded file. A safety backup is taken automatically first, but plan for brief downtime.</div>
+              <div style="font-size:12px;color:var(--red-text);font-weight:600;line-height:1.6">This permanently replaces all current data with the uploaded file. A safety backup is taken automatically first, but plan for brief downtime.</div>
             </div>
 <input type="file" accept=".sql" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
             <div id="restoreDropZone" class="restore-drop-zone"

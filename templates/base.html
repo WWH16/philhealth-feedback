@@ -5,9 +5,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}PhilHealth Cauayan City{% endblock %}</title>
-  <link rel="icon" type="image/png" href="{% static 'img/philhealth_logo.png' %}">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('ph-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   {% block styles %}{% endblock %}
 </head>
 <body>

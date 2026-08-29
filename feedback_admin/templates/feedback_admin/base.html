@@ -37,8 +37,8 @@
   --ink:        #1c1e22;
   --ink2:       #2e3238;
   --ink3:       #484c53;
-  --ink4:       #73787f;
-  --ink5:       #9ea3a9;
+  --ink4:       #484c53;
+  --ink5:       #525866;
   --ink6:       #c9cdd3;
   --ink7:       #e4e7eb;
   --ink8:       #f2f4f6;
@@ -47,6 +47,7 @@
 
   --red:        #c0001a;
   --red-bg:     #fff0f2;
+  --red-text:   #990014;
 
   --font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -63,6 +64,23 @@
   --text-primary:    var(--ink);
   --text-secondary:  var(--ink4);
   --text-muted:      var(--ink5);
+
+  /* Semantic Status Badge Tokens (Light) */
+  --badge-vsat-bg:     var(--g-xlight);
+  --badge-vsat-text:   #0d6e35;
+  --badge-vsat-border: #b8e6cb;
+
+  --badge-sat-bg:      #fffbe6;
+  --badge-sat-text:    #7a5500;
+  --badge-sat-border:  #f5e4a0;
+
+  --badge-unsat-bg:    #fff0f2;
+  --badge-unsat-text:  #990014;
+  --badge-unsat-border:#fca5a5;
+
+  --badge-blue-bg:     #eff6ff;
+  --badge-blue-text:   #1d4ed8;
+  --badge-blue-border: #bfdbfe;
 }
 
 [data-theme="dark"] {
@@ -71,20 +89,38 @@
   --surface-sidebar: #0d1510;
   --surface-topbar:  #0d1510;
   --border:          #2a2e35;
-  --text-primary:    #e8eaed;
-  --text-secondary:  #9ea3a9;
-  --text-muted:      #6b7178;
+  --text-primary:    #f1f5f9;
+  --text-secondary:  #cbd5e1;
+  --text-muted:      #94a3b8;
   --ink8:            #111418;
   --ink9:            #1a1e24;
   --ink7:            #2a2e35;
   --ink6:            #3a3f47;
-  --ink5:            #6b7178;
-  --ink4:            #9ea3a9;
-  --ink3:            #c5c9cf;
-  --ink:             #e8eaed;
-  --g-xlight:        rgba(35,164,85,0.12);
-  --gold-light:      rgba(184,147,58,0.12);
-  --red-bg:          rgba(192,0,26,0.12);
+  --ink5:            #94a3b8;
+  --ink4:            #cbd5e1;
+  --ink3:            #e2e8f0;
+  --ink:             #f1f5f9;
+  --g-xlight:        rgba(35,164,85,0.15);
+  --gold-light:      rgba(184,147,58,0.15);
+  --red-bg:          rgba(192,0,26,0.15);
+  --red-text:        #f87171;
+
+  /* Semantic Status Badge Tokens (Dark) */
+  --badge-vsat-bg:     rgba(35,164,85,0.18);
+  --badge-vsat-text:   #5fcf8a;
+  --badge-vsat-border: rgba(35,164,85,0.35);
+
+  --badge-sat-bg:      rgba(184,147,58,0.18);
+  --badge-sat-text:    #f59e0b;
+  --badge-sat-border:  rgba(184,147,58,0.35);
+
+  --badge-unsat-bg:    rgba(192,0,26,0.18);
+  --badge-unsat-text:  #f87171;
+  --badge-unsat-border:rgba(192,0,26,0.35);
+
+  --badge-blue-bg:     rgba(59,130,246,0.18);
+  --badge-blue-text:   #93c5fd;
+  --badge-blue-border: rgba(59,130,246,0.35);
 }
 
 /* ── THEME TOGGLE ANIMATION ─────────────────────────────────────────────── */

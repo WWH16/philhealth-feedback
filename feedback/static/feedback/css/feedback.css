@@ -4,6 +4,13 @@
 :root {
   --g-primary:   #169651;
   --g-dark:      #123e23;
+
+  --surface-page:   #e2e8f0;
+  --surface-paper:  #ffffff;
+  --surface-header: #f1f5f9;
+  --border-dark:    #1e293b;
+  --border-light:   #cbd5e1;
+
   --ink:         #0f172a;
   --ink2:        #1e293b;
   --ink3:        #334155;
@@ -17,14 +24,45 @@
   --font-mono: 'IBM Plex Mono', monospace;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface-page:   #0f1712;
+    --surface-paper:  #18201a;
+    --surface-header: #202b23;
+    --border-dark:    #354539;
+    --border-light:   #3d5243;
+    --ink:            #f1f5f9;
+    --ink2:           #e2e8f0;
+    --ink3:           #cbd5e1;
+    --ink4:           #94a3b8;
+    --ink8:           #0f1712;
+    --ink9:           #18201a;
+  }
+}
+
+[data-theme="dark"] {
+  --surface-page:   #0f1712;
+  --surface-paper:  #18201a;
+  --surface-header: #202b23;
+  --border-dark:    #354539;
+  --border-light:   #3d5243;
+  --ink:            #f1f5f9;
+  --ink2:           #e2e8f0;
+  --ink3:           #cbd5e1;
+  --ink4:           #94a3b8;
+  --ink8:           #0f1712;
+  --ink9:           #18201a;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
   font-family: var(--font);
-  background-color: #e2e8f0;
+  background-color: var(--surface-page);
   min-height: 100vh;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 /* ── NAVBAR ─────────────────────────────────────────────────────────────── */
@@ -47,28 +85,30 @@ body {
 
 /* ── PAPER FORM SHEET CONTAINER ────────────────────────────────────────── */
 .paper-sheet {
-  background: var(--white);
-  border: none;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+  background: var(--surface-paper);
+  border: 1px solid var(--border-dark);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
   border-radius: 4px;
+  color: var(--ink);
 }
 
 /* ── FORM TABLE & GRID BOXES ───────────────────────────────────────────── */
 .paper-box {
-  border: 1px solid #1e293b;
+  border: 1px solid var(--border-dark);
   border-radius: 2px;
   overflow: hidden;
+  background: var(--surface-paper);
 }
 
 .paper-box-header {
-  background: #f1f5f9;
-  border-bottom: 1px solid #1e293b;
+  background: var(--surface-header);
+  border-bottom: 1px solid var(--border-dark);
   padding: 8px 12px;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #0f172a;
+  color: var(--ink);
 }
 
 .csm-field-table {
@@ -77,18 +117,19 @@ body {
 }
 
 .csm-field-table td, .csm-field-table th {
-  border: 1px solid #1e293b;
+  border: 1px solid var(--border-dark);
   padding: 10px 12px;
   vertical-align: top;
+  color: var(--ink);
 }
 
 .csm-paper-input {
   width: 100%;
   padding: 5px 8px;
   font-size: 13px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
+  border: 1px solid var(--border-light);
+  background: var(--surface-paper);
+  color: var(--ink);
   border-radius: 2px;
 }
 .csm-paper-input:focus {
@@ -113,7 +154,7 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
   align-items: center;
   gap: 8px;
   font-size: 12.5px;
-  color: #0f172a;
+  color: var(--ink);
   cursor: pointer;
   user-select: none;
   padding: 6px 4px;
@@ -134,20 +175,9 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--border-dark);
   border-radius: 2px;
-  /* Scroll-shadow affordance: fades in on either edge only while there is
-     more content to scroll to in that direction. */
-  background-image:
-    linear-gradient(to right, var(--white), rgba(255, 255, 255, 0)),
-    linear-gradient(to left, var(--white), rgba(255, 255, 255, 0)),
-    linear-gradient(to right, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0)),
-    linear-gradient(to left, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0));
-  background-repeat: no-repeat;
-  background-color: var(--white);
-  background-size: 28px 100%, 28px 100%, 10px 100%, 10px 100%;
-  background-position: left center, right center, left center, right center;
-  background-attachment: local, local, scroll, scroll;
+  background-color: var(--surface-paper);
 }
 
 .paper-sqd-table {
@@ -159,10 +189,11 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
 }
 
 .paper-sqd-table th, .paper-sqd-table td {
-  border-right: 1px solid #1e293b;
-  border-bottom: 1px solid #1e293b;
+  border-right: 1px solid var(--border-dark);
+  border-bottom: 1px solid var(--border-dark);
   padding: 10px 10px;
   vertical-align: middle;
+  color: var(--ink);
 }
 
 .paper-sqd-table tr:last-child td {
@@ -173,8 +204,8 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
 }
 
 .paper-sqd-table th {
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--surface-header);
+  color: var(--ink);
   font-weight: 700;
   text-align: center;
 }
@@ -186,11 +217,11 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
 }
 
 .paper-sqd-table tbody tr:nth-child(even) {
-  background-color: #f8fafc;
+  background-color: var(--surface-header);
 }
 
 .paper-sqd-table tbody tr:hover {
-  background-color: #f0fdf4;
+  background-color: var(--g-xlight);
 }
 
 .sqd-cell-center {

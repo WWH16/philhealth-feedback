@@ -433,7 +433,43 @@ function renderAllSentimentCharts() {
   initSentimentTrend();
 }
 
-function onThemeChange() { renderAllSentimentCharts(); }
+function onThemeChange() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (sentimentPieChart) {
+    sentimentPieChart.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
+    sentimentPieChart.update('none');
+  }
+  if (sentimentBarChart) {
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
+    const textColor = isDark ? '#cbd5e1' : '#475569';
+    if (sentimentBarChart.options && sentimentBarChart.options.scales) {
+      if (sentimentBarChart.options.scales.x) {
+        sentimentBarChart.options.scales.x.grid.color = gridColor;
+        sentimentBarChart.options.scales.x.ticks.color = textColor;
+      }
+      if (sentimentBarChart.options.scales.y) {
+        sentimentBarChart.options.scales.y.grid.color = gridColor;
+        sentimentBarChart.options.scales.y.ticks.color = textColor;
+      }
+    }
+    sentimentBarChart.update('none');
+  }
+  if (sentimentTrendChart) {
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
+    const textColor = isDark ? '#cbd5e1' : '#475569';
+    if (sentimentTrendChart.options && sentimentTrendChart.options.scales) {
+      if (sentimentTrendChart.options.scales.x) {
+        sentimentTrendChart.options.scales.x.grid.color = gridColor;
+        sentimentTrendChart.options.scales.x.ticks.color = textColor;
+      }
+      if (sentimentTrendChart.options.scales.y) {
+        sentimentTrendChart.options.scales.y.grid.color = gridColor;
+        sentimentTrendChart.options.scales.y.ticks.color = textColor;
+      }
+    }
+    sentimentTrendChart.update('none');
+  }
+}
 function onResize() {
   // Chart.js automatically handles container resize events smoothly
 }

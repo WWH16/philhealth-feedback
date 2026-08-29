@@ -579,8 +579,32 @@ function setFilter(btn, period) {
 }
 
 function onThemeChange() {
-  updatePieAndLegend(FILTER_DATA[currentFilterPeriod], true);
-  renderTrendForPeriod(currentFilterPeriod, true);
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (pieChart) {
+    pieChart.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
+    if (pieChart.options && pieChart.options.plugins && pieChart.options.plugins.tooltip) {
+      pieChart.options.plugins.tooltip.backgroundColor = isDark ? '#0f172a' : '#1e293b';
+    }
+    pieChart.update('none');
+  }
+  if (lineChart) {
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
+    const textColor = isDark ? '#cbd5e1' : '#475569';
+    if (lineChart.options && lineChart.options.scales) {
+      if (lineChart.options.scales.x) {
+        lineChart.options.scales.x.grid.color = gridColor;
+        lineChart.options.scales.x.ticks.color = textColor;
+      }
+      if (lineChart.options.scales.y) {
+        lineChart.options.scales.y.grid.color = gridColor;
+        lineChart.options.scales.y.ticks.color = textColor;
+      }
+    }
+    if (lineChart.options && lineChart.options.plugins && lineChart.options.plugins.tooltip) {
+      lineChart.options.plugins.tooltip.backgroundColor = isDark ? '#0f172a' : '#1e293b';
+    }
+    lineChart.update('none');
+  }
 }
 
 function onResize() {
