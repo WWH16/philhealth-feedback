@@ -323,12 +323,23 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
   text-transform: uppercase;
   cursor: pointer;
   border-radius: 4px;
-  transition: background-color 120ms ease;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
   padding: 12px 20px;
   font-size: 13px;
 }
 .success-reset-btn:hover {
-  background: var(--g-deep);
+  background: #0d743b;
+  border-color: #0d743b;
+  color: var(--white);
+}
+.success-reset-btn:active {
+  background: #0a592d;
+  border-color: #0a592d;
+  color: var(--white);
+}
+.success-reset-btn:focus-visible {
+  outline: 2px solid var(--g-primary);
+  outline-offset: 2px;
 }
 
 /* ── VALIDATION ERROR STATES (highlights exactly which field needs input) ── */
