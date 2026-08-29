@@ -102,6 +102,8 @@ function ensureErrorMsgEl(field, groupEl) {
   msg = document.createElement('p');
   msg.className = 'field-error-msg';
   msg.setAttribute('data-field', field.id || field.name);
+  msg.setAttribute('role', 'alert');
+  msg.setAttribute('aria-live', 'polite');
   msg.hidden = true;
   msg.innerHTML = '<span class="material-icons-round" aria-hidden="true">error_outline</span><span class="field-error-text"></span>';
 
@@ -196,29 +198,73 @@ function handleSubmitCSM(event) {
     btnSubmit.classList.add('is-loading');
   }
 
-  // Submission handling with safety delay
-  setTimeout(function () {
-    var today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    var randomHex = Math.floor(Math.random() * 16777215).toString(16).toUpperCase().padStart(6, '0');
-    var trackingCode = 'CSM-' + today + '-' + randomHex;
+  var servicesAvailed = Array.from(document.querySelectorAll('input[name="services_availed"]:checked'))
+    .map(function (cb) { return cb.value; });
 
-    var detailEl = document.getElementById('successDetailText');
-    if (detailEl) detailEl.textContent = 'PhilHealth LHIO Cauayan City';
+  var payload = {
+    date_time: (document.getElementById('dateTime') || {}).value || null,
+    contact_no: (document.getElementById('contactNo') || {}).value || '',
+    email_address: (document.getElementById('emailAddress') || {}).value || '',
+    age: (document.getElementById('clientAge') || {}).value || null,
+    client_type: (document.querySelector('input[name="client_type"]:checked') || {}).value || '',
+    sex: (document.querySelector('input[name="sex"]:checked') || {}).value || '',
+    name_of_client: (document.getElementById('clientName') || {}).value || '',
+    services_availed: servicesAvailed,
+    cc1: (document.querySelector('input[name="cc1"]:checked') || {}).value || '',
+    cc2: (document.querySelector('input[name="cc2"]:checked') || {}).value || '',
+    cc3: (document.querySelector('input[name="cc3"]:checked') || {}).value || '',
+    sqd0: (document.querySelector('input[name="sqd0"]:checked') || {}).value || null,
+    sqd1: (document.querySelector('input[name="sqd1"]:checked') || {}).value || null,
+    sqd2: (document.querySelector('input[name="sqd2"]:checked') || {}).value || null,
+    sqd3: (document.querySelector('input[name="sqd3"]:checked') || {}).value || null,
+    sqd4: (document.querySelector('input[name="sqd4"]:checked') || {}).value || null,
+    sqd5: (document.querySelector('input[name="sqd5"]:checked') || {}).value || null,
+    sqd6: (document.querySelector('input[name="sqd6"]:checked') || {}).value || null,
+    sqd7: (document.querySelector('input[name="sqd7"]:checked') || {}).value || null,
+    sqd8: (document.querySelector('input[name="sqd8"]:checked') || {}).value || null,
+    comments_suggestions: (document.getElementById('commentsSuggestions') || {}).value || '',
+    commendation: (document.getElementById('commendation') || {}).value || ''
+  };
 
-    var metaEl = document.getElementById('successMetaText');
-    if (metaEl) metaEl.textContent = 'Tracking ID: ' + trackingCode + ' · Recorded: Just now';
-
-    var sw = document.getElementById('successWrap');
-    if (sw) {
-      sw.classList.add('is-open');
+  var submitUrl = window.FEEDBACK_SUBMIT_URL || '/submit/';
+  fetch(submitUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(payload)
+  })
+  .then(function (res) {
+    if (!res.ok) {
+      return res.json().then(function (errData) { throw new Error(errData.error || 'Server error (' + res.status + ')'); });
     }
-    document.body.style.overflow = 'hidden';
-
+    return res.json();
+  })
+  .then(function (data) {
     if (btnSubmit) {
       btnSubmit.disabled = false;
       btnSubmit.classList.remove('is-loading');
     }
-  }, 500);
+    if (data.ok) {
+      var detailEl = document.getElementById('successDetailText');
+      if (detailEl) detailEl.textContent = 'PhilHealth LHIO Cauayan City';
+
+      var metaEl = document.getElementById('successMetaText');
+      if (metaEl) metaEl.textContent = 'Tracking ID: ' + data.tracking_code + ' · Recorded: ' + (data.created_at || 'Just now');
+
+      var sw = document.getElementById('successWrap');
+      if (sw) sw.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    }
+  })
+  .catch(function (err) {
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.classList.remove('is-loading');
+    }
+    alert(err.message || 'Network error. Please check your connection and try again.');
+  });
 }
 
 function resetCSMForm() {

@@ -208,6 +208,11 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
   user-select: none;
   padding: 6px 4px;
   min-height: 38px;
+  border-radius: 2px;
+}
+.paper-option:focus-within {
+  outline: 2px solid var(--g-primary);
+  outline-offset: 1px;
 }
 .paper-option input[type="radio"],
 .paper-option input[type="checkbox"] {

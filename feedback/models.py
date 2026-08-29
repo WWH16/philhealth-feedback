@@ -52,8 +52,36 @@ class FeedbackEntry(models.Model):
     experience = models.CharField(max_length=10, choices=EXPERIENCE_CHOICES)
     sentiment = models.CharField(max_length=10, choices=SENTIMENT_CHOICES, default=PENDING)
     category = models.CharField(max_length=12, choices=CATEGORY_CHOICES, blank=True)
-    comment = models.TextField(blank=True, max_length=500)
+    comment = models.TextField(blank=True, max_length=1000)
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=PENDING)
+
+    # CSM Form Specific Fields
+    date_time = models.DateTimeField(null=True, blank=True)
+    contact_no = models.CharField(max_length=50, blank=True)
+    email_address = models.EmailField(max_length=100, blank=True)
+    age = models.IntegerField(null=True, blank=True)
+    client_type = models.CharField(max_length=100, blank=True)
+    sex = models.CharField(max_length=50, blank=True)
+    name_of_client = models.CharField(max_length=100, blank=True)
+    services_availed = models.JSONField(default=list, blank=True)
+
+    cc1 = models.CharField(max_length=10, blank=True)
+    cc2 = models.CharField(max_length=10, blank=True)
+    cc3 = models.CharField(max_length=10, blank=True)
+
+    sqd0 = models.IntegerField(null=True, blank=True)
+    sqd1 = models.IntegerField(null=True, blank=True)
+    sqd2 = models.IntegerField(null=True, blank=True)
+    sqd3 = models.IntegerField(null=True, blank=True)
+    sqd4 = models.IntegerField(null=True, blank=True)
+    sqd5 = models.IntegerField(null=True, blank=True)
+    sqd6 = models.IntegerField(null=True, blank=True)
+    sqd7 = models.IntegerField(null=True, blank=True)
+    sqd8 = models.IntegerField(null=True, blank=True)
+
+    comments_suggestions = models.TextField(blank=True, max_length=1000)
+    commendation = models.TextField(blank=True, max_length=1000)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
