@@ -8,7 +8,7 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.hashers import make_password
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -288,14 +288,22 @@ def dashboard(request):
     week_start = now - timedelta(days=7)
     month_start = now - timedelta(days=30)
     recent_entries = qs.order_by('-created_at')[:5]
-    total = qs.count()
-    very_satisfactory = qs.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count()
-    satisfactory = qs.filter(experience=FeedbackEntry.SATISFACTORY).count()
-    unsatisfactory = qs.filter(experience=FeedbackEntry.UNSATISFACTORY).count()
+
+    all_counts = _experience_counts(qs)
+    total = all_counts['total']
+    very_satisfactory = all_counts['vsat']
+    satisfactory = all_counts['sat']
+    unsatisfactory = all_counts['unsat']
+
+    trend_counts = (
+        qs.annotate(local_date=TruncDate('created_at'))
+        .values('local_date', 'experience')
+        .annotate(count=Count('id'))
+    )
     trend_data_map = defaultdict(lambda: defaultdict(int))
-    for entry in qs:
-        local_day = timezone.localtime(entry.created_at).date()
-        trend_data_map[local_day][entry.experience] += 1
+    for row in trend_counts:
+        if row['local_date']:
+            trend_data_map[row['local_date']][row['experience']] = row['count']
 
     trend_dates = sorted(trend_data_map.keys())
 
@@ -324,7 +332,7 @@ def dashboard(request):
             'today': _experience_counts(qs.filter(created_at__range=(today_start, today_end))),
             'week': _experience_counts(qs.filter(created_at__gte=week_start)),
             'month': _experience_counts(qs.filter(created_at__gte=month_start)),
-            'all': _experience_counts(qs),
+            'all': all_counts,
         },
         'trend_labels': [f'{day:%b} {day.day}' for day in trend_dates],
         'trend_dates': [day.isoformat() for day in trend_dates],
@@ -386,11 +394,17 @@ def _entry_to_row(entry, activity=None):
 
 
 def _experience_counts(qs):
+    res = qs.aggregate(
+        total=Count('id'),
+        vsat=Count('id', filter=Q(experience=FeedbackEntry.VERY_SATISFACTORY)),
+        sat=Count('id', filter=Q(experience=FeedbackEntry.SATISFACTORY)),
+        unsat=Count('id', filter=Q(experience=FeedbackEntry.UNSATISFACTORY)),
+    )
     return {
-        'total': qs.count(),
-        'vsat': qs.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count(),
-        'sat': qs.filter(experience=FeedbackEntry.SATISFACTORY).count(),
-        'unsat': qs.filter(experience=FeedbackEntry.UNSATISFACTORY).count(),
+        'total': res['total'] or 0,
+        'vsat': res['vsat'] or 0,
+        'sat': res['sat'] or 0,
+        'unsat': res['unsat'] or 0,
     }
 
 

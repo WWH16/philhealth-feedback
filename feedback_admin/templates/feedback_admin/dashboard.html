@@ -9,6 +9,20 @@
 
 {% block nav_dashboard %}active{% endblock %}
 
+{% block extra_styles %}
+<style>
+  .card-block, .stat-card {
+    contain: content;
+  }
+  .mini-stat-bar {
+    width: 100% !important;
+    transform-origin: left center;
+    will-change: transform;
+    transition: transform 300ms cubic-bezier(.4, 0, .2, 1);
+  }
+</style>
+{% endblock %}
+
 {% block page_content %}
 
   <!-- PAGE HEADER -->
@@ -24,11 +38,11 @@
 
   <!-- FILTER TABS -->
   <div style="margin-bottom:20px;">
-    <div class="filter-tabs" style="display:inline-flex;max-width:480px;width:100%">
-      <button type="button" class="filter-tab" onclick="setFilter(this,'today')">Today</button>
-      <button type="button" class="filter-tab" onclick="setFilter(this,'week')">This Week</button>
-      <button type="button" class="filter-tab" onclick="setFilter(this,'month')">This Month</button>
-      <button type="button" class="filter-tab active" onclick="setFilter(this,'all')">All Time</button>
+    <div class="filter-tabs" role="tablist" aria-label="Dashboard time period filter" style="display:inline-flex;max-width:480px;width:100%">
+      <button type="button" role="tab" id="tab-today" aria-selected="false" aria-controls="dashboard-stats" class="filter-tab" onclick="setFilter(this,'today')">Today</button>
+      <button type="button" role="tab" id="tab-week" aria-selected="false" aria-controls="dashboard-stats" class="filter-tab" onclick="setFilter(this,'week')">This Week</button>
+      <button type="button" role="tab" id="tab-month" aria-selected="false" aria-controls="dashboard-stats" class="filter-tab" onclick="setFilter(this,'month')">This Month</button>
+      <button type="button" role="tab" id="tab-all" aria-selected="true" aria-controls="dashboard-stats" class="filter-tab active" onclick="setFilter(this,'all')">All Time</button>
     </div>
   </div>
 
@@ -113,17 +127,17 @@
               <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
                 <div class="mini-stat" style="padding-top:0">
                   <div class="mini-stat-label">Very Sat.</div>
-                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" id="miniBarVsat" style="width:{{ very_satisfactory_pct }}%;background:var(--g-primary)"></div></div>
+                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" id="miniBarVsat" style="transform:scaleX(calc({{ very_satisfactory_pct|default:0 }} / 100));background:var(--g-primary)"></div></div>
                   <div class="mini-stat-val" id="miniValVsat">{{ very_satisfactory_pct }}%</div>
                 </div>
                 <div class="mini-stat">
                   <div class="mini-stat-label">Satisfactory</div>
-                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" id="miniBarSat" style="width:{{ satisfactory_pct }}%;background:var(--gold)"></div></div>
+                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" id="miniBarSat" style="transform:scaleX(calc({{ satisfactory_pct|default:0 }} / 100));background:var(--gold)"></div></div>
                   <div class="mini-stat-val" id="miniValSat">{{ satisfactory_pct }}%</div>
                 </div>
                 <div class="mini-stat">
                   <div class="mini-stat-label">Unsat.</div>
-                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" id="miniBarUnsat" style="width:{{ unsatisfactory_pct }}%;background:var(--red)"></div></div>
+                  <div class="mini-stat-bar-wrap"><div class="mini-stat-bar" id="miniBarUnsat" style="transform:scaleX(calc({{ unsatisfactory_pct|default:0 }} / 100));background:var(--red)"></div></div>
                   <div class="mini-stat-val" id="miniValUnsat">{{ unsatisfactory_pct }}%</div>
                 </div>
               </div>
@@ -229,33 +243,43 @@ let pieChart, lineChart;
 
 function pctOf(value, total) { return total ? Math.round((value / total) * 100) : 0; }
 
-function initPieChart(data) {
+function updatePieChart(data, forceRecreate = false) {
   const canvas = document.getElementById('pieChart');
   if (!canvas) return;
   const ctx    = canvas.getContext('2d');
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const total  = data.total || (data.vsat + data.sat + data.unsat);
+  const datasetData = [data.vsat, data.sat, data.unsat];
+
+  if (pieChart && !forceRecreate) {
+    pieChart.data.datasets[0].data = datasetData;
+    pieChart.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
+    pieChart.update();
+    return;
+  }
 
   if (pieChart) pieChart.destroy();
 
-  // Center text plugin for Donut Chart
   const centerTextPlugin = {
     id: 'centerText',
     beforeDraw(chart) {
       const { width, height, ctx } = chart;
+      const dataset = chart.data.datasets[0];
+      const t = dataset.data.reduce((a, b) => a + b, 0);
+      const vsatVal = dataset.data[0] || 0;
+      const vsatPct = t ? Math.round((vsatVal / t) * 100) : 0;
+      const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
       ctx.save();
-      const vsatPct = total ? Math.round((data.vsat / total) * 100) : 0;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const centerX = width / 2;
       const centerY = height / 2;
 
       ctx.font = '700 22px "IBM Plex Sans", sans-serif';
-      ctx.fillStyle = isDark ? '#f8fafc' : '#0f172a';
+      ctx.fillStyle = isDarkMode ? '#f8fafc' : '#0f172a';
       ctx.fillText(`${vsatPct}%`, centerX, centerY - 8);
 
       ctx.font = '600 10px "IBM Plex Sans", sans-serif';
-      ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
       ctx.fillText('Satisfaction', centerX, centerY + 12);
       ctx.restore();
     }
@@ -266,11 +290,11 @@ function initPieChart(data) {
     data: {
       labels: ['Very Satisfactory', 'Satisfactory', 'Unsatisfactory'],
       datasets: [{
-        data: [data.vsat, data.sat, data.unsat],
+        data: datasetData,
         backgroundColor: [
-          '#169651', // PhilHealth Green
-          '#d97706', // Warm Amber
-          '#dc2626'  // Ruby Red
+          '#169651',
+          '#d97706',
+          '#dc2626'
         ],
         borderColor: isDark ? '#1e293b' : '#ffffff',
         borderWidth: 2,
@@ -283,6 +307,7 @@ function initPieChart(data) {
       maintainAspectRatio: false,
       cutout: '72%',
       animation: {
+        duration: 300,
         animateRotate: true,
         animateScale: true
       },
@@ -309,13 +334,13 @@ function initPieChart(data) {
   });
 }
 
-function updatePieAndLegend(data) {
+function updatePieAndLegend(data, forceRecreate = false) {
   const total    = data.total || (data.vsat + data.sat + data.unsat);
   const vsatPct  = pctOf(data.vsat, total);
   const satPct   = pctOf(data.sat, total);
   const unsatPct = pctOf(data.unsat, total);
 
-  initPieChart(data);
+  updatePieChart(data, forceRecreate);
 
   document.getElementById('legendVsatVal').textContent  = data.vsat;
   document.getElementById('legendVsatPct').textContent  = vsatPct + '%';
@@ -337,16 +362,27 @@ function updatePieAndLegend(data) {
   document.getElementById('miniValUnsat').textContent = unsatPct + '%';
 }
 
-function initLineChart(labels, vsat, sat, unsat) {
+function updateLineChart(labels, vsat, sat, unsat, forceRecreate = false) {
   const canvas = document.getElementById('lineChart');
   if (!canvas) return;
   const ctx       = canvas.getContext('2d');
   const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+
+  if (lineChart && !forceRecreate) {
+    lineChart.data.labels = labels;
+    lineChart.data.datasets[0].data = vsat;
+    lineChart.data.datasets[1].data = sat;
+    lineChart.data.datasets[2].data = unsat;
+    lineChart.update();
+    return;
+  }
+
+  if (lineChart) lineChart.destroy();
+
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
   const textColor = isDark ? '#cbd5e1' : '#475569';
   const ptBgColor = isDark ? '#0f172a' : '#ffffff';
 
-  // Crisp area gradients
   const gradVsat = ctx.createLinearGradient(0, 0, 0, 240);
   gradVsat.addColorStop(0, 'rgba(22, 150, 81, 0.22)');
   gradVsat.addColorStop(1, 'rgba(22, 150, 81, 0.0)');
@@ -358,8 +394,6 @@ function initLineChart(labels, vsat, sat, unsat) {
   const gradUnsat = ctx.createLinearGradient(0, 0, 0, 240);
   gradUnsat.addColorStop(0, 'rgba(220, 38, 38, 0.18)');
   gradUnsat.addColorStop(1, 'rgba(220, 38, 38, 0.0)');
-
-  if (lineChart) lineChart.destroy();
 
   lineChart = new Chart(ctx, {
     type: 'line',
@@ -425,12 +459,13 @@ function initLineChart(labels, vsat, sat, unsat) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: { duration: 300 },
       interaction: { mode: 'index', intersect: false },
       scales: {
         x: {
           grid: {
             color: gridColor,
-            borderDash: [], // Solid grid lines for maximum legibility
+            borderDash: [],
             drawTicks: false
           },
           ticks: {
@@ -445,7 +480,7 @@ function initLineChart(labels, vsat, sat, unsat) {
           beginAtZero: true,
           grid: {
             color: gridColor,
-            borderDash: [], // Solid grid lines for clear reading
+            borderDash: [],
             drawTicks: false
           },
           ticks: {
@@ -515,32 +550,42 @@ function filterTrendByPeriod(period) {
   };
 }
 
-function renderTrendForPeriod(period) {
+function renderTrendForPeriod(period, forceRecreate = false) {
   const f = filterTrendByPeriod(period);
   if (f.labels.length === 0) {
-    initLineChart(['No data yet'], [0], [0], [0]);
+    updateLineChart(['No data yet'], [0], [0], [0], forceRecreate);
   } else {
-    initLineChart(f.labels, f.vsat, f.sat, f.unsat);
+    updateLineChart(f.labels, f.vsat, f.sat, f.unsat, forceRecreate);
   }
 }
 
 function setFilter(btn, period) {
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.filter-tab').forEach(t => {
+    t.classList.remove('active');
+    t.setAttribute('aria-selected', 'false');
+  });
   btn.classList.add('active');
+  btn.setAttribute('aria-selected', 'true');
   currentFilterPeriod = period;
 
   const d = FILTER_DATA[period];
   animateCount('totalVal', d.total);
   animateCount('vsatVal',  d.vsat);
   animateCount('satVal',   d.sat);
-  animateCount('unsatVal', d.unsat);   // was the broken 'negVal' / d.neg
+  animateCount('unsatVal', d.unsat);
 
   updatePieAndLegend(d);
   renderTrendForPeriod(period);
 }
 
-function onThemeChange() { updatePieAndLegend(FILTER_DATA[currentFilterPeriod]); renderTrendForPeriod(currentFilterPeriod); }
-function onResize()       { updatePieAndLegend(FILTER_DATA[currentFilterPeriod]); renderTrendForPeriod(currentFilterPeriod); }
+function onThemeChange() {
+  updatePieAndLegend(FILTER_DATA[currentFilterPeriod], true);
+  renderTrendForPeriod(currentFilterPeriod, true);
+}
+
+function onResize() {
+  // Chart.js automatically handles container resize events smoothly
+}
 
 function tickClock() {
   const now         = new Date();

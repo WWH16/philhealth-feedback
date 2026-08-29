@@ -931,7 +931,13 @@ function animateCount(id, target) {
   const el = document.getElementById(id);
   if (!el) return;
   const start = parseInt(el.textContent.replace(/,/g,'')) || 0;
-  const dur = 400, t0 = performance.now();
+  if (start === target) return;
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) {
+    el.textContent = target.toLocaleString();
+    return;
+  }
+  const dur = 350, t0 = performance.now();
   const step = t => {
     const p = Math.min((t - t0) / dur, 1);
     el.textContent = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3))).toLocaleString();
