@@ -47,8 +47,6 @@ class FeedbackEntry(models.Model):
         (COMPLIMENT, 'Compliment'),
         (CONCERN, 'Concern'),
     ]
-
-    tracking_code = models.CharField(max_length=24, unique=True, editable=False)
     experience = models.CharField(max_length=10, choices=EXPERIENCE_CHOICES)
     sentiment = models.CharField(max_length=10, choices=SENTIMENT_CHOICES, default=PENDING)
     category = models.CharField(max_length=12, choices=CATEGORY_CHOICES, blank=True)
@@ -88,26 +86,12 @@ class FeedbackEntry(models.Model):
     class Meta:
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['tracking_code']),
             models.Index(fields=['status']),
             models.Index(fields=['created_at']),
         ]
 
     def __str__(self):
-        return f'{self.tracking_code} - {self.get_experience_display()}'
-
-    def save(self, *args, **kwargs):
-        if not self.tracking_code:
-            self.tracking_code = self._generate_tracking_code()
-        super().save(*args, **kwargs)
-
-    @classmethod
-    def _generate_tracking_code(cls):
-        today = timezone.localdate().strftime('%Y%m%d')
-        while True:
-            code = f'CF-{today}-{secrets.token_hex(3).upper()}'
-            if not cls.objects.filter(tracking_code=code).exists():
-                return code
+        return f'Feedback #{self.pk} - {self.get_experience_display()}'
 
 
 class FeedbackConfiguration(models.Model):

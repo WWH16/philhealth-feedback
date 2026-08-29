@@ -115,7 +115,6 @@ def submit_feedback(request):
 
     return JsonResponse({
         'ok': True,
-        'tracking_code': entry.tracking_code,
         'experience': entry.get_experience_display(),
         'status': entry.get_status_display(),
         'created_at': entry.created_at.strftime('%b %d, %Y %I:%M %p'),

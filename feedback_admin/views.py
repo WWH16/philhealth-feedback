@@ -147,9 +147,11 @@ def _format_audit_row(log, entry=None):
     search_parts = [
         author,
         message,
+        author,
+        message,
         ctype,
         log.object_repr or '',
-        getattr(entry, 'tracking_code', ''),
+        f'Feedback #{entry.pk}' if entry else '',
         getattr(entry, 'username', ''),
         getattr(entry, 'name', ''),
     ]
@@ -157,29 +159,30 @@ def _format_audit_row(log, entry=None):
     new_status = ''
 
     if ctype == 'feedbackentry':
+        label = f"Feedback #{entry.pk}" if entry else log.object_repr
         if log.action_flag == CHANGE and '|' in message:
             old_raw, _, new_raw = message.partition('|')
             action_label = 'Status Update'
             action_type = 'status'
             old_status = dict(FeedbackEntry.STATUS_CHOICES).get(old_raw, old_raw)
             new_status = dict(FeedbackEntry.STATUS_CHOICES).get(new_raw, new_raw)
-            summary = f"{entry.tracking_code if entry else log.object_repr}: {old_status} -> {new_status}"
+            summary = f"{label}: {old_status} -> {new_status}"
         elif log.action_flag == CHANGE and message.startswith('category:'):
             _, _, payload = message.partition(':')
             old_raw, _, new_raw = payload.partition('|')
             action_label = 'Category Update'
             action_type = 'category'
-            summary = f"{entry.tracking_code if entry else log.object_repr}: {dict(FeedbackEntry.CATEGORY_CHOICES).get(old_raw, old_raw or 'Uncategorized')} -> {dict(FeedbackEntry.CATEGORY_CHOICES).get(new_raw, new_raw or 'Uncategorized')}"
+            summary = f"{label}: {dict(FeedbackEntry.CATEGORY_CHOICES).get(old_raw, old_raw or 'Uncategorized')} -> {dict(FeedbackEntry.CATEGORY_CHOICES).get(new_raw, new_raw or 'Uncategorized')}"
         elif log.action_flag == DELETION:
             action_label = 'Feedback Deleted'
             action_type = 'delete'
-            summary = f"{entry.tracking_code if entry else log.object_repr} deleted"
+            summary = f"{label} deleted"
         elif log.action_flag == ADDITION:
             action_label = 'Note / Reply'
             action_type = 'note'
-            summary = f"{entry.tracking_code if entry else log.object_repr}: {message}"
+            summary = f"{label}: {message}"
         else:
-            summary = f"{entry.tracking_code if entry else log.object_repr}: {message}"
+            summary = f"{label}: {message}"
     elif ctype == 'user':
         if log.action_flag == ADDITION and message == 'Logged in':
             action_label = 'Login'
@@ -370,7 +373,6 @@ def _entry_to_row(entry, activity=None):
         status_history = entry_activity['status_history']
     return {
         'id': entry.id,
-        'tracking_code': entry.tracking_code,
         'date': local_created.strftime('%Y-%m-%d'),
         'time': local_created.strftime('%H:%M'),
         'experience': entry.get_experience_display(),

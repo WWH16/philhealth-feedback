@@ -251,7 +251,7 @@ function handleSubmitCSM(event) {
       if (detailEl) detailEl.textContent = 'PhilHealth LHIO Cauayan City';
 
       var metaEl = document.getElementById('successMetaText');
-      if (metaEl) metaEl.textContent = 'Tracking ID: ' + data.tracking_code + ' · Recorded: ' + (data.created_at || 'Just now');
+      if (metaEl) metaEl.textContent = 'Recorded: ' + (data.created_at || 'Just now');
 
       var sw = document.getElementById('successWrap');
       if (sw) sw.classList.add('is-open');

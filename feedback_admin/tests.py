@@ -61,13 +61,11 @@ class DashboardViewTests(TestCase):
     def test_dashboard_view_renders_successfully(self):
         from feedback.models import FeedbackEntry
         FeedbackEntry.objects.create(
-            tracking_code='PH-2026-001',
             experience=FeedbackEntry.VERY_SATISFACTORY,
             category='compliment',
             comment='Great service!',
         )
         FeedbackEntry.objects.create(
-            tracking_code='PH-2026-002',
             experience=FeedbackEntry.SATISFACTORY,
             category='suggestion',
             comment='Smooth process.',
@@ -97,13 +95,11 @@ class SentimentAnalysisViewTests(TestCase):
     def test_sentiment_analysis_view_renders_successfully(self):
         from feedback.models import FeedbackEntry
         FeedbackEntry.objects.create(
-            tracking_code='PH-2026-010',
             experience=FeedbackEntry.VERY_SATISFACTORY,
             sentiment=FeedbackEntry.POSITIVE,
             comment='Exemplary assistance.',
         )
         FeedbackEntry.objects.create(
-            tracking_code='PH-2026-011',
             experience=FeedbackEntry.UNSATISFACTORY,
             sentiment=FeedbackEntry.NEGATIVE,
             comment='Delayed processing.',
@@ -130,7 +126,6 @@ class ReportsViewTests(TestCase):
     def test_reports_view_renders_successfully(self):
         from feedback.models import FeedbackEntry
         FeedbackEntry.objects.create(
-            tracking_code='PH-2026-020',
             experience=FeedbackEntry.VERY_SATISFACTORY,
             category='compliment',
             comment='Superb staff responsiveness.',
@@ -161,7 +156,6 @@ class ResponsesViewTests(TestCase):
     def test_responses_view_renders_successfully(self):
         from feedback.models import FeedbackEntry
         FeedbackEntry.objects.create(
-            tracking_code='PH-2026-030',
             experience=FeedbackEntry.VERY_SATISFACTORY,
             category='compliment',
             comment='Fast transaction.',

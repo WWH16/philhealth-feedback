@@ -76,9 +76,8 @@ class SubmitFeedbackAutoAnalysisTests(TestCase):
         self.assertEqual(response.status_code, 201)
         data = response.json()
         self.assertTrue(data['ok'])
-        self.assertTrue(data['tracking_code'].startswith('CF-'))
 
-        entry = FeedbackEntry.objects.get(tracking_code=data['tracking_code'])
+        entry = FeedbackEntry.objects.latest('id')
         self.assertEqual(entry.contact_no, '09171234567')
         self.assertEqual(entry.email_address, 'juan@example.com')
         self.assertEqual(entry.age, 35)
