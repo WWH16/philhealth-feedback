@@ -5,9 +5,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Login | PhilHealth Cauayan City</title>
+  <meta name="description" content="PhilHealth LHIO Cauayan City — Admin login. Authorized personnel only.">
+  <link rel="icon" type="image/png" href="{% static 'img/philhealth_logo.png' %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <script>
     document.documentElement.setAttribute('data-theme', 'light');
@@ -146,14 +148,6 @@ body {
   background: var(--g-primary);
 }
 
-.brand-tagline-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.28);
-  margin-bottom: 10px;
-}
 .brand-tagline {
   font-size: 28px;
   font-weight: 800;
@@ -223,11 +217,12 @@ body {
   color: var(--g-primary);
   margin-bottom: 10px;
 }
+/* Fixed: was Times New Roman serif -- no brand basis. IBM Plex Sans italic stays on-system. */
 .mobile-brand-tagline {
   font-size: 12px;
   font-style: italic;
   color: var(--ink4);
-  font-family: 'Times New Roman', Times, serif;
+  font-family: var(--font);
 }
 
 .card-title {
@@ -281,7 +276,9 @@ body {
   border-color: var(--g-primary);
   background: var(--white);
 }
-.form-input::placeholder { color: var(--ink5); }
+/* Fixed: ink5 (#73787f) on ink9 (#fafbfc) = ~4.1:1, below 4.5:1 WCAG AA.
+   ink4 (#525866) on ink9 (#fafbfc) = ~5.8:1 -- passes. */
+.form-input::placeholder { color: var(--ink4); }
 .input-icon {
   position: absolute;
   left: 12px;
@@ -387,7 +384,8 @@ body {
 /* ── FOOTER NOTE ── */
 .card-note {
   font-size: 11px;
-  color: var(--ink5);
+  /* Fixed: ink5 on white = ~4.3:1 (below 4.5:1). ink4 on white = ~5.8:1 -- WCAG AA. */
+  color: var(--ink4);
   text-align: center;
   line-height: 1.6;
   display: flex;
@@ -417,8 +415,14 @@ body {
 }
 
 /* ── REDUCED MOTION ── */
+/* Fixed: was only "transition: none" -- left animation: spin running for users who need no motion.
+   Now suppresses both transitions and animations per WCAG 2.3.3. */
 @media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
   </style>
 </head>
@@ -429,10 +433,14 @@ body {
   <!-- ── LEFT: BRAND PANEL ── -->
   <aside class="brand-panel" aria-hidden="true">
     <div class="brand-center">
+      <!-- Explicit width/height: 250x250 source at 96px display height. Prevents CLS. -->
       <img
         src="{% static 'img/philhealth_logo.png' %}"
         alt="PhilHealth Logo"
+        width="96"
+        height="96"
         class="brand-logo"
+        loading="eager"
         onerror="this.style.display='none'"
       >
       <div class="brand-name">PhilHealth</div>
@@ -456,9 +464,13 @@ body {
 
         <!-- mobile brand (shown only when left panel is hidden) -->
         <div class="mobile-brand">
+          <!-- Explicit width/height: 250x250 source at 56px display height. Prevents CLS. -->
           <img
             src="{% static 'img/philhealth_logo.png' %}"
             alt="PhilHealth Logo"
+            width="56"
+            height="56"
+            loading="eager"
             onerror="this.style.display='none'"
           >
           <div class="mobile-brand-name">PhilHealth</div>
