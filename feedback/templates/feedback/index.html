@@ -16,12 +16,12 @@
     <div class="paper-sheet p-4 sm:p-8 md:p-10 space-y-6">
 
       <!-- ── 1. FORM HEADER ──────────────────────────────────────────────── -->
-      <div class="pb-5 border-b-2 border-slate-900 space-y-3 md:space-y-0 md:grid md:grid-cols-[170px_1fr_170px] md:items-center">
+      <div class="pb-5 border-b-2 border-slate-900 space-y-3 md:space-y-0 md:grid md:grid-cols-[200px_1fr_200px] md:items-center">
         
         <!-- LEFT: PHILHEALTH LOGO & TAGLINE (Mobile: top row left, Desktop: left col) -->
         <div class="flex items-center justify-between md:justify-start gap-3 w-full md:w-auto">
           <div class="flex items-center gap-2">
-            <img src="{% static 'img/philhealth_logo.png' %}" alt="PhilHealth Logo" class="h-9 sm:h-12 md:h-16 w-auto object-contain">
+            <img src="{% static 'img/philhealth_logo.png' %}" alt="PhilHealth Logo" class="h-9 sm:h-12 md:h-14 w-auto object-contain">
             <div>
               <div class="text-[10px] sm:text-xs md:text-sm font-black text-slate-900 tracking-tight uppercase leading-none">PhilHealth</div>
               <div class="text-[8.5px] sm:text-[10px] md:text-[11px] text-emerald-700 italic font-bold leading-tight mt-0.5">Your Partner in Health</div>
@@ -48,7 +48,7 @@
 
         <!-- RIGHT (DESKTOP ONLY): BAGONG PILIPINAS SEAL -->
         <div class="hidden md:flex flex-col items-center justify-end shrink-0 ml-auto">
-          <img src="{% static 'img/bagong_pilipinas_logo.png' %}" alt="Bagong Pilipinas Logo" class="h-14 md:h-16 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <img src="{% static 'img/bagong_pilipinas_logo.png' %}" alt="Bagong Pilipinas Logo" class="h-12 md:h-14 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="hidden flex-col items-center justify-center p-2 border border-slate-900 bg-slate-50 shrink-0 min-w-[85px]">
             <div class="text-[10px] font-black text-blue-900 tracking-widest uppercase">Bagong</div>
             <div class="text-xs font-black text-red-600 tracking-wider uppercase">Pilipinas</div>
@@ -79,21 +79,21 @@
           <div class="paper-box-header">Respondent Information</div>
           
           <div class="divide-y divide-slate-900 bg-white text-xs">
-            <!-- ROW 1: INPUT FIELDS GRID -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-900">
-              <div class="p-3">
+            <!-- ROW 1: INPUT FIELDS GRID (clean 1px matrix grid across all breakpoints) -->
+            <div class="paper-info-grid">
+              <div class="paper-info-cell">
                 <label for="dateTime" class="block text-[11px] font-bold text-slate-900 uppercase mb-1">Date & Time</label>
                 <input type="datetime-local" id="dateTime" name="date_time" class="csm-paper-input font-mono text-slate-900 cursor-pointer" required>
               </div>
-              <div class="p-3">
+              <div class="paper-info-cell">
                 <label for="contactNo" class="block text-[11px] font-bold text-slate-900 uppercase mb-1">Contact No.</label>
                 <input type="tel" id="contactNo" name="contact_no" placeholder="e.g. 09171234567" maxlength="20" autocomplete="tel" pattern="[0-9+\s\-()]*" class="csm-paper-input" required>
               </div>
-              <div class="p-3">
+              <div class="paper-info-cell">
                 <label for="emailAddress" class="block text-[11px] font-bold text-slate-900 uppercase mb-1">Email Address</label>
                 <input type="email" id="emailAddress" name="email_address" placeholder="name@example.com" maxlength="100" autocomplete="email" class="csm-paper-input" required>
               </div>
-              <div class="p-3">
+              <div class="paper-info-cell">
                 <label for="clientAge" class="block text-[11px] font-bold text-slate-900 uppercase mb-1">Age</label>
                 <input type="number" id="clientAge" name="age" min="1" max="120" placeholder="35" inputmode="numeric" class="csm-paper-input" required>
               </div>
@@ -207,7 +207,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <!-- CC1 -->
-              <div class="p-3 border border-slate-900 bg-slate-50 space-y-2" id="cc1Block">
+              <div class="paper-cc-card space-y-2" id="cc1Block">
                 <div class="text-xs font-bold text-slate-900">CC1</div>
                 <div class="text-xs text-slate-800 leading-snug">Which of the following best describes your awareness of a Citizen's Charter (CC)?</div>
                 <div class="space-y-1.5 pt-1">
@@ -231,7 +231,7 @@
               </div>
 
               <!-- CC2 -->
-              <div class="p-3 border border-slate-900 bg-slate-50 space-y-2" id="cc2Block">
+              <div class="paper-cc-card space-y-2" id="cc2Block">
                 <div class="text-xs font-bold text-slate-900">CC2</div>
                 <div class="text-xs text-slate-800 leading-snug">If aware of Citizen's Charter, would you say that the CC of this office was...?</div>
                 <div class="space-y-1.5 pt-1">
@@ -259,7 +259,7 @@
               </div>
 
               <!-- CC3 -->
-              <div class="p-3 border border-slate-900 bg-slate-50 space-y-2" id="cc3Block">
+              <div class="paper-cc-card space-y-2" id="cc3Block">
                 <div class="text-xs font-bold text-slate-900">CC3</div>
                 <div class="text-xs text-slate-800 leading-snug">If aware of Citizen's Charter, how much did the CC help you in your transaction?</div>
                 <div class="space-y-1.5 pt-1">
