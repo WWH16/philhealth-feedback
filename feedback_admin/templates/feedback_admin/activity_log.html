@@ -6,6 +6,9 @@
 {% block nav_activity_log %}active{% endblock %}
 
 {% block extra_styles %}
+.filter-panel, .card-block {
+  contain: content;
+}
 .filter-panel {
   background: var(--surface-card); border: 1px solid var(--border);
   padding: 14px 16px; margin-bottom: 16px;
@@ -94,7 +97,7 @@
     <div class="filter-panel-row">
       <div class="search-box">
         <span class="material-icons-round">search</span>
-        <input type="text" id="actSearch" placeholder="Search admin, action, object, or details…" oninput="applyActFilters()" aria-label="Search audit logs">
+        <input type="text" id="actSearch" placeholder="Search admin, action, object, or details…" oninput="onActSearchInput()" aria-label="Search audit logs">
       </div>
       <div class="date-range-inputs">
         <span class="filter-sep">From</span>
@@ -197,6 +200,12 @@ function populateAdminFilter() {
     opt.value = a; opt.textContent = a;
     sel.appendChild(opt);
   });
+}
+
+let actSearchDebounce = null;
+function onActSearchInput() {
+  clearTimeout(actSearchDebounce);
+  actSearchDebounce = setTimeout(applyActFilters, 150);
 }
 
 function applyActFilters() {

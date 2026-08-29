@@ -700,16 +700,19 @@ def activity_log(request):
             .select_related('user', 'content_type')
             .order_by('-action_time'))
 
-    feedback_ids = {
-        int(l.object_id)
-        for l in logs
-        if l.content_type_id and l.content_type.model == 'feedbackentry' and l.object_id and l.object_id.isdigit()
-    }
-    feedback_entries = {e.pk: e for e in FeedbackEntry.objects.filter(pk__in=feedback_ids)}
+    feedback_ct = _feedback_content_type()
+    feedback_ids_raw = (
+        LogEntry.objects.filter(content_type=feedback_ct)
+        .exclude(object_id='')
+        .values_list('object_id', flat=True)
+    )
+    valid_pks = [int(pk) for pk in feedback_ids_raw if pk and pk.isdigit()]
+    feedback_entries = {e.pk: e for e in FeedbackEntry.objects.filter(pk__in=valid_pks)}
 
     rows = []
     for log in logs:
-        entry = feedback_entries.get(int(log.object_id)) if log.content_type_id and log.content_type.model == 'feedbackentry' and log.object_id and log.object_id.isdigit() else None
+        is_fb = log.content_type_id == feedback_ct.pk if log.content_type_id else False
+        entry = feedback_entries.get(int(log.object_id)) if is_fb and log.object_id and log.object_id.isdigit() else None
         rows.append(_format_audit_row(log, entry))
 
     context = {
