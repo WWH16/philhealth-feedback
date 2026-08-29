@@ -3,9 +3,7 @@
 
 {% block title %}Admin Dashboard | PhilHealth Cauayan City{% endblock %}
 
-{% block head_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-{% endblock %}
+{% block head_scripts %}{% endblock %}
 
 {% block nav_dashboard %}active{% endblock %}
 
@@ -14,11 +12,19 @@
   .card-block, .stat-card {
     contain: content;
   }
+  /* mini-stat-bar: transform-origin for scaleX animation only.
+     will-change removed — static promotion wastes GPU memory for rarely-animated elements.
+     The browser auto-promotes during the transition via the transition property. */
   .mini-stat-bar {
     width: 100% !important;
     transform-origin: left center;
-    will-change: transform;
     transition: transform 300ms cubic-bezier(.4, 0, .2, 1);
+  }
+  .mini-stat-bar-wrap {
+    contain: layout style;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-stat-bar { transition: none !important; }
   }
 </style>
 {% endblock %}
@@ -195,6 +201,8 @@
 {% block page_scripts %}
 {{ recent_entries_data|json_script:"recent-entries-data" }}
 {{ filter_data|json_script:"filter-data" }}
+<!-- Chart.js loaded here (end of body) — non-render-blocking. Initializes via pageInit() on DOMContentLoaded. -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 const RATING_CONFIG = {
   'Very Satisfactory': { cls: 'chip-pos', icon: 'sentiment_satisfied_alt' },
@@ -209,6 +217,9 @@ const TREND_DATES  = {{ trend_dates|safe }};
 const TREND_VSAT = {{ trend_very_satisfactory|safe }};
 const TREND_SAT = {{ trend_satisfactory|safe }};
 const TREND_UNSAT = {{ trend_unsatisfactory|safe }};
+
+// Respect prefers-reduced-motion for chart animations (Chart.js doesn't check this natively)
+const CHART_ANIM_DURATION = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300;
 
 let currentFilterPeriod = 'all';
 
@@ -307,7 +318,7 @@ function updatePieChart(data, forceRecreate = false) {
       maintainAspectRatio: false,
       cutout: '72%',
       animation: {
-        duration: 300,
+        duration: CHART_ANIM_DURATION,
         animateRotate: true,
         animateScale: true
       },
@@ -459,7 +470,7 @@ function updateLineChart(labels, vsat, sat, unsat, forceRecreate = false) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 300 },
+      animation: { duration: CHART_ANIM_DURATION },
       interaction: { mode: 'index', intersect: false },
       scales: {
         x: {
@@ -611,14 +622,15 @@ function onResize() {
   // Chart.js automatically handles container resize events smoothly
 }
 
+// Cache Intl formatters — creating new Date format objects every second is expensive.
+const _clockFmt = new Intl.DateTimeFormat('en-PH', {
+  timeZone: 'Asia/Manila', weekday: 'short', year: 'numeric',
+  month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  second: '2-digit', hour12: true
+});
 function tickClock() {
-  const now         = new Date();
-  const options     = { timeZone: 'Asia/Manila', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-  const timeOptions = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-  const dateStr     = now.toLocaleDateString('en-PH', options);
-  const timeStr     = now.toLocaleTimeString('en-PH', timeOptions);
-  const dateBadge   = document.getElementById('currentDate');
-  if (dateBadge) dateBadge.textContent = `${dateStr}  ${timeStr}`;
+  const dateBadge = document.getElementById('currentDate');
+  if (dateBadge) dateBadge.textContent = _clockFmt.format(new Date());
 }
 
 function pageInit() {
