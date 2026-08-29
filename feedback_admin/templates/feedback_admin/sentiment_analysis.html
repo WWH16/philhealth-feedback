@@ -9,6 +9,14 @@
 
 {% block nav_sentiment %}active{% endblock %}
 
+{% block extra_styles %}
+<style>
+  .card-block, .stat-card {
+    contain: content;
+  }
+</style>
+{% endblock %}
+
 {% block page_content %}
 
   <!-- PAGE HEADER -->
@@ -426,7 +434,9 @@ function renderAllSentimentCharts() {
 }
 
 function onThemeChange() { renderAllSentimentCharts(); }
-function onResize()       { renderAllSentimentCharts(); }
+function onResize() {
+  // Chart.js automatically handles container resize events smoothly
+}
 
 function pageInit() {
   renderAllSentimentCharts();

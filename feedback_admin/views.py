@@ -481,18 +481,29 @@ def response_category_update(request, entry_id):
 @login_required
 def sentiment_analysis(request):
     entries = FeedbackEntry.objects.all()
-    positive = entries.filter(sentiment=FeedbackEntry.POSITIVE).count()
-    neutral = entries.filter(sentiment=FeedbackEntry.NEUTRAL).count()
-    negative = entries.filter(sentiment=FeedbackEntry.NEGATIVE).count()
+    counts = entries.aggregate(
+        positive=Count('id', filter=Q(sentiment=FeedbackEntry.POSITIVE)),
+        neutral=Count('id', filter=Q(sentiment=FeedbackEntry.NEUTRAL)),
+        negative=Count('id', filter=Q(sentiment=FeedbackEntry.NEGATIVE)),
+    )
+    positive = counts['positive'] or 0
+    neutral = counts['neutral'] or 0
+    negative = counts['negative'] or 0
     total = positive + neutral + negative
 
     def pct(n):
         return round((n / total) * 100) if total else 0
 
+    trend_counts = (
+        entries.exclude(sentiment=FeedbackEntry.PENDING)
+        .annotate(local_date=TruncDate('created_at'))
+        .values('local_date', 'sentiment')
+        .annotate(count=Count('id'))
+    )
     trend_data_map = defaultdict(lambda: defaultdict(int))
-    for entry in entries.exclude(sentiment=FeedbackEntry.PENDING):
-        local_day = timezone.localtime(entry.created_at).date()
-        trend_data_map[local_day][entry.sentiment] += 1
+    for row in trend_counts:
+        if row['local_date']:
+            trend_data_map[row['local_date']][row['sentiment']] = row['count']
 
     trend_dates = sorted(trend_data_map.keys())
     trend_labels = [f'{day:%b} {day.day}' for day in trend_dates]
