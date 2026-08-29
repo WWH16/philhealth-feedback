@@ -501,14 +501,107 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
   from { width: 100%; }
   to { width: 0%; }
 }
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.toast-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  max-width: 400px;
+  width: calc(100% - 32px);
+  pointer-events: none;
+  z-index: 1080 !important;
+  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
 .ph-toast {
+  pointer-events: auto;
   background: var(--surface-card) !important;
   border: 1.5px solid var(--toast-color) !important;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.12) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.16) !important;
   position: relative;
   overflow: hidden;
   border-radius: 0 !important;
+  margin-bottom: 0 !important;
+  width: 100%;
+  flex-shrink: 0;
+  animation: toast-enter 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 200ms ease, margin 200ms ease, box-shadow 200ms ease;
 }
+.ph-toast.hide, .ph-toast.hiding {
+  opacity: 0 !important;
+  transform: translateY(-10px) scale(0.95) !important;
+}
+
+/* Visual Stack Badge & Multi-Toast Deck */
+.toast-stack-badge {
+  font-family: var(--mono, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--surface-page, #f8fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  color: var(--text-muted, #64748b);
+  padding: 2px 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border-radius: 2px;
+  line-height: 1.3;
+}
+.toast-dismiss-all-btn {
+  pointer-events: auto;
+  align-self: flex-end;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--surface-card, #ffffff);
+  border: 1.5px solid var(--border, #cbd5e1);
+  color: var(--text-secondary, #475569);
+  padding: 4px 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 120ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: -4px;
+}
+.toast-dismiss-all-btn:hover {
+  background: var(--red-bg, #fef2f2);
+  border-color: var(--red, #dc2626);
+  color: var(--red, #dc2626);
+}
+.toast-dismiss-all-btn .material-icons-round {
+  font-size: 13px;
+}
+
+/* Stacked Visual Depth layering when multiple toasts exist */
+.toast-container.is-stacked:not(:hover):not(:focus-within) .ph-toast:nth-child(n+3) {
+  margin-top: -24px;
+  transform: scale(0.97);
+  opacity: 0.94;
+}
+.toast-container.is-stacked:not(:hover):not(:focus-within) .ph-toast:nth-child(n+4) {
+  margin-top: -24px;
+  transform: scale(0.94);
+  opacity: 0.88;
+}
+.toast-container.is-stacked:hover .ph-toast,
+.toast-container.is-stacked:focus-within .ph-toast {
+  margin-top: 0 !important;
+  transform: scale(1) !important;
+  opacity: 1 !important;
+}
+
 .ph-toast-progress {
   position: absolute;
   bottom: 0;
@@ -872,9 +965,47 @@ function adjustToastPosition() {
   }
 }
 
+function updateToastStacking() {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const toasts = Array.from(container.querySelectorAll('.ph-toast:not(.hiding):not(.hide)'));
+  const count = toasts.length;
+
+  container.classList.toggle('is-stacked', count > 1);
+
+  let dismissBtn = container.querySelector('.toast-dismiss-all-btn');
+  if (count >= 3) {
+    if (!dismissBtn) {
+      dismissBtn = document.createElement('button');
+      dismissBtn.type = 'button';
+      dismissBtn.className = 'toast-dismiss-all-btn';
+      dismissBtn.onclick = function() {
+        toasts.forEach(t => {
+          const bs = bootstrap.Toast.getInstance(t);
+          if (bs) bs.hide(); else t.remove();
+        });
+        if (dismissBtn) dismissBtn.remove();
+      };
+      container.insertBefore(dismissBtn, container.firstChild);
+    }
+    dismissBtn.innerHTML = `<span class="material-icons-round">done_all</span> Clear Stack`;
+  } else if (dismissBtn) {
+    dismissBtn.remove();
+  }
+
+  // Ensure no number badges remain on toast bodies
+  container.querySelectorAll('.toast-stack-badge').forEach(b => b.remove());
+}
+
 window.showToast = function(msg, type = 'success', shouldReload = false) {
   if (shouldReload) {
-    sessionStorage.setItem('pendingToast', JSON.stringify({ msg, type }));
+    let pending = [];
+    try {
+      pending = JSON.parse(sessionStorage.getItem('pendingToasts') || '[]');
+    } catch (e) {}
+    pending.push({ msg, type });
+    sessionStorage.setItem('pendingToasts', JSON.stringify(pending));
     location.reload();
     return;
   }
@@ -884,11 +1015,11 @@ window.showToast = function(msg, type = 'success', shouldReload = false) {
 
   const normalizedMsg = String(msg).trim();
 
-  // Deduplication check: prevent displaying duplicate toast with identical text
+  // Deduplication check: prevent identical duplicate message from stacking twice simultaneously
   const existingToasts = container.querySelectorAll('.toast-body');
   for (const t of existingToasts) {
     const text = t.textContent.trim();
-    if (text === normalizedMsg || text.includes(normalizedMsg) || normalizedMsg.includes(text)) {
+    if (text === normalizedMsg) {
       return;
     }
   }
@@ -915,17 +1046,27 @@ window.showToast = function(msg, type = 'success', shouldReload = false) {
   div.style.setProperty('--toast-color', toastColor);
   div.innerHTML = `
     <div class="d-flex w-100">
-      <div class="toast-body d-flex align-items-center gap-3 py-3" style="color:var(--text-primary);font-size:13px;font-weight:600;">
-        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>${escHtml(msg)}
+      <div class="toast-body d-flex align-items-center gap-3 py-3" style="color:var(--text-primary);font-size:13px;font-weight:600;width:100%;">
+        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>
+        <span class="toast-text">${escHtml(msg)}</span>
       </div>
       <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size:10px;"></button>
     </div>
     <div class="ph-toast-progress"></div>`;
 
-  container.appendChild(div);
+  if (container.firstChild) {
+    container.insertBefore(div, container.firstChild);
+  } else {
+    container.appendChild(div);
+  }
+
   const toastInstance = new bootstrap.Toast(div);
-  div.addEventListener('hidden.bs.toast', () => div.remove());
+  div.addEventListener('hidden.bs.toast', () => {
+    div.remove();
+    updateToastStacking();
+  });
   toastInstance.show();
+  updateToastStacking();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -941,15 +1082,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const toastElList = [].slice.call(document.querySelectorAll('.toast'));
   toastElList.map(function (toastEl) {
     const toast = new bootstrap.Toast(toastEl);
+    toastEl.addEventListener('hidden.bs.toast', () => {
+      toastEl.remove();
+      updateToastStacking();
+    });
     toast.show();
   });
 
+  updateToastStacking();
+
   try {
-    const pending = sessionStorage.getItem('pendingToast');
-    if (pending) {
+    const pendingRaw = sessionStorage.getItem('pendingToasts') || sessionStorage.getItem('pendingToast');
+    if (pendingRaw) {
+      sessionStorage.removeItem('pendingToasts');
       sessionStorage.removeItem('pendingToast');
-      const { msg, type } = JSON.parse(pending);
-      showToast(msg, type, false);
+      let items = [];
+      if (pendingRaw.startsWith('[')) {
+        items = JSON.parse(pendingRaw);
+      } else {
+        items = [JSON.parse(pendingRaw)];
+      }
+      items.forEach((item, idx) => {
+        setTimeout(() => {
+          showToast(item.msg, item.type, false);
+        }, idx * 140);
+      });
     }
   } catch (e) {}
 });
