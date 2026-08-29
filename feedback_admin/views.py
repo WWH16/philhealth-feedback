@@ -807,10 +807,9 @@ def user_add(request):
     log_admin_event(request.user, user, ADDITION, f'Created user "{username}"')
 
     msg = f'User "{username}" created successfully.'
-    messages.success(request, msg)
-
     if _is_ajax(request):
         return JsonResponse({'ok': True, 'message': msg})
+    messages.success(request, msg)
     return redirect('users')
 
 
@@ -910,10 +909,9 @@ def user_edit(request, user_id):
         )
 
     msg = f'User "{user.username}" updated successfully.'
-    messages.success(request, msg)
-
     if _is_ajax(request):
         return JsonResponse({'ok': True, 'message': msg})
+    messages.success(request, msg)
     return redirect('users')
 
 
@@ -931,10 +929,9 @@ def user_delete(request, user_id):
     user.delete()
 
     msg = f'User "{username}" deleted.'
-    messages.success(request, msg)
-
     if _is_ajax(request):
         return JsonResponse({'ok': True, 'message': msg})
+    messages.success(request, msg)
     return redirect('users')
 
 
@@ -976,10 +973,9 @@ def group_add(request):
     log_admin_event(request.user, group, ADDITION, f'Created group "{name}"')
 
     msg = f'Group "{name}" created.'
-    messages.success(request, msg)
-
     if _is_ajax(request):
         return JsonResponse({'ok': True, 'message': msg})
+    messages.success(request, msg)
     return redirect('users')
 
 
@@ -1010,10 +1006,9 @@ def group_edit(request, group_id):
         log_admin_event(request.user, group, CHANGE, f'Updated group "{group.name}"')
 
     msg = f'Group "{name}" updated.'
-    messages.success(request, msg)
-
     if _is_ajax(request):
         return JsonResponse({'ok': True, 'message': msg})
+    messages.success(request, msg)
     return redirect('users')
 
 
@@ -1026,10 +1021,9 @@ def group_delete(request, group_id):
     group.delete()
 
     msg = f'Group "{name}" deleted.'
-    messages.success(request, msg)
-
     if _is_ajax(request):
         return JsonResponse({'ok': True, 'message': msg})
+    messages.success(request, msg)
     return redirect('users')
 
 

@@ -1015,11 +1015,14 @@ window.showToast = function(msg, type = 'success', shouldReload = false) {
 
   const normalizedMsg = String(msg).trim();
 
-  // Deduplication check: prevent identical duplicate message from stacking twice simultaneously
-  const existingToasts = container.querySelectorAll('.toast-body');
+  // Deduplication check: inspect existing toasts for matching text content
+  const existingToasts = container.querySelectorAll('.ph-toast');
   for (const t of existingToasts) {
-    const text = t.textContent.trim();
-    if (text === normalizedMsg) {
+    const textEl = t.querySelector('.toast-text') || t.querySelector('.toast-body');
+    const text = (textEl ? textEl.textContent : t.textContent)
+      .replace(/check_circle|error|warning|info|done_all/g, '')
+      .trim();
+    if (text === normalizedMsg || (text.length > 3 && (text.includes(normalizedMsg) || normalizedMsg.includes(text)))) {
       return;
     }
   }
