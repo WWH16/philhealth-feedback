@@ -6,6 +6,9 @@
 {% block nav_users %}active{% endblock %}
 
 {% block extra_styles %}
+.stat-card, .card-block, .modal-card {
+  contain: content;
+}
 .tab-bar {
   display: flex; gap: 0;
   border-bottom: 2px solid var(--border);
@@ -233,7 +236,7 @@
       <div class="table-controls">
         <div class="search-box">
           <span class="material-icons-round">search</span>
-          <input type="text" id="userSearch" placeholder="Search username or email…" oninput="filterUsers()" aria-label="Search users">
+          <input type="text" id="userSearch" placeholder="Search username or email…" oninput="onUserSearchInput()" aria-label="Search users">
         </div>
         <div class="table-controls-right">
           <select class="btn-ph" id="roleFilter" onchange="filterUsers()" style="cursor:pointer">
@@ -580,6 +583,12 @@ function switchTab(tab, btn) {
   btn.classList.add('active');
   document.getElementById('panel-users').style.display  = tab === 'users'  ? 'block' : 'none';
   document.getElementById('panel-groups').style.display = tab === 'groups' ? 'block' : 'none';
+}
+
+let userSearchDebounce = null;
+function onUserSearchInput() {
+  clearTimeout(userSearchDebounce);
+  userSearchDebounce = setTimeout(filterUsers, 150);
 }
 
 /* ── CLIENT-SIDE USER FILTER ── */

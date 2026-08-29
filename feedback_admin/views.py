@@ -730,14 +730,21 @@ def users(request):
     all_groups = Group.objects.annotate(member_count=Count('user')).prefetch_related('permissions')
     all_perms = Permission.objects.select_related('content_type').order_by('content_type__app_label', 'codename')
 
+    user_counts = User.objects.aggregate(
+        total=Count('id'),
+        active=Count('id', filter=Q(is_active=True)),
+        staff=Count('id', filter=Q(is_staff=True)),
+    )
+    evaluated_groups = list(all_groups)
+
     context = {
         'users': all_users,
-        'groups': all_groups,
+        'groups': evaluated_groups,
         'permissions': all_perms,
-        'total_users': all_users.count(),
-        'active_users': all_users.filter(is_active=True).count(),
-        'staff_users': all_users.filter(is_staff=True).count(),
-        'total_groups': all_groups.count(),
+        'total_users': user_counts['total'] or 0,
+        'active_users': user_counts['active'] or 0,
+        'staff_users': user_counts['staff'] or 0,
+        'total_groups': len(evaluated_groups),
     }
     return render(request, 'feedback_admin/users.html', context)
 

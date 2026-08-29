@@ -190,3 +190,22 @@ class ActivityLogViewTests(TestCase):
         self.assertIn('logs_data', response.context)
         self.assertContains(response, 'nav-item active')
 
+
+class UsersViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='admin',
+            password='password123',
+            is_staff=True,
+        )
+        self.client.force_login(self.user)
+
+    def test_users_view_renders_successfully(self):
+        response = self.client.get(reverse('users'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['total_users'], 1)
+        self.assertEqual(response.context['active_users'], 1)
+        self.assertEqual(response.context['staff_users'], 1)
+        self.assertContains(response, 'nav-item active')
+
+
