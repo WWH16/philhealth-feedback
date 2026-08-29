@@ -6,6 +6,9 @@
 {% block nav_responses %}active{% endblock %}
 
 {% block extra_styles %}
+.card-block, .stat-card {
+  contain: content;
+}
 .expand-btn {
   background: none; border: none; cursor: pointer; padding: 4px;
   color: var(--text-muted); transition: color 120ms; line-height: 1;
@@ -126,7 +129,7 @@
     <div class="table-controls">
       <div class="search-box">
         <span class="material-icons-round">search</span>
-        <input type="text" id="tableSearch" placeholder="Search responses…" oninput="applyFilters()" aria-label="Search responses">
+        <input type="text" id="tableSearch" placeholder="Search responses…" oninput="onSearchInput()" aria-label="Search responses">
       </div>
       <div class="table-controls-right">
         <span class="table-info" id="tableInfo">—</span>
@@ -271,6 +274,12 @@ function inDateRange(r) {
   if (activeDateRange === 'week')  { const w = new Date(now); w.setDate(now.getDate()-7); return d >= w; }
   if (activeDateRange === 'month') return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
   return true;
+}
+
+let searchDebounceTimer = null;
+function onSearchInput() {
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(applyFilters, 150);
 }
 
 /* ── FILTER ── */

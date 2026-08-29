@@ -346,21 +346,15 @@ def dashboard(request):
 @login_required
 def responses(request):
     entries = FeedbackEntry.objects.order_by('-created_at')
+    counts = _experience_counts(entries)
     entries_data = list(entries)
     activity_map = _build_feedback_activity_map([entry.pk for entry in entries_data])
-    experience_counts = {
-        FeedbackEntry.VERY_SATISFACTORY: 0,
-        FeedbackEntry.SATISFACTORY: 0,
-        FeedbackEntry.UNSATISFACTORY: 0,
-    }
-    for entry in entries_data:
-        experience_counts[entry.experience] += 1
 
     context = {
-        'total': len(entries_data),
-        'very_satisfactory': experience_counts[FeedbackEntry.VERY_SATISFACTORY],
-        'satisfactory': experience_counts[FeedbackEntry.SATISFACTORY],
-        'unsatisfactory': experience_counts[FeedbackEntry.UNSATISFACTORY],
+        'total': counts['total'],
+        'very_satisfactory': counts['vsat'],
+        'satisfactory': counts['sat'],
+        'unsatisfactory': counts['unsat'],
         'entries_data': [_entry_to_row(entry, activity_map) for entry in entries_data],
     }
     return render(request, 'feedback_admin/responses.html', context)
