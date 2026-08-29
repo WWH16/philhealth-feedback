@@ -10,10 +10,7 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    (function () {
-      var t = localStorage.getItem('ph-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', t);
-    })();
+    document.documentElement.setAttribute('data-theme', 'light');
   </script>
   {% block styles %}{% endblock %}
 </head>

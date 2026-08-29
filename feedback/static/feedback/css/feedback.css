@@ -43,40 +43,6 @@
   --font-mono: 'IBM Plex Mono', monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --g-xlight:       #182a1f;
-    --surface-page:   #0f1712;
-    --surface-paper:  #18201a;
-    --surface-header: #202b23;
-    --surface-box:    #1f2821;
-    --border-dark:    #354539;
-    --border-light:   #3d5243;
-    --ink:            #f1f5f9;
-    --ink2:           #e2e8f0;
-    --ink3:           #cbd5e1;
-    --ink4:           #94a3b8;
-    --ink8:           #0f1712;
-    --ink9:           #18201a;
-  }
-}
-
-[data-theme="dark"] {
-  --g-xlight:       #182a1f;
-  --surface-page:   #0f1712;
-  --surface-paper:  #18201a;
-  --surface-header: #202b23;
-  --surface-box:    #1f2821;
-  --border-dark:    #354539;
-  --border-light:   #3d5243;
-  --ink:            #f1f5f9;
-  --ink2:           #e2e8f0;
-  --ink3:           #cbd5e1;
-  --ink4:           #94a3b8;
-  --ink8:           #0f1712;
-  --ink9:           #18201a;
-}
-
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {

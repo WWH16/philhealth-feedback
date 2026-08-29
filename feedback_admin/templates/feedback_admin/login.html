@@ -10,10 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <script>
-    (function () {
-      var t = localStorage.getItem('ph-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', t);
-    })();
+    document.documentElement.setAttribute('data-theme', 'light');
   </script>
   <style>
 /* ── DESIGN TOKENS ── */
@@ -40,19 +37,6 @@
 
   --font: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
-}
-
-[data-theme="dark"] {
-  --ink:        #f1f5f9;
-  --ink3:       #e2e8f0;
-  --ink4:       #cbd5e1;
-  --ink5:       #94a3b8;
-  --ink6:       #3a3f47;
-  --ink7:       #2a2e35;
-  --ink8:       #111418;
-  --ink9:       #1a1e24;
-  --white:      #1a1e24;
-  --red-bg:     rgba(192,0,26,0.15);
 }
 
 /* ── BASE ── */
