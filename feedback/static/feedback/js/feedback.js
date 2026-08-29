@@ -247,15 +247,10 @@ function handleSubmitCSM(event) {
       btnSubmit.classList.remove('is-loading');
     }
     if (data.ok) {
-      var detailEl = document.getElementById('successDetailText');
-      if (detailEl) detailEl.textContent = 'PhilHealth LHIO Cauayan City';
-
-      var metaEl = document.getElementById('successMetaText');
-      if (metaEl) metaEl.textContent = 'Recorded: ' + (data.created_at || 'Just now');
-
       var sw = document.getElementById('successWrap');
       if (sw) sw.classList.add('is-open');
       document.body.style.overflow = 'hidden';
+      startSuccessTimer();
     }
   })
   .catch(function (err) {
@@ -277,7 +272,42 @@ function handleSubmitCSM(event) {
   });
 }
 
+var successTimer = null;
+var successCountdown = 5;
+
+function updateResetBtnText() {
+  var textEl = document.getElementById('resetBtnText');
+  if (textEl) {
+    textEl.textContent = 'Done';
+  }
+}
+
+function startSuccessTimer() {
+  stopSuccessTimer();
+  successCountdown = 5;
+  updateResetBtnText();
+  
+  successTimer = setInterval(function () {
+    successCountdown--;
+    if (successCountdown <= 0) {
+      stopSuccessTimer();
+      resetCSMForm();
+    } else {
+      updateResetBtnText();
+    }
+  }, 1000);
+}
+
+function stopSuccessTimer() {
+  if (successTimer) {
+    clearInterval(successTimer);
+    successTimer = null;
+  }
+}
+
 function resetCSMForm() {
+  stopSuccessTimer();
+
   var form = document.getElementById('csmForm');
   if (form) form.reset();
 

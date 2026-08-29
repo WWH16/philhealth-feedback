@@ -501,7 +501,7 @@
 
   </main>
 
-  <!-- SUCCESS MODAL (Placed outside .paper-sheet to escape contain: layout context) -->
+  <!-- SUCCESS MODAL -->
   <div id="successWrap" role="dialog" aria-modal="true" aria-labelledby="successTitle"
     class="fixed inset-0 z-[100] items-center justify-center p-4 sm:p-6"
     style="background: rgba(15, 23, 42, 0.6);"
@@ -510,19 +510,12 @@
       <div class="success-icon" aria-hidden="true">
         <span class="material-icons-round">task_alt</span>
       </div>
-      <h2 class="success-title" id="successTitle">CSM Form Submitted</h2>
-      <p class="success-sub">Thank you for submitting the PhilHealth Client Satisfaction Measurement form.</p>
+      <h2 class="success-title" id="successTitle">Thank You!</h2>
+      <p class="success-sub">Your feedback has been recorded successfully.</p>
       
-      <div class="success-badge">
-        <span class="material-icons-round" aria-hidden="true">verified</span>
-        <span id="successDetailText">Form Recorded Successfully</span>
-      </div>
-      
-      <p class="success-meta" id="successMetaText">—</p>
-      
-      <button type="button" class="success-reset-btn" onclick="resetCSMForm()">
-        <span class="material-icons-round" aria-hidden="true">refresh</span>
-        Submit Another Response
+      <button type="button" class="success-reset-btn" id="successResetBtn" onclick="resetCSMForm()">
+        <span class="material-icons-round" aria-hidden="true">check</span>
+        <span id="resetBtnText">Done</span>
       </button>
     </div>
   </div>

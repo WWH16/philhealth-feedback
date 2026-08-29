@@ -261,7 +261,7 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
 #successWrap {
   display: none;
   opacity: 0;
-  transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 #successWrap.is-open {
   display: flex;
@@ -270,41 +270,32 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
 
 .success-card {
   width: 100%;
-  max-width: 480px;
+  max-width: 400px;
   text-align: center;
   position: relative;
   overflow: hidden;
   background: var(--white);
-  border: 2px solid var(--g-primary);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 36px 28px 28px;
-  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.2);
-  transform: scale(0.95);
-  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 16px 32px -4px rgba(15, 23, 42, 0.16);
+  transform: scale(0.97);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 #successWrap.is-open .success-card {
   transform: scale(1);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
 .success-icon {
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 16px;
-  background: #f0fdf4;
-  border: 1.5px solid #d1fae5;
+  background: var(--g-xlight);
+  border: 1px solid var(--g-light);
   border-radius: 50%;
-  width: 60px; height: 60px;
+  width: 56px; height: 56px;
 }
-.success-icon .material-icons-round { font-size: 32px; color: var(--g-primary); }
+.success-icon .material-icons-round { font-size: 28px; color: var(--g-primary); }
 
 .success-title {
   font-weight: 800;
@@ -315,53 +306,29 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
 }
 
 .success-sub {
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--ink4);
   font-size: 14px;
-}
-
-.success-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 18px;
-  background: #f0fdf4;
-  border: 1px solid #d1fae5;
-  color: #0a5229;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 4px;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.success-badge .material-icons-round { font-size: 15px; color: var(--g-primary); }
-
-.success-meta {
-  margin: 10px 0 0;
-  color: var(--ink4);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.5;
+  margin-bottom: 24px;
 }
 
 .success-reset-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%;
-  margin-top: 20px;
   border: 1.5px solid var(--g-primary);
   background: var(--g-primary);
   color: var(--white);
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
   border-radius: 4px;
-  transition: background-color 150ms ease;
+  transition: background-color 120ms ease;
   padding: 12px 20px;
   font-size: 13px;
 }
 .success-reset-btn:hover {
-  background: #0d743b;
+  background: var(--g-deep);
 }
 
 /* ── VALIDATION ERROR STATES (highlights exactly which field needs input) ── */
