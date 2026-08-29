@@ -1068,7 +1068,6 @@ def settings_page(request):
         backup_error = str(e)
 
     context = {
-        'users': User.objects.all().order_by('-date_joined'),
         'feedback_config': FeedbackConfiguration.get_solo(),
         'backups': backups,
         'backup_error': backup_error,
