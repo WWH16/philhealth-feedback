@@ -400,14 +400,17 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
 [data-theme="dark"] select.btn-ph { background: var(--surface-card); color: var(--text-secondary); border-color: var(--border); }
 
 /* ── LOADING STATE ── */
-.btn-ph.is-loading {
+.btn-ph.is-loading,
+.btn-logout-confirm.is-loading {
   pointer-events: none;
   color: transparent !important;
 }
-.btn-ph.is-loading .material-icons-round {
+.btn-ph.is-loading .material-icons-round,
+.btn-logout-confirm.is-loading .material-icons-round {
   visibility: hidden;
 }
-.btn-ph .ph-loader {
+.btn-ph .ph-loader,
+.btn-logout-confirm .ph-loader {
   display: none;
   position: absolute;
   left: 50%; top: 50%;
@@ -426,7 +429,8 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
   border: 2px solid rgba(255, 255, 255, 0.1);
   border-top-color: var(--g-primary);
 }
-.btn-ph.is-loading .ph-loader {
+.btn-ph.is-loading .ph-loader,
+.btn-logout-confirm.is-loading .ph-loader {
   display: block;
 }
 @keyframes ph-spin {
@@ -674,6 +678,7 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
 .btn-logout-cancel .material-icons-round { font-size: 14px; }
 
 .btn-logout-confirm {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -905,11 +910,12 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
         <p>Are you sure you want to sign out?</p>
       </div>
       <div class="logout-modal-footer">
-        <button type="button" class="btn-logout-cancel" onclick="closeLogoutModal()">
+        <button type="button" class="btn-logout-cancel" id="btnLogoutCancel" onclick="closeLogoutModal()">
           <span class="material-icons-round">close</span>
           Cancel
         </button>
-        <button type="button" class="btn-logout-confirm" onclick="document.getElementById('logoutForm').submit()">
+        <button type="button" class="btn-logout-confirm" id="btnLogoutConfirm" onclick="handleLogoutSubmit(this)">
+          <span class="ph-loader"></span>
           <span class="material-icons-round">logout</span>
           Sign Out
         </button>
@@ -1084,12 +1090,23 @@ function animateCount(id, target) {
 
 /* ── LOGOUT MODAL ── */
 function openLogoutModal() {
+  const btn = document.getElementById('btnLogoutConfirm');
+  const cancelBtn = document.getElementById('btnLogoutCancel');
+  if (btn) btn.classList.remove('is-loading');
+  if (cancelBtn) cancelBtn.disabled = false;
   document.getElementById('logoutModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 function closeLogoutModal() {
   document.getElementById('logoutModal').classList.remove('open');
   document.body.style.overflow = '';
+}
+function handleLogoutSubmit(btn) {
+  if (btn) btn.classList.add('is-loading');
+  const cancelBtn = document.getElementById('btnLogoutCancel');
+  if (cancelBtn) cancelBtn.disabled = true;
+  const form = document.getElementById('logoutForm');
+  if (form) form.submit();
 }
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLogoutModal();
