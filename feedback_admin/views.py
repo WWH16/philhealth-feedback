@@ -19,7 +19,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
-from django.db.models.functions import TruncDate
+from django.db.models.functions import TruncDate, TruncWeek, TruncMonth, ExtractHour
 from feedback.models import FeedbackConfiguration, FeedbackEntry
 
 from django.http import FileResponse, Http404
@@ -538,15 +538,28 @@ def reports(request):
     year_start = now - timedelta(days=365)
 
     def get_period_data(qs):
-        total = qs.count()
-        vsat = qs.filter(experience=FeedbackEntry.VERY_SATISFACTORY).count()
-        sat = qs.filter(experience=FeedbackEntry.SATISFACTORY).count()
-        unsat = qs.filter(experience=FeedbackEntry.UNSATISFACTORY).count()
+        res = qs.aggregate(
+            total=Count('id'),
+            vsat=Count('id', filter=Q(experience=FeedbackEntry.VERY_SATISFACTORY)),
+            sat=Count('id', filter=Q(experience=FeedbackEntry.SATISFACTORY)),
+            unsat=Count('id', filter=Q(experience=FeedbackEntry.UNSATISFACTORY)),
+            compliment=Count('id', filter=Q(category='compliment')),
+            suggestion=Count('id', filter=Q(category='suggestion')),
+            complaint=Count('id', filter=Q(category='complaint')),
+            concern=Count('id', filter=Q(category='concern')),
+        )
+        total = res['total'] or 0
+        vsat = res['vsat'] or 0
+        sat = res['sat'] or 0
+        unsat = res['unsat'] or 0
         satisfaction = round((vsat + sat) / total * 100) if total else 0
 
-        # Category Breakdown
-        cats = qs.exclude(category='').values('category').annotate(count=Count('id'))
-        cat_counts = {c['category']: c['count'] for c in cats}
+        cat_counts = {
+            'compliment': res['compliment'] or 0,
+            'suggestion': res['suggestion'] or 0,
+            'complaint': res['complaint'] or 0,
+            'concern': res['concern'] or 0,
+        }
         categorized = sum(cat_counts.values())
 
         return {
@@ -556,12 +569,7 @@ def reports(request):
             'neg': unsat,
             'satisfaction': satisfaction,
             'categorized': categorized,
-            'categories': {
-                'compliment': cat_counts.get('compliment', 0),
-                'suggestion': cat_counts.get('suggestion', 0),
-                'complaint': cat_counts.get('complaint', 0),
-                'concern': cat_counts.get('concern', 0),
-            }
+            'categories': cat_counts,
         }
 
     # Basic stats for templates
@@ -581,17 +589,16 @@ def reports(request):
 
     def _hourly_trend(qs):
         """Buckets entries by hour-of-day (0–23) — for a single day's queryset."""
-        counts = [0] * 24
-        for entry in qs:
-            counts[timezone.localtime(entry.created_at).hour] += 1
+        counts_qs = qs.annotate(hour=ExtractHour('created_at')).values('hour').annotate(count=Count('id'))
+        hour_map = {row['hour']: row['count'] for row in counts_qs if row['hour'] is not None}
+        counts = [hour_map.get(h, 0) for h in range(24)]
         labels = [datetime(2000, 1, 1, hour).strftime('%I %p').lstrip('0') for hour in range(24)]
         return labels, counts
 
     def _daily_trend(qs, start_date, end_date):
         """Buckets entries by calendar day across an inclusive date range."""
-        counts = defaultdict(int)
-        for entry in qs:
-            counts[timezone.localtime(entry.created_at).date()] += 1
+        counts_qs = qs.annotate(local_date=TruncDate('created_at')).values('local_date').annotate(count=Count('id'))
+        counts = {row['local_date']: row['count'] for row in counts_qs if row['local_date']}
 
         days, cursor = [], start_date
         while cursor <= end_date:
@@ -604,10 +611,8 @@ def reports(request):
 
     def _weekly_trend(qs, start_date, end_date):
         """Buckets entries by ISO week (Mon–Sun) across an inclusive date range."""
-        counts = defaultdict(int)
-        for entry in qs:
-            local_day = timezone.localtime(entry.created_at).date()
-            counts[local_day - timedelta(days=local_day.weekday())] += 1
+        counts_qs = qs.annotate(local_week=TruncWeek('created_at')).values('local_week').annotate(count=Count('id'))
+        counts = {row['local_week'].date() if hasattr(row['local_week'], 'date') else row['local_week']: row['count'] for row in counts_qs if row['local_week']}
 
         first_week = start_date - timedelta(days=start_date.weekday())
         last_week = end_date - timedelta(days=end_date.weekday())
@@ -623,9 +628,8 @@ def reports(request):
 
     def _monthly_trend(qs, months_back):
         """Buckets entries by calendar month for the trailing `months_back` months."""
-        counts = defaultdict(int)
-        for entry in qs:
-            counts[timezone.localtime(entry.created_at).date().replace(day=1)] += 1
+        counts_qs = qs.annotate(local_month=TruncMonth('created_at')).values('local_month').annotate(count=Count('id'))
+        counts = {row['local_month'].date().replace(day=1) if hasattr(row['local_month'], 'date') else row['local_month']: row['count'] for row in counts_qs if row['local_month']}
 
         months, cursor = [], timezone.localdate().replace(day=1)
         for _ in range(months_back):

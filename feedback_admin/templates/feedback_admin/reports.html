@@ -8,6 +8,9 @@
 {% endblock %}
 
 {% block extra_styles %}
+.metric-tile, .card-block {
+  contain: content;
+}
 .metric-tile {
   display: flex; flex-direction: column; gap: 12px;
   padding: 18px; background: var(--surface-card);
@@ -44,7 +47,12 @@
 }
 .performance-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); min-width: 110px; }
 .performance-bar { flex: 1; height: 8px; background: var(--border); position: relative; border-radius: 4px; overflow: hidden; }
-.performance-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--g-primary); border-radius: 4px; }
+.performance-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 100% !important;
+  background: var(--g-primary); border-radius: 4px;
+  transform-origin: left center; will-change: transform;
+  transition: transform 300ms cubic-bezier(.4,0,.2,1);
+}
 .performance-value { font-size: 11px; font-weight: 700; color: var(--text-primary); font-family: var(--mono); min-width: 36px; text-align: right; }
 
 .performance-caption {
@@ -75,12 +83,12 @@
 
 <!-- REPORT PERIOD SELECTOR -->
 <div style="margin-bottom: 20px;">
-  <div class="filter-tabs" style="display:inline-flex;max-width:560px;width:100%">
-    <button type="button" class="filter-tab active" onclick="setReportPeriod(this, 'daily')">Daily</button>
-    <button type="button" class="filter-tab" onclick="setReportPeriod(this, 'weekly')">Weekly</button>
-    <button type="button" class="filter-tab" onclick="setReportPeriod(this, 'monthly')">Monthly</button>
-    <button type="button" class="filter-tab" onclick="setReportPeriod(this, 'quarterly')">Quarterly</button>
-    <button type="button" class="filter-tab" onclick="setReportPeriod(this, 'annual')">Annual</button>
+  <div class="filter-tabs" role="tablist" aria-label="Report period filter" style="display:inline-flex;max-width:560px;width:100%">
+    <button type="button" role="tab" id="tab-daily" aria-selected="true" class="filter-tab active" onclick="setReportPeriod(this, 'daily')">Daily</button>
+    <button type="button" role="tab" id="tab-weekly" aria-selected="false" class="filter-tab" onclick="setReportPeriod(this, 'weekly')">Weekly</button>
+    <button type="button" role="tab" id="tab-monthly" aria-selected="false" class="filter-tab" onclick="setReportPeriod(this, 'monthly')">Monthly</button>
+    <button type="button" role="tab" id="tab-quarterly" aria-selected="false" class="filter-tab" onclick="setReportPeriod(this, 'quarterly')">Quarterly</button>
+    <button type="button" role="tab" id="tab-annual" aria-selected="false" class="filter-tab" onclick="setReportPeriod(this, 'annual')">Annual</button>
   </div>
 </div>
 
@@ -307,8 +315,12 @@ let currentPeriod = 'daily';
 let reportPieChart, reportTrendChart;
 
 function setReportPeriod(btn, period) {
-  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.filter-tab').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-selected', 'false');
+  });
   btn.classList.add('active');
+  btn.setAttribute('aria-selected', 'true');
   currentPeriod = period;
   updateReport();
 }
@@ -321,20 +333,27 @@ const TREND_CAPTIONS = {
   annual: 'Monthly · Last 12 months',
 };
 
-function updateReport() {
+function updateReport(forceRecreate = false) {
   const data = REPORT_DATA[currentPeriod];
   document.getElementById('trendRangeCaption').textContent = TREND_CAPTIONS[currentPeriod];
 
-  // Update metrics
-  document.getElementById('metricTotal').textContent = data.total.toLocaleString();
-  document.getElementById('metricSatisfaction').textContent = data.satisfaction;
-  document.getElementById('metricVsat').textContent = data.vsat.toLocaleString();
-  document.getElementById('metricNeg').textContent = data.neg.toLocaleString();
+  // Update metrics cleanly
+  if (typeof animateCount === 'function') {
+    animateCount('metricTotal', data.total);
+    animateCount('metricSatisfaction', data.satisfaction);
+    animateCount('metricVsat', data.vsat);
+    animateCount('metricNeg', data.neg);
+  } else {
+    document.getElementById('metricTotal').textContent = data.total.toLocaleString();
+    document.getElementById('metricSatisfaction').textContent = data.satisfaction;
+    document.getElementById('metricVsat').textContent = data.vsat.toLocaleString();
+    document.getElementById('metricNeg').textContent = data.neg.toLocaleString();
+  }
 
   // Calculate percentages
-  const vsatPct = Math.round((data.vsat / data.total) * 100);
-  const satPct = Math.round((data.sat / data.total) * 100);
-  const negPct = Math.round((data.neg / data.total) * 100);
+  const vsatPct = data.total ? Math.round((data.vsat / data.total) * 100) : 0;
+  const satPct = data.total ? Math.round((data.sat / data.total) * 100) : 0;
+  const negPct = data.total ? Math.round((data.neg / data.total) * 100) : 0;
 
   // Update legend
   document.getElementById('legendVsat').textContent = data.vsat.toLocaleString();
@@ -350,7 +369,7 @@ function updateReport() {
   document.getElementById('summaryNeg').textContent = data.neg.toLocaleString() + ' responses';
   document.getElementById('summaryScore').textContent = data.satisfaction + '/100';
 
-  // Update Service Performance Rating (category breakdown of admin-flagged feedback)
+  // Update Service Performance Rating with GPU scaleX transforms
   const cats = data.categories;
   const categorized = data.categorized || 0;
   const order = ['compliment', 'suggestion', 'complaint', 'concern'];
@@ -361,24 +380,31 @@ function updateReport() {
     const pct = categorized > 0 ? Math.round((count / categorized) * 100) : 0;
     const fill = row.querySelector('.performance-fill');
     const valSpan = row.querySelector('.performance-value');
-    fill.style.width = pct + '%';
-    valSpan.textContent = pct + '%';
+    if (fill) fill.style.transform = `scaleX(${pct / 100})`;
+    if (valSpan) valSpan.textContent = pct + '%';
   });
 
   document.getElementById('performanceCaption').querySelector('span:last-child').textContent =
     `Based on ${categorized.toLocaleString()} of ${data.total.toLocaleString()} total responses reviewed and categorized by admin staff.`;
 
-  // Update charts
-  initReportPieChart(data);
-  initReportTrendChart(data);
+  // Update charts in-place without canvas teardown
+  updateReportPieChart(data, forceRecreate);
+  updateReportTrendChart(data, forceRecreate);
 }
 
-function initReportPieChart(data) {
+function updateReportPieChart(data, forceRecreate = false) {
   const canvas = document.getElementById('reportPieChart');
   if (!canvas) return;
   const ctx    = canvas.getContext('2d');
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const total  = data.total || (data.vsat + data.sat + data.neg);
+  const datasetData = [data.vsat, data.sat, data.neg];
+
+  if (reportPieChart && !forceRecreate) {
+    reportPieChart.data.datasets[0].data = datasetData;
+    reportPieChart.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
+    reportPieChart.update();
+    return;
+  }
 
   if (reportPieChart) reportPieChart.destroy();
 
@@ -388,18 +414,22 @@ function initReportPieChart(data) {
       if (!chart.chartArea) return;
       const ctx = chart.ctx;
       ctx.save();
-      const vsatPct = total ? Math.round((data.vsat / total) * 100) : 0;
+      const dataset = chart.data.datasets[0];
+      const t = dataset.data.reduce((a, b) => a + b, 0);
+      const vsatVal = dataset.data[0] || 0;
+      const vsatPct = t ? Math.round((vsatVal / t) * 100) : 0;
+      const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
       const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
 
       ctx.font = '700 22px "IBM Plex Sans", sans-serif';
-      ctx.fillStyle = isDark ? '#f8fafc' : '#0f172a';
+      ctx.fillStyle = isDarkMode ? '#f8fafc' : '#0f172a';
       ctx.fillText(`${vsatPct}%`, centerX, centerY - 8);
 
       ctx.font = '600 10px "IBM Plex Sans", sans-serif';
-      ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+      ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
       ctx.fillText('Very Sat.', centerX, centerY + 12);
       ctx.restore();
     }
@@ -410,7 +440,7 @@ function initReportPieChart(data) {
     data: {
       labels: ['Very Satisfactory', 'Satisfactory', 'Unsatisfactory'],
       datasets: [{
-        data: [data.vsat, data.sat, data.neg],
+        data: datasetData,
         backgroundColor: ['#169651', '#d97706', '#dc2626'],
         borderColor: isDark ? '#1e293b' : '#ffffff',
         borderWidth: 2,
@@ -422,7 +452,7 @@ function initReportPieChart(data) {
       responsive: true,
       maintainAspectRatio: false,
       cutout: '72%',
-      animation: { animateRotate: true, animateScale: true },
+      animation: { duration: 300, animateRotate: true, animateScale: true },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -446,11 +476,21 @@ function initReportPieChart(data) {
   });
 }
 
-function initReportTrendChart(data) {
+function updateReportTrendChart(data, forceRecreate = false) {
   const canvas = document.getElementById('reportTrendChart');
   if (!canvas) return;
   const ctx       = canvas.getContext('2d');
   const isDark    = document.documentElement.getAttribute('data-theme') === 'dark';
+
+  if (reportTrendChart && !forceRecreate) {
+    reportTrendChart.data.labels = data.trendLabels;
+    reportTrendChart.data.datasets[0].data = data.trendData;
+    reportTrendChart.update();
+    return;
+  }
+
+  if (reportTrendChart) reportTrendChart.destroy();
+
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.08)';
   const textColor = isDark ? '#cbd5e1' : '#475569';
   const ptBgColor = isDark ? '#0f172a' : '#ffffff';
@@ -458,8 +498,6 @@ function initReportTrendChart(data) {
   const gradPos = ctx.createLinearGradient(0, 0, 0, 240);
   gradPos.addColorStop(0, 'rgba(22, 150, 81, 0.22)');
   gradPos.addColorStop(1, 'rgba(22, 150, 81, 0.0)');
-
-  if (reportTrendChart) reportTrendChart.destroy();
 
   reportTrendChart = new Chart(ctx, {
     type: 'line',
@@ -487,6 +525,7 @@ function initReportTrendChart(data) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: { duration: 300 },
       interaction: { mode: 'index', intersect: false },
       scales: {
         x: {
@@ -541,8 +580,10 @@ function shareReport() {
 }
 
 /* ── THEME & RESIZE ── */
-function onThemeChange() { updateReport(); }
-function onResize() { updateReport(); }
+function onThemeChange() { updateReport(true); }
+function onResize() {
+  // Chart.js automatically handles container resize events smoothly
+}
 
 /* ── INIT ── */
 function pageInit() {
