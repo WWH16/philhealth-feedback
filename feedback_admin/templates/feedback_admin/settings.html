@@ -1318,6 +1318,10 @@ function closeConfirmModal(id) {
 
 /* ── TOAST ── */
 function showToast(msg, type) {
+  if (window.showToast && window.showToast !== showToast) {
+    window.showToast(msg, type);
+    return;
+  }
   const isError    = type === 'error';
   const toastColor = isError ? 'var(--red)' : 'var(--g-primary)';
   const icon       = isError ? 'error' : 'check_circle';

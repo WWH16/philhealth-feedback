@@ -986,27 +986,15 @@ function submitGroupForm() {
 
 /* ── TOAST ── */
 function _flashSuccessToast(msg, type, reloadAfter) {
-  const isError    = type === 'error';
-  const toastColor = isError ? 'var(--red)' : 'var(--g-primary)';
-  const icon       = isError ? 'error' : 'check_circle';
   const shouldReload = reloadAfter !== false;
-  const div = document.createElement('div');
-  div.className = 'toast ph-toast fade align-items-center border-0';
-  div.setAttribute('role', 'alert');
-  div.setAttribute('data-bs-delay', '5000');
-  div.style.setProperty('--toast-color', toastColor);
-  div.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body d-flex align-items-center gap-3 py-3" style="color:var(--text-primary);font-size:13px;font-weight:600;">
-        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>${msg}
-      </div>
-      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size:10px;"></button>
-    </div>
-    <div class="ph-toast-progress"></div>`;
-  document.getElementById('toastContainer').appendChild(div);
-  const toastInstance = new bootstrap.Toast(div);
-  if (shouldReload) { location.reload(); } else { div.addEventListener('hidden.bs.toast', () => div.remove()); }
-  toastInstance.show();
+  if (window.showToast) {
+    window.showToast(msg, type || 'success', shouldReload);
+  } else {
+    if (shouldReload) {
+      sessionStorage.setItem('pendingToast', JSON.stringify({ msg, type: type || 'success' }));
+      location.reload();
+    }
+  }
 }
 
 function pageInit() { filterUsers(); }

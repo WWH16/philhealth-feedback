@@ -858,6 +858,7 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
 /* ── TOASTS ── */
 function adjustToastPosition() {
   const container = document.getElementById('toastContainer');
+  if (!container) return;
   if (window.innerWidth < 576) {
     container.classList.remove('top-0', 'end-0');
     container.classList.add('bottom-0', 'start-50', 'translate-middle-x');
@@ -870,6 +871,62 @@ function adjustToastPosition() {
     container.style.marginBottom = '0';
   }
 }
+
+window.showToast = function(msg, type = 'success', shouldReload = false) {
+  if (shouldReload) {
+    sessionStorage.setItem('pendingToast', JSON.stringify({ msg, type }));
+    location.reload();
+    return;
+  }
+
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  const normalizedMsg = String(msg).trim();
+
+  // Deduplication check: prevent displaying duplicate toast with identical text
+  const existingToasts = container.querySelectorAll('.toast-body');
+  for (const t of existingToasts) {
+    const text = t.textContent.trim();
+    if (text === normalizedMsg || text.includes(normalizedMsg) || normalizedMsg.includes(text)) {
+      return;
+    }
+  }
+
+  const isError    = type === 'error';
+  const isWarning  = type === 'warning';
+  const toastColor = isError ? 'var(--red)' : (isWarning ? 'var(--gold)' : 'var(--g-primary)');
+  const icon       = isError ? 'error' : (isWarning ? 'warning' : 'check_circle');
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  const div = document.createElement('div');
+  div.className = 'toast ph-toast fade align-items-center border-0';
+  div.setAttribute('role', 'alert');
+  div.setAttribute('data-bs-delay', '5000');
+  div.style.setProperty('--toast-color', toastColor);
+  div.innerHTML = `
+    <div class="d-flex w-100">
+      <div class="toast-body d-flex align-items-center gap-3 py-3" style="color:var(--text-primary);font-size:13px;font-weight:600;">
+        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>${escHtml(msg)}
+      </div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size:10px;"></button>
+    </div>
+    <div class="ph-toast-progress"></div>`;
+
+  container.appendChild(div);
+  const toastInstance = new bootstrap.Toast(div);
+  div.addEventListener('hidden.bs.toast', () => div.remove());
+  toastInstance.show();
+};
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ② Sync slider state with the theme that was applied before paint */
@@ -886,6 +943,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = new bootstrap.Toast(toastEl);
     toast.show();
   });
+
+  try {
+    const pending = sessionStorage.getItem('pendingToast');
+    if (pending) {
+      sessionStorage.removeItem('pendingToast');
+      const { msg, type } = JSON.parse(pending);
+      showToast(msg, type, false);
+    }
+  } catch (e) {}
 });
 
 /* ── SIDEBAR ── */
