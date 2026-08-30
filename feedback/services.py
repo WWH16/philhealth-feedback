@@ -27,6 +27,7 @@ _LABEL_MAP = {
     'irrelevant': FeedbackEntry.PENDING,
 }
 
+
 def _get_model():
     global _model
     if _model is None and _MODEL_PATH.exists():
@@ -40,6 +41,9 @@ def _get_model():
 def _preprocess_light(text):
     if not isinstance(text, str):
         return ""
+    # Strip form section header prefixes (e.g., "Comments: ", "Commendation: ")
+    text = re.sub(r'^(Comments|Commendation|Comments & Suggestions):\s*', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\|\s*(Comments|Commendation|Comments & Suggestions):\s*', ' ', text, flags=re.IGNORECASE)
     text = text.lower()
     text = re.sub(r'[^a-z\s]', '', text)
     tokens = text.split()
@@ -51,25 +55,43 @@ def _preprocess_light(text):
     return " ".join(filtered_tokens)
 
 
-def analyze_comment_sentiment(comment):
-    if not comment:
+def _experience_to_sentiment(experience):
+    if experience == FeedbackEntry.VERY_SATISFACTORY:
+        return FeedbackEntry.POSITIVE
+    elif experience == FeedbackEntry.UNSATISFACTORY:
+        return FeedbackEntry.NEGATIVE
+    elif experience == FeedbackEntry.SATISFACTORY:
+        return FeedbackEntry.NEUTRAL
+    return FeedbackEntry.PENDING
+
+
+def analyze_comment_sentiment(comment, experience=None):
+    if not comment or not comment.strip():
         return FeedbackEntry.PENDING
     model = _get_model()
-    if not model:
-        return FeedbackEntry.PENDING
     cleaned = _preprocess_light(comment)
-    if not cleaned:
-        return FeedbackEntry.PENDING
-    try:
-        predicted_label = model.predict([cleaned])[0]
-        normalized_label = (
-            predicted_label.strip().lower()
-            if isinstance(predicted_label, str)
-            else predicted_label
-        )
-        return _LABEL_MAP.get(normalized_label, FeedbackEntry.PENDING)
-    except Exception:
-        return FeedbackEntry.PENDING
+    
+    if model and cleaned:
+        try:
+            predicted_label = model.predict([cleaned])[0]
+            normalized_label = (
+                predicted_label.strip().lower()
+                if isinstance(predicted_label, str)
+                else predicted_label
+            )
+            sentiment = _LABEL_MAP.get(normalized_label, FeedbackEntry.PENDING)
+            if sentiment != FeedbackEntry.PENDING:
+                return sentiment
+        except Exception:
+            pass
+
+    # Fallback to user experience rating if ML model returned irrelevant/pending or failed
+    if experience:
+        fallback = _experience_to_sentiment(experience)
+        if fallback != FeedbackEntry.PENDING:
+            return fallback
+
+    return FeedbackEntry.PENDING
 
 
 def reanalyze_pending_entries(force=False):
@@ -81,7 +103,7 @@ def reanalyze_pending_entries(force=False):
     processed = 0
 
     for entry in qs.iterator(chunk_size=200):
-        new_sentiment = analyze_comment_sentiment(entry.comment)
+        new_sentiment = analyze_comment_sentiment(entry.comment, experience=entry.experience)
         if new_sentiment != entry.sentiment:
             entry.sentiment = new_sentiment
             entry.save(update_fields=['sentiment', 'updated_at'])
