@@ -28,7 +28,7 @@ class SubmitFeedbackAutoAnalysisTests(TestCase):
         self.assertEqual(response.status_code, 201)
         entry = FeedbackEntry.objects.get()
         self.assertEqual(entry.sentiment, FeedbackEntry.POSITIVE)
-        mocked_analyze.assert_called_once_with('Excellent service.', experience=FeedbackEntry.VERY_SATISFACTORY)
+        mocked_analyze.assert_called_once_with('Excellent service.')
 
     @patch('feedback.views.analyze_comment_sentiment', return_value=FeedbackEntry.POSITIVE)
     def test_submit_feedback_skips_analysis_when_disabled(self, mocked_analyze):
@@ -95,10 +95,4 @@ class SentimentServiceTests(TestCase):
         from .services import analyze_comment_sentiment
         res = analyze_comment_sentiment('Comments: The staff was very helpful and accommodating.')
         self.assertIn(res, [FeedbackEntry.POSITIVE, FeedbackEntry.NEUTRAL])
-
-    def test_analyze_comment_fallback_to_experience(self):
-        from .services import analyze_comment_sentiment
-        # Non-alphabetic / empty cleaned text falls back to experience rating
-        res = analyze_comment_sentiment('12345 !!!', experience=FeedbackEntry.VERY_SATISFACTORY)
-        self.assertEqual(res, FeedbackEntry.POSITIVE)
 

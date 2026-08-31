@@ -63,7 +63,7 @@ def submit_feedback(request):
 
     # 3. Sentiment Analysis
     sentiment = (
-        analyze_comment_sentiment(comment, experience=experience)
+        analyze_comment_sentiment(comment)
         if (comment and FeedbackConfiguration.auto_analysis_is_enabled())
         else FeedbackEntry.PENDING
     )
