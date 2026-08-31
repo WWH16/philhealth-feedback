@@ -557,10 +557,6 @@ function setFilter(btn, period) {
   renderTrendForPeriod(period);
 }
 
-  updatePieAndLegend(d);
-  renderTrendForPeriod(period);
-}
-
 function onThemeChange() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   if (pieChart) {
