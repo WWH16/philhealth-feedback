@@ -60,7 +60,7 @@ The screenshots below showcase the user interfaces and administrative tools of t
 ## Core Features
 
 ### Public-Facing Feedback Submission
-- **Two-Step Submission**: Step 1 collects a structured experience rating (Very Satisfactory, Satisfactory, Unsatisfactory). Step 2 accepts optional detailed feedback comments.
+- **Structured Submission**: Collects structured Service Quality Dimensions (SQD) ratings using official 6-point scale options (😠 Strongly Disagree, 🙁 Disagree, 😐 Neither Agree nor Disagree, 🙂 Agree, 😃 Strongly Agree, N/A Not Applicable) along with detailed feedback comments.
 - **Unique Tracking Code**: Generates an immutable, human-readable identifier (e.g., CF-YYYYMMDD-[HEX]) upon submission for tracking.
 - **AJAX Driven**: High-fidelity modal success screen and instant code generation without page reloads.
 

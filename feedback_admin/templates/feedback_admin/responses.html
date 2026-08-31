@@ -132,9 +132,12 @@
         <span class="table-info" id="tableInfo">—</span>
         <select class="btn-ph" id="ratingFilter" onchange="applyFilters()" aria-label="Filter by rating" style="cursor:pointer">
           <option value="">All Ratings</option>
-          <option value="Very Satisfactory">Very Satisfactory</option>
-          <option value="Satisfactory">Satisfactory</option>
-          <option value="Unsatisfactory">Unsatisfactory</option>
+          <option value="Strongly Agree">😃 Strongly Agree</option>
+          <option value="Agree">🙂 Agree</option>
+          <option value="Neither Agree nor Disagree">😐 Neither Agree/Disagree</option>
+          <option value="Disagree">🙁 Disagree</option>
+          <option value="Strongly Disagree">😠 Strongly Disagree</option>
+          <option value="Not Applicable">N/A Not Applicable</option>
         </select>
         <select class="btn-ph" id="categoryFilter" onchange="applyFilters()" aria-label="Filter by category" style="cursor:pointer">
           <option value="">All Categories</option>
@@ -224,9 +227,15 @@ const CSRF_TOKEN = '{{ csrf_token }}';
 const ALL_DATA = JSON.parse(document.getElementById('entries-data').textContent);
 
 const RATING_CONFIG = {
-  'Very Satisfactory': { cls:'chip-pos', icon:'sentiment_satisfied_alt' },
-  'Satisfactory':      { cls:'chip-neu', icon:'sentiment_neutral' },
-  'Unsatisfactory':    { cls:'chip-neg', icon:'sentiment_dissatisfied' },
+  'Strongly Agree':             { cls:'chip-sa',  icon:'sentiment_very_satisfied' },
+  'Agree':                      { cls:'chip-a',   icon:'sentiment_satisfied' },
+  'Neither Agree nor Disagree': { cls:'chip-nad', icon:'sentiment_neutral' },
+  'Disagree':                   { cls:'chip-d',   icon:'sentiment_dissatisfied' },
+  'Strongly Disagree':          { cls:'chip-sd',  icon:'sentiment_very_dissatisfied' },
+  'Not Applicable':             { cls:'chip-na',  icon:'block' },
+  'Very Satisfactory':          { cls:'chip-sa',  icon:'sentiment_very_satisfied' },
+  'Satisfactory':               { cls:'chip-a',   icon:'sentiment_satisfied' },
+  'Unsatisfactory':             { cls:'chip-sd',  icon:'sentiment_very_dissatisfied' },
 };
 
 const SENTIMENT_CONFIG = {

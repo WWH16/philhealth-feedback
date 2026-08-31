@@ -294,9 +294,12 @@ def dashboard(request):
 
     all_counts = _experience_counts(qs)
     total = all_counts['total']
-    very_satisfactory = all_counts['vsat']
-    satisfactory = all_counts['sat']
-    unsatisfactory = all_counts['unsat']
+    sa = all_counts['strongly_agree']
+    a = all_counts['agree']
+    nad = all_counts['neither']
+    d = all_counts['disagree']
+    sd = all_counts['strongly_disagree']
+    na = all_counts['na']
 
     trend_counts = (
         qs.annotate(local_date=TruncDate('created_at'))
@@ -324,12 +327,25 @@ def dashboard(request):
 
     context = {
         'total': total,
-        'very_satisfactory': very_satisfactory,
-        'satisfactory': satisfactory,
-        'unsatisfactory': unsatisfactory,
-        'very_satisfactory_pct': pct(very_satisfactory),
-        'satisfactory_pct': pct(satisfactory),
-        'unsatisfactory_pct': pct(unsatisfactory),
+        'strongly_agree': sa,
+        'agree': a,
+        'neither': nad,
+        'disagree': d,
+        'strongly_disagree': sd,
+        'na': na,
+        'strongly_agree_pct': pct(sa),
+        'agree_pct': pct(a),
+        'neither_pct': pct(nad),
+        'disagree_pct': pct(d),
+        'strongly_disagree_pct': pct(sd),
+        'na_pct': pct(na),
+        # Legacy fallbacks
+        'very_satisfactory': sa,
+        'satisfactory': a,
+        'unsatisfactory': sd + d,
+        'very_satisfactory_pct': pct(sa),
+        'satisfactory_pct': pct(a),
+        'unsatisfactory_pct': pct(sd + d),
         'recent_entries_data': [_entry_to_row(entry, recent_activity) for entry in recent_entries_data],
         'filter_data': {
             'today': _experience_counts(qs.filter(created_at__range=(today_start, today_end))),
@@ -339,9 +355,15 @@ def dashboard(request):
         },
         'trend_labels': [f'{day:%b} {day.day}' for day in trend_dates],
         'trend_dates': [day.isoformat() for day in trend_dates],
-        'trend_very_satisfactory': trend_for(FeedbackEntry.VERY_SATISFACTORY),
-        'trend_satisfactory': trend_for(FeedbackEntry.SATISFACTORY),
-        'trend_unsatisfactory': trend_for(FeedbackEntry.UNSATISFACTORY),
+        'trend_strongly_agree': trend_for(FeedbackEntry.STRONGLY_AGREE),
+        'trend_agree': trend_for(FeedbackEntry.AGREE),
+        'trend_neither': trend_for(FeedbackEntry.NEITHER),
+        'trend_disagree': trend_for(FeedbackEntry.DISAGREE),
+        'trend_strongly_disagree': trend_for(FeedbackEntry.STRONGLY_DISAGREE),
+        'trend_na': trend_for(FeedbackEntry.NOT_APPLICABLE),
+        'trend_very_satisfactory': trend_for(FeedbackEntry.STRONGLY_AGREE),
+        'trend_satisfactory': trend_for(FeedbackEntry.AGREE),
+        'trend_unsatisfactory': trend_for(FeedbackEntry.DISAGREE),
     }
     return render(request, 'feedback_admin/dashboard.html', context)
 
@@ -355,9 +377,15 @@ def responses(request):
 
     context = {
         'total': counts['total'],
-        'very_satisfactory': counts['vsat'],
-        'satisfactory': counts['sat'],
-        'unsatisfactory': counts['unsat'],
+        'strongly_agree': counts['strongly_agree'],
+        'agree': counts['agree'],
+        'neither': counts['neither'],
+        'disagree': counts['disagree'],
+        'strongly_disagree': counts['strongly_disagree'],
+        'na': counts['na'],
+        'very_satisfactory': counts['strongly_agree'],
+        'satisfactory': counts['agree'],
+        'unsatisfactory': counts['disagree'] + counts['strongly_disagree'],
         'entries_data': [_entry_to_row(entry, activity_map) for entry in entries_data],
     }
     return render(request, 'feedback_admin/responses.html', context)
@@ -392,15 +420,35 @@ def _entry_to_row(entry, activity=None):
 def _experience_counts(qs):
     res = qs.aggregate(
         total=Count('id'),
-        vsat=Count('id', filter=Q(experience=FeedbackEntry.VERY_SATISFACTORY)),
-        sat=Count('id', filter=Q(experience=FeedbackEntry.SATISFACTORY)),
-        unsat=Count('id', filter=Q(experience=FeedbackEntry.UNSATISFACTORY)),
+        sa=Count('id', filter=Q(experience__in=[FeedbackEntry.STRONGLY_AGREE, 'vsat'])),
+        a=Count('id', filter=Q(experience__in=[FeedbackEntry.AGREE, 'sat'])),
+        nad=Count('id', filter=Q(experience=FeedbackEntry.NEITHER)),
+        d=Count('id', filter=Q(experience=FeedbackEntry.DISAGREE)),
+        sd=Count('id', filter=Q(experience__in=[FeedbackEntry.STRONGLY_DISAGREE, 'unsat'])),
+        na=Count('id', filter=Q(experience=FeedbackEntry.NOT_APPLICABLE)),
     )
+    total = res['total'] or 0
+    sa = res['sa'] or 0
+    a = res['a'] or 0
+    nad = res['nad'] or 0
+    d = res['d'] or 0
+    sd = res['sd'] or 0
+    na_count = res['na'] or 0
     return {
-        'total': res['total'] or 0,
-        'vsat': res['vsat'] or 0,
-        'sat': res['sat'] or 0,
-        'unsat': res['unsat'] or 0,
+        'total': total,
+        'strongly_agree': sa,
+        'agree': a,
+        'neither': nad,
+        'disagree': d,
+        'strongly_disagree': sd,
+        'na': na_count,
+        # Legacy fallback keys
+        'vsat': sa,
+        'sat': a,
+        'unsat': sd + d,
+        'very_satisfactory': sa,
+        'satisfactory': a,
+        'unsatisfactory': sd + d,
     }
 
 
@@ -536,19 +584,25 @@ def reports(request):
     def get_period_data(qs):
         res = qs.aggregate(
             total=Count('id'),
-            vsat=Count('id', filter=Q(experience=FeedbackEntry.VERY_SATISFACTORY)),
-            sat=Count('id', filter=Q(experience=FeedbackEntry.SATISFACTORY)),
-            unsat=Count('id', filter=Q(experience=FeedbackEntry.UNSATISFACTORY)),
+            sa=Count('id', filter=Q(experience__in=[FeedbackEntry.STRONGLY_AGREE, 'vsat'])),
+            a=Count('id', filter=Q(experience__in=[FeedbackEntry.AGREE, 'sat'])),
+            nad=Count('id', filter=Q(experience=FeedbackEntry.NEITHER)),
+            d=Count('id', filter=Q(experience=FeedbackEntry.DISAGREE)),
+            sd=Count('id', filter=Q(experience__in=[FeedbackEntry.STRONGLY_DISAGREE, 'unsat'])),
+            na=Count('id', filter=Q(experience=FeedbackEntry.NOT_APPLICABLE)),
             compliment=Count('id', filter=Q(category='compliment')),
             suggestion=Count('id', filter=Q(category='suggestion')),
             complaint=Count('id', filter=Q(category='complaint')),
             concern=Count('id', filter=Q(category='concern')),
         )
         total = res['total'] or 0
-        vsat = res['vsat'] or 0
-        sat = res['sat'] or 0
-        unsat = res['unsat'] or 0
-        satisfaction = round((vsat + sat) / total * 100) if total else 0
+        sa = res['sa'] or 0
+        a = res['a'] or 0
+        nad = res['nad'] or 0
+        d = res['d'] or 0
+        sd = res['sd'] or 0
+        na_count = res['na'] or 0
+        satisfaction = round((sa + a) / total * 100) if total else 0
 
         cat_counts = {
             'compliment': res['compliment'] or 0,
@@ -560,9 +614,15 @@ def reports(request):
 
         return {
             'total': total,
-            'vsat': vsat,
-            'sat': sat,
-            'neg': unsat,
+            'strongly_agree': sa,
+            'agree': a,
+            'neither': nad,
+            'disagree': d,
+            'strongly_disagree': sd,
+            'na': na_count,
+            'vsat': sa,
+            'sat': a,
+            'neg': sd + d,
             'satisfaction': satisfaction,
             'categorized': categorized,
             'categories': cat_counts,

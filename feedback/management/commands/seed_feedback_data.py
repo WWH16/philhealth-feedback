@@ -2,30 +2,36 @@ import random
 from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from feedback.models import FeedbackEntry
-
+from feedback.models import FeedbackConfiguration, FeedbackEntry
+from feedback.services import analyze_comment_sentiment
 
 SAMPLE_FEEDBACK = [
-    # Very Satisfactory / Positive Compliments
+    # Strongly Agree / Positive Compliments
     {
-        'experience': FeedbackEntry.VERY_SATISFACTORY,
-        'sentiment': FeedbackEntry.POSITIVE,
+        'experience': FeedbackEntry.STRONGLY_AGREE,
         'category': FeedbackEntry.COMPLIMENT,
         'comments': [
             "Fast and courteous service at window 3. Very satisfied with the PhilHealth ID processing!",
             "Nagpapasalamat ako sa mabilis na pag-assist sa aking Member Data Record (MDR) request.",
             "Clean office environment and helpful security staff guiding senior citizens.",
             "Efficient transaction today! Less than 15 minutes wait time for contribution updates.",
-            "Mabait at maasikaso ang frontline staff sa pag-update ng aking dependents.",
-            "Smooth submission process. The Citizen's Charter guidelines were very clear.",
             "Very responsive staff at the express lane for pregnant women and PWDs.",
             "Excellent customer service! All my questions about Konsulta benefits were explained clearly.",
         ]
     },
-    # Satisfactory / Neutral Suggestions
+    # Agree / Positive & Neutral
     {
-        'experience': FeedbackEntry.SATISFACTORY,
-        'sentiment': FeedbackEntry.NEUTRAL,
+        'experience': FeedbackEntry.AGREE,
+        'category': FeedbackEntry.COMPLIMENT,
+        'comments': [
+            "Mabait at maasikaso ang frontline staff sa pag-update ng aking dependents.",
+            "Smooth submission process. The Citizen's Charter guidelines were very clear.",
+            "Process was clear and staff answered all our questions kindly.",
+        ]
+    },
+    # Neither Agree nor Disagree / Neutral Suggestions
+    {
+        'experience': FeedbackEntry.NEITHER,
         'category': FeedbackEntry.SUGGESTION,
         'comments': [
             "Overall good experience, but please consider adding more chairs in the waiting area.",
@@ -37,29 +43,36 @@ SAMPLE_FEEDBACK = [
             "Good service overall. Clearer signage for senior citizen express counter is suggested.",
         ]
     },
-    # Unsatisfactory / Negative Complaints & Concerns
+    # Disagree / Negative Complaints
     {
-        'experience': FeedbackEntry.UNSATISFACTORY,
-        'sentiment': FeedbackEntry.NEGATIVE,
+        'experience': FeedbackEntry.DISAGREE,
         'category': FeedbackEntry.COMPLAINT,
         'comments': [
-            "Waited over 2 hours just to submit my claim documents. Window 2 was offline for too long.",
             "Medyo matagal ang pila nung umaga. Sana madagdagan ang active counters during peak hours.",
-            "Network system interruption for 30 minutes caused unexpected delay.",
             "Informational posters regarding updated premium contribution rates were confusing.",
             "Counters were understaffed during lunch break resulting in long line buildup.",
             "Matagal ang veripikasyon ng member record. Kailangan po ng karagdagang verification officers.",
         ]
     },
-    # Unsatisfactory / Negative Concerns
+    # Strongly Disagree / Severe Negative Complaints & Concerns
     {
-        'experience': FeedbackEntry.UNSATISFACTORY,
-        'sentiment': FeedbackEntry.NEGATIVE,
-        'category': FeedbackEntry.CONCERN,
+        'experience': FeedbackEntry.STRONGLY_DISAGREE,
+        'category': FeedbackEntry.COMPLAINT,
         'comments': [
+            "Waited over 2 hours just to submit my claim documents. Window 2 was offline for too long.",
+            "Network system interruption for 30 minutes caused unexpected delay.",
             "System verification error required me to return another day for my MDR update.",
             "Need clearer step-by-step flowchart at the entrance for first-time walk-in applicants.",
             "Long waiting time at counter 4 for employer remittance corrections.",
+        ]
+    },
+    # Not Applicable / General Inquiries
+    {
+        'experience': FeedbackEntry.NOT_APPLICABLE,
+        'category': FeedbackEntry.SUGGESTION,
+        'comments': [
+            "Inquired about Konsulta package requirements for non-resident relatives.",
+            "Just picked up printed form guidelines.",
         ]
     }
 ]
@@ -88,22 +101,28 @@ class Command(BaseCommand):
         count = options['count']
         days = options['days']
         now = timezone.now()
+        auto_analysis = FeedbackConfiguration.auto_analysis_is_enabled()
 
-        self.stdout.write(f'Generating {count} sample feedback entries across the past {days} days...')
+        self.stdout.write(f'Generating {count} sample feedback entries across the past {days} days (Auto-analysis: {auto_analysis})...')
 
         created_entries = 0
         for i in range(count):
             group = random.choices(
                 SAMPLE_FEEDBACK,
-                weights=[45, 35, 12, 8],  # 45% VSat, 35% Sat, 12% Complaint, 8% Concern
+                weights=[45, 30, 12, 6, 4, 3],  # 45% SA, 30% A, 12% NAD, 6% D, 4% SD, 3% N/A
                 k=1
             )[0]
 
             exp = group['experience']
-            sent = group['sentiment']
             cat = group['category']
             comment = random.choice(group['comments'])
             status = random.choices(STATUSES, weights=[40, 35, 25], k=1)[0]
+
+            # Determine sentiment strictly based on system settings
+            if auto_analysis and comment:
+                sent = analyze_comment_sentiment(comment)
+            else:
+                sent = FeedbackEntry.PENDING
 
             # Random timestamp within past `days`
             random_seconds = random.randint(0, days * 86400)

@@ -21,14 +21,14 @@ class SubmitFeedbackAutoAnalysisTests(TestCase):
         config.save()
 
         response = self._submit({
-            'experience': FeedbackEntry.VERY_SATISFACTORY,
+            'experience': FeedbackEntry.STRONGLY_AGREE,
             'comment': 'Excellent service.',
         })
 
         self.assertEqual(response.status_code, 201)
         entry = FeedbackEntry.objects.get()
         self.assertEqual(entry.sentiment, FeedbackEntry.POSITIVE)
-        mocked_analyze.assert_called_once_with('Excellent service.')
+        mocked_analyze.assert_called_once_with('Excellent service.', FeedbackEntry.STRONGLY_AGREE)
 
     @patch('feedback.views.analyze_comment_sentiment', return_value=FeedbackEntry.POSITIVE)
     def test_submit_feedback_skips_analysis_when_disabled(self, mocked_analyze):
@@ -37,7 +37,7 @@ class SubmitFeedbackAutoAnalysisTests(TestCase):
         config.save()
 
         response = self._submit({
-            'experience': FeedbackEntry.SATISFACTORY,
+            'experience': FeedbackEntry.AGREE,
             'comment': 'Please improve wait times.',
         })
 
@@ -85,7 +85,7 @@ class SubmitFeedbackAutoAnalysisTests(TestCase):
         self.assertEqual(entry.name_of_client, 'Juan Dela Cruz')
         self.assertEqual(entry.services_availed, ['KonSulTa Registration (5)', 'Claims Filing (8)'])
         self.assertEqual(entry.sqd0, 5)
-        self.assertEqual(entry.experience, FeedbackEntry.VERY_SATISFACTORY)
+        self.assertEqual(entry.experience, FeedbackEntry.STRONGLY_AGREE)
         self.assertIn('Comments: Keep up the good work!', entry.comment)
         self.assertIn('Commendation: Kudos to Frontdesk Staff Maria!', entry.comment)
 

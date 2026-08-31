@@ -26,20 +26,44 @@ def submit_feedback(request):
     raw_sqd0 = payload.get('sqd0')
     experience = payload.get('experience')
 
-    if not experience and raw_sqd0 is not None:
+    SQD_MAP = {
+        1: FeedbackEntry.STRONGLY_DISAGREE,
+        2: FeedbackEntry.DISAGREE,
+        3: FeedbackEntry.NEITHER,
+        4: FeedbackEntry.AGREE,
+        5: FeedbackEntry.STRONGLY_AGREE,
+        6: FeedbackEntry.NOT_APPLICABLE,
+        '1': FeedbackEntry.STRONGLY_DISAGREE,
+        '2': FeedbackEntry.DISAGREE,
+        '3': FeedbackEntry.NEITHER,
+        '4': FeedbackEntry.AGREE,
+        '5': FeedbackEntry.STRONGLY_AGREE,
+        '6': FeedbackEntry.NOT_APPLICABLE,
+        'strongly_disagree': FeedbackEntry.STRONGLY_DISAGREE,
+        'disagree': FeedbackEntry.DISAGREE,
+        'neither': FeedbackEntry.NEITHER,
+        'agree': FeedbackEntry.AGREE,
+        'strongly_agree': FeedbackEntry.STRONGLY_AGREE,
+        'na': FeedbackEntry.NOT_APPLICABLE,
+        # Legacy fallback
+        'vsat': FeedbackEntry.STRONGLY_AGREE,
+        'sat': FeedbackEntry.AGREE,
+        'unsat': FeedbackEntry.DISAGREE,
+    }
+
+    if raw_sqd0 is not None:
         try:
             sqd0_val = int(raw_sqd0)
-            if sqd0_val in (1, 2):
-                experience = FeedbackEntry.UNSATISFACTORY
-            elif sqd0_val in (3, 4, 6):
-                experience = FeedbackEntry.SATISFACTORY
-            elif sqd0_val == 5:
-                experience = FeedbackEntry.VERY_SATISFACTORY
+            if sqd0_val in SQD_MAP:
+                experience = SQD_MAP[sqd0_val]
         except (ValueError, TypeError):
             pass
 
+    if not experience and payload.get('experience') in SQD_MAP:
+        experience = SQD_MAP[payload.get('experience')]
+
     if not experience:
-        experience = FeedbackEntry.SATISFACTORY
+        experience = FeedbackEntry.AGREE
 
     valid_experiences = {choice[0] for choice in FeedbackEntry.EXPERIENCE_CHOICES}
     if experience not in valid_experiences:
@@ -63,7 +87,7 @@ def submit_feedback(request):
 
     # 3. Sentiment Analysis
     sentiment = (
-        analyze_comment_sentiment(comment)
+        analyze_comment_sentiment(comment, experience)
         if (comment and FeedbackConfiguration.auto_analysis_is_enabled())
         else FeedbackEntry.PENDING
     )

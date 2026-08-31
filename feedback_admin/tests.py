@@ -61,12 +61,12 @@ class DashboardViewTests(TestCase):
     def test_dashboard_view_renders_successfully(self):
         from feedback.models import FeedbackEntry
         FeedbackEntry.objects.create(
-            experience=FeedbackEntry.VERY_SATISFACTORY,
+            experience=FeedbackEntry.STRONGLY_AGREE,
             category='compliment',
             comment='Great service!',
         )
         FeedbackEntry.objects.create(
-            experience=FeedbackEntry.SATISFACTORY,
+            experience=FeedbackEntry.AGREE,
             category='suggestion',
             comment='Smooth process.',
         )
@@ -75,9 +75,9 @@ class DashboardViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('filter_data', response.context)
         self.assertEqual(response.context['total'], 2)
-        self.assertEqual(response.context['very_satisfactory'], 1)
-        self.assertEqual(response.context['satisfactory'], 1)
-        self.assertEqual(response.context['unsatisfactory'], 0)
+        self.assertEqual(response.context['strongly_agree'], 1)
+        self.assertEqual(response.context['agree'], 1)
+        self.assertEqual(response.context['disagree'], 0)
         self.assertEqual(response.context['filter_data']['all']['total'], 2)
         self.assertContains(response, 'id="nav-dashboard"')
         self.assertContains(response, 'nav-item active')
@@ -95,12 +95,12 @@ class SentimentAnalysisViewTests(TestCase):
     def test_sentiment_analysis_view_renders_successfully(self):
         from feedback.models import FeedbackEntry
         FeedbackEntry.objects.create(
-            experience=FeedbackEntry.VERY_SATISFACTORY,
+            experience=FeedbackEntry.STRONGLY_AGREE,
             sentiment=FeedbackEntry.POSITIVE,
             comment='Exemplary assistance.',
         )
         FeedbackEntry.objects.create(
-            experience=FeedbackEntry.UNSATISFACTORY,
+            experience=FeedbackEntry.DISAGREE,
             sentiment=FeedbackEntry.NEGATIVE,
             comment='Delayed processing.',
         )
@@ -126,7 +126,7 @@ class ReportsViewTests(TestCase):
     def test_reports_view_renders_successfully(self):
         from feedback.models import FeedbackEntry
         FeedbackEntry.objects.create(
-            experience=FeedbackEntry.VERY_SATISFACTORY,
+            experience=FeedbackEntry.STRONGLY_AGREE,
             category='compliment',
             comment='Superb staff responsiveness.',
         )
@@ -140,7 +140,7 @@ class ReportsViewTests(TestCase):
         self.assertIn('monthly', report_data)
         self.assertIn('quarterly', report_data)
         self.assertIn('annual', report_data)
-        self.assertEqual(report_data['daily']['vsat'], 1)
+        self.assertEqual(report_data['daily']['strongly_agree'], 1)
         self.assertContains(response, 'nav-item active')
 
 
@@ -156,7 +156,7 @@ class ResponsesViewTests(TestCase):
     def test_responses_view_renders_successfully(self):
         from feedback.models import FeedbackEntry
         FeedbackEntry.objects.create(
-            experience=FeedbackEntry.VERY_SATISFACTORY,
+            experience=FeedbackEntry.STRONGLY_AGREE,
             category='compliment',
             comment='Fast transaction.',
         )
@@ -164,7 +164,7 @@ class ResponsesViewTests(TestCase):
         response = self.client.get(reverse('responses'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['total'], 1)
-        self.assertEqual(response.context['very_satisfactory'], 1)
+        self.assertEqual(response.context['strongly_agree'], 1)
         self.assertEqual(len(response.context['entries_data']), 1)
         self.assertContains(response, 'nav-item active')
 

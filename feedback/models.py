@@ -6,15 +6,21 @@ from django.utils import timezone
 
 
 class FeedbackEntry(models.Model):
-    # Experience Ratings (User Selected)
-    VERY_SATISFACTORY = 'vsat'
-    SATISFACTORY = 'sat'
-    UNSATISFACTORY = 'unsat'
+    # Experience Ratings (Service Quality Dimensions - SQD)
+    STRONGLY_AGREE = 'strongly_agree'
+    AGREE = 'agree'
+    NEITHER = 'neither'
+    DISAGREE = 'disagree'
+    STRONGLY_DISAGREE = 'strongly_disagree'
+    NOT_APPLICABLE = 'na'
 
     EXPERIENCE_CHOICES = [
-        (VERY_SATISFACTORY, 'Very Satisfactory'),
-        (SATISFACTORY, 'Satisfactory'),
-        (UNSATISFACTORY, 'Unsatisfactory'),
+        (STRONGLY_AGREE, 'Strongly Agree'),
+        (AGREE, 'Agree'),
+        (NEITHER, 'Neither Agree nor Disagree'),
+        (DISAGREE, 'Disagree'),
+        (STRONGLY_DISAGREE, 'Strongly Disagree'),
+        (NOT_APPLICABLE, 'Not Applicable'),
     ]
 
     # Sentiments (Detected or Manual)
@@ -47,7 +53,7 @@ class FeedbackEntry(models.Model):
         (COMPLIMENT, 'Compliment'),
         (CONCERN, 'Concern'),
     ]
-    experience = models.CharField(max_length=10, choices=EXPERIENCE_CHOICES)
+    experience = models.CharField(max_length=25, choices=EXPERIENCE_CHOICES)
     sentiment = models.CharField(max_length=10, choices=SENTIMENT_CHOICES, default=PENDING)
     category = models.CharField(max_length=12, choices=CATEGORY_CHOICES, blank=True)
     comment = models.TextField(blank=True, max_length=1000)

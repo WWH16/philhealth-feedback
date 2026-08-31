@@ -96,26 +96,26 @@
 <div class="row g-3 mb-4">
   <div class="col-6 col-sm-3">
     <div class="metric-tile">
-      <div class="metric-value" id="metricTotal">18</div>
+      <div class="metric-value" id="metricTotal">0</div>
       <div class="metric-label">Total Responses</div>
     </div>
   </div>
   <div class="col-6 col-sm-3">
     <div class="metric-tile">
-      <div class="metric-value" id="metricSatisfaction">83</div>
+      <div class="metric-value" id="metricSatisfaction">0</div>
       <div class="metric-label">Satisfaction Rate %</div>
     </div>
   </div>
   <div class="col-6 col-sm-3">
     <div class="metric-tile alt">
-      <div class="metric-value" id="metricVsat">11</div>
-      <div class="metric-label">Very Satisfactory</div>
+      <div class="metric-value" id="metricVsat">0</div>
+      <div class="metric-label">😃 Strongly Agree</div>
     </div>
   </div>
   <div class="col-6 col-sm-3">
     <div class="metric-tile neg">
-      <div class="metric-value" id="metricNeg">2</div>
-      <div class="metric-label">Unsatisfactory</div>
+      <div class="metric-value" id="metricNeg">0</div>
+      <div class="metric-label">😠 Disagree / Strongly Disagree</div>
     </div>
   </div>
 </div>
@@ -129,35 +129,53 @@
       <div class="card-block-head">
         <h2 class="card-block-title">
           <span class="material-icons-round">donut_large</span>
-          Satisfaction Distribution
+          SQD Distribution
         </h2>
       </div>
       <div class="card-block-body">
         <div class="pie-chart-layout">
           <div class="pie-chart-col">
             <div class="chart-wrap" style="height: 200px;">
-              <canvas id="reportPieChart" aria-label="Satisfaction Distribution pie chart" role="img"></canvas>
+              <canvas id="reportPieChart" aria-label="SQD Distribution pie chart" role="img"></canvas>
             </div>
           </div>
           <div class="pie-legend-col">
-            <div class="pie-legend">
+            <div class="pie-legend" style="gap:6px;">
               <div class="pie-legend-item">
-                <div class="pie-legend-dot" style="background: var(--g-primary)"></div>
-                <span class="pie-legend-label">Very Sat.</span>
-                <span class="pie-legend-value" id="legendVsat">11</span>
-                <span class="pie-legend-pct" id="legendVsatPct">61%</span>
+                <div class="pie-legend-dot" style="background: #169651"></div>
+                <span class="pie-legend-label">Strongly Agree</span>
+                <span class="pie-legend-value" id="legendSa">0</span>
+                <span class="pie-legend-pct" id="legendSaPct">0%</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-dot" style="background: var(--gold)"></div>
-                <span class="pie-legend-label">Satisfactory</span>
-                <span class="pie-legend-value" id="legendSat">5</span>
-                <span class="pie-legend-pct" id="legendSatPct">28%</span>
+                <div class="pie-legend-dot" style="background: #10b981"></div>
+                <span class="pie-legend-label">Agree</span>
+                <span class="pie-legend-value" id="legendA">0</span>
+                <span class="pie-legend-pct" id="legendAPct">0%</span>
               </div>
               <div class="pie-legend-item">
-                <div class="pie-legend-dot" style="background: var(--red)"></div>
-                <span class="pie-legend-label">Unsat.</span>
-                <span class="pie-legend-value" id="legendNeg">2</span>
-                <span class="pie-legend-pct" id="legendNegPct">11%</span>
+                <div class="pie-legend-dot" style="background: #d97706"></div>
+                <span class="pie-legend-label">Neither</span>
+                <span class="pie-legend-value" id="legendNad">0</span>
+                <span class="pie-legend-pct" id="legendNadPct">0%</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-dot" style="background: #f97316"></div>
+                <span class="pie-legend-label">Disagree</span>
+                <span class="pie-legend-value" id="legendD">0</span>
+                <span class="pie-legend-pct" id="legendDPct">0%</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-dot" style="background: #dc2626"></div>
+                <span class="pie-legend-label">Strongly Dis.</span>
+                <span class="pie-legend-value" id="legendSd">0</span>
+                <span class="pie-legend-pct" id="legendSdPct">0%</span>
+              </div>
+              <div class="pie-legend-item">
+                <div class="pie-legend-dot" style="background: #64748b"></div>
+                <span class="pie-legend-label">N/A</span>
+                <span class="pie-legend-value" id="legendNa">0</span>
+                <span class="pie-legend-pct" id="legendNaPct">0%</span>
               </div>
             </div>
           </div>
@@ -337,39 +355,58 @@ function updateReport(forceRecreate = false) {
   const data = REPORT_DATA[currentPeriod];
   document.getElementById('trendRangeCaption').textContent = TREND_CAPTIONS[currentPeriod];
 
-  // Update metrics cleanly
+  const sa  = data.strongly_agree || data.vsat || 0;
+  const a   = data.agree || data.sat || 0;
+  const nad = data.neither || 0;
+  const d   = data.disagree || 0;
+  const sd  = data.strongly_disagree || 0;
+  const na  = data.na || 0;
+  const neg = d + sd;
+
   if (typeof animateCount === 'function') {
     animateCount('metricTotal', data.total);
     animateCount('metricSatisfaction', data.satisfaction);
-    animateCount('metricVsat', data.vsat);
-    animateCount('metricNeg', data.neg);
+    animateCount('metricVsat', sa);
+    animateCount('metricNeg', neg);
   } else {
     document.getElementById('metricTotal').textContent = data.total.toLocaleString();
     document.getElementById('metricSatisfaction').textContent = data.satisfaction;
-    document.getElementById('metricVsat').textContent = data.vsat.toLocaleString();
-    document.getElementById('metricNeg').textContent = data.neg.toLocaleString();
+    document.getElementById('metricVsat').textContent = sa.toLocaleString();
+    document.getElementById('metricNeg').textContent = neg.toLocaleString();
   }
 
-  // Calculate percentages
-  const vsatPct = data.total ? Math.round((data.vsat / data.total) * 100) : 0;
-  const satPct = data.total ? Math.round((data.sat / data.total) * 100) : 0;
-  const negPct = data.total ? Math.round((data.neg / data.total) * 100) : 0;
+  const setLegend = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val.toLocaleString();
+  };
+  const setPct = (id, count) => {
+    const el = document.getElementById(id);
+    const pct = data.total ? Math.round((count / data.total) * 100) : 0;
+    if (el) el.textContent = pct + '%';
+  };
 
-  // Update legend
-  document.getElementById('legendVsat').textContent = data.vsat.toLocaleString();
-  document.getElementById('legendVsatPct').textContent = vsatPct + '%';
-  document.getElementById('legendSat').textContent = data.sat.toLocaleString();
-  document.getElementById('legendSatPct').textContent = satPct + '%';
-  document.getElementById('legendNeg').textContent = data.neg.toLocaleString();
-  document.getElementById('legendNegPct').textContent = negPct + '%';
+  setLegend('legendSa', sa);
+  setPct('legendSaPct', sa);
+  setLegend('legendA', a);
+  setPct('legendAPct', a);
+  setLegend('legendNad', nad);
+  setPct('legendNadPct', nad);
+  setLegend('legendD', d);
+  setPct('legendDPct', d);
+  setLegend('legendSd', sd);
+  setPct('legendSdPct', sd);
+  setLegend('legendNa', na);
+  setPct('legendNaPct', na);
 
-  // Update summary
-  document.getElementById('summaryVsat').textContent = data.vsat.toLocaleString() + ' responses';
-  document.getElementById('summarySat').textContent = data.sat.toLocaleString() + ' responses';
-  document.getElementById('summaryNeg').textContent = data.neg.toLocaleString() + ' responses';
+  const setSummary = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val.toLocaleString() + ' responses';
+  };
+  setSummary('summaryVsat', sa);
+  setSummary('summarySat', a);
+  setSummary('summaryNeg', neg);
   document.getElementById('summaryScore').textContent = data.satisfaction + '/100';
 
-  // Update Service Performance Rating with GPU scaleX transforms
   const cats = data.categories;
   const categorized = data.categorized || 0;
   const order = ['compliment', 'suggestion', 'complaint', 'concern'];
@@ -387,7 +424,6 @@ function updateReport(forceRecreate = false) {
   document.getElementById('performanceCaption').querySelector('span:last-child').textContent =
     `Based on ${categorized.toLocaleString()} of ${data.total.toLocaleString()} total responses reviewed and categorized by admin staff.`;
 
-  // Update charts in-place without canvas teardown
   updateReportPieChart(data, forceRecreate);
   updateReportTrendChart(data, forceRecreate);
 }
@@ -397,7 +433,13 @@ function updateReportPieChart(data, forceRecreate = false) {
   if (!canvas) return;
   const ctx    = canvas.getContext('2d');
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const datasetData = [data.vsat, data.sat, data.neg];
+  const sa  = data.strongly_agree || data.vsat || 0;
+  const a   = data.agree || data.sat || 0;
+  const nad = data.neither || 0;
+  const d   = data.disagree || 0;
+  const sd  = data.strongly_disagree || 0;
+  const na  = data.na || 0;
+  const datasetData = [sa, a, nad, d, sd, na];
 
   if (reportPieChart && !forceRecreate) {
     reportPieChart.data.datasets[0].data = datasetData;
@@ -415,9 +457,9 @@ function updateReportPieChart(data, forceRecreate = false) {
       const ctx = chart.ctx;
       ctx.save();
       const dataset = chart.data.datasets[0];
-      const t = dataset.data.reduce((a, b) => a + b, 0);
-      const vsatVal = dataset.data[0] || 0;
-      const vsatPct = t ? Math.round((vsatVal / t) * 100) : 0;
+      const t = dataset.data.reduce((acc, b) => acc + b, 0);
+      const posCount = (dataset.data[0] || 0) + (dataset.data[1] || 0);
+      const posPct = t ? Math.round((posCount / t) * 100) : 0;
       const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -426,11 +468,11 @@ function updateReportPieChart(data, forceRecreate = false) {
 
       ctx.font = '700 22px "IBM Plex Sans", sans-serif';
       ctx.fillStyle = isDarkMode ? '#f8fafc' : '#0f172a';
-      ctx.fillText(`${vsatPct}%`, centerX, centerY - 8);
+      ctx.fillText(`${posPct}%`, centerX, centerY - 8);
 
       ctx.font = '600 10px "IBM Plex Sans", sans-serif';
       ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
-      ctx.fillText('Very Sat.', centerX, centerY + 12);
+      ctx.fillText('Satisfaction', centerX, centerY + 12);
       ctx.restore();
     }
   };
@@ -438,10 +480,10 @@ function updateReportPieChart(data, forceRecreate = false) {
   reportPieChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Very Satisfactory', 'Satisfactory', 'Unsatisfactory'],
+      labels: ['Strongly Agree', 'Agree', 'Neither Agree nor Disagree', 'Disagree', 'Strongly Disagree', 'Not Applicable'],
       datasets: [{
         data: datasetData,
-        backgroundColor: ['#169651', '#d97706', '#dc2626'],
+        backgroundColor: ['#169651', '#10b981', '#d97706', '#f97316', '#dc2626', '#64748b'],
         borderColor: isDark ? '#1e293b' : '#ffffff',
         borderWidth: 2,
         hoverOffset: 6
