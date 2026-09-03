@@ -75,7 +75,7 @@ body {
   padding: 48px 40px;
   position: relative;
   overflow: hidden;
-  border-right: 2px solid var(--g-primary);
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 /* subtle grid texture */
@@ -88,15 +88,6 @@ body {
     linear-gradient(90deg, rgba(35,164,85,0.04) 1px, transparent 1px);
   background-size: 32px 32px;
   pointer-events: none;
-}
-
-/* accent bar top */
-.brand-panel::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--g-primary);
 }
 
 .brand-center {
@@ -174,15 +165,9 @@ body {
   max-width: 400px;
 }
 
-/* card top bar */
-.card-top-bar {
-  height: 3px;
-  background: var(--g-primary);
-}
 .card-inner {
   background: var(--white);
   border: 1px solid var(--ink7);
-  border-top: none;
   padding: 36px 32px 32px;
 }
 
@@ -458,8 +443,6 @@ body {
   <!-- ── RIGHT: FORM PANEL ── -->
   <main class="form-panel" role="main">
     <div class="login-card">
-
-      <div class="card-top-bar"></div>
       <div class="card-inner">
 
         <!-- mobile brand (shown only when left panel is hidden) -->
