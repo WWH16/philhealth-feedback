@@ -693,29 +693,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
           </div>
         </div>
 
-        <div class="settings-section">
-          <div class="settings-section-head">
-            <div class="settings-section-icon"><span class="material-icons-round">logout</span></div>
-            <div>
-              <div class="settings-section-title">Session</div>
-              <div class="settings-section-desc">Sign out of the admin dashboard.</div>
-            </div>
-          </div>
-          <div class="settings-section-body">
-            <div class="settings-row">
-              <div class="settings-row-info">
-                <div class="settings-row-label">Sign Out</div>
-                <div class="settings-row-hint">End your current admin session.</div>
-              </div>
-              <div class="settings-row-control">
-                <button class="btn-ph" style="border-color:var(--red);color:var(--red);" onclick="openLogoutModal()">
-                  <span class="material-icons-round">logout</span> Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div><!-- /panel-system-settings -->
 
 
@@ -734,24 +711,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
               </div>
             </div>
             <div class="settings-section-body">
-              <div class="settings-row">
-                <div class="settings-row-info">
-                  <div class="settings-row-label">New Feedback Notifications</div>
-                  <div class="settings-row-hint">Receive an in-dashboard notification every time a new feedback is submitted.</div>
-                </div>
-                <div class="settings-row-control">
-                  <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
-                </div>
-              </div>
-              <div class="settings-row">
-                <div class="settings-row-info">
-                  <div class="settings-row-label">Negative Feedback Alert</div>
-                  <div class="settings-row-hint">Get an immediate alert when an "Unsatisfactory" response is submitted.</div>
-                </div>
-                <div class="settings-row-control">
-                  <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
-                </div>
-              </div>
               <div class="settings-row">
                 <div class="settings-row-info">
                   <div class="settings-row-label">Daily Summary Email</div>
@@ -797,7 +756,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
     </div><!-- /col-lg-9 -->
   </div><!-- /row -->
 
-  <form method="post" action="{% url 'admin_logout' %}" id="settingsLogoutForm" style="display:none">{% csrf_token %}</form>
 
   <!-- ══════════════════════════════════════════════
        TASK 3: DELETE BACKUP CONFIRMATION MODAL
