@@ -17,10 +17,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
 from django.db.models.functions import TruncDate, TruncWeek, TruncMonth, ExtractHour
 from feedback.models import FeedbackConfiguration, FeedbackEntry
+from feedback.email_service import send_daily_summary_email
 
 from django.http import FileResponse, Http404
 from django.core.exceptions import SuspiciousFileOperation
@@ -1202,6 +1204,107 @@ def reanalyze_sentiment_view(request):
     else:
         message = f'Re-analysis complete: {processed} of {total} pending entries categorized.'
     return JsonResponse({'ok': True, 'message': message, 'processed': processed, 'total': total})
+
+
+@login_required
+@require_POST
+def update_notification_settings(request):
+    config = FeedbackConfiguration.get_solo()
+
+    daily_summary_enabled = request.POST.get('daily_summary_enabled') == 'on'
+    weekly_report_enabled = request.POST.get('weekly_report_enabled') == 'on'
+    notification_email = request.POST.get('notification_email', '').strip()
+    daily_summary_time = request.POST.get('daily_summary_time', '17:30').strip()
+
+    if notification_email:
+        try:
+            validate_email(notification_email)
+        except ValidationError:
+            return JsonResponse({
+                'ok': False,
+                'error': 'Please enter a valid notification email address.'
+            }, status=400)
+
+    config.daily_summary_enabled = daily_summary_enabled
+    config.weekly_report_enabled = weekly_report_enabled
+    config.notification_email = notification_email
+    config.daily_summary_time = daily_summary_time or '17:30'
+    config.save(update_fields=[
+        'daily_summary_enabled',
+        'weekly_report_enabled',
+        'notification_email',
+        'daily_summary_time',
+        'updated_at',
+    ])
+
+    log_admin_event(
+        request.user,
+        config,
+        CHANGE,
+        f'Notification settings updated: daily summary {"enabled" if daily_summary_enabled else "disabled"}, email="{notification_email}"',
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'message': 'Notification settings saved successfully.',
+        'daily_summary_enabled': daily_summary_enabled,
+        'weekly_report_enabled': weekly_report_enabled,
+        'notification_email': notification_email,
+        'daily_summary_time': config.daily_summary_time,
+    })
+
+
+@login_required
+@require_POST
+def send_summary_now(request):
+    config = FeedbackConfiguration.get_solo()
+    target_email = request.POST.get('email', '').strip() or config.notification_email or request.user.email
+    is_test = request.POST.get('is_test') == 'true'
+
+    if not target_email:
+        return JsonResponse({
+            'ok': False,
+            'error': 'No notification email address found. Please specify an email address first.'
+        }, status=400)
+
+    try:
+        validate_email(target_email)
+    except ValidationError:
+        return JsonResponse({
+            'ok': False,
+            'error': f'"{target_email}" is not a valid email address.'
+        }, status=400)
+
+    base_url = request.build_absolute_uri('/')
+    result = send_daily_summary_email(
+        recipient_email=target_email,
+        force=True,
+        is_test=is_test,
+        base_url=base_url
+    )
+
+    if result.get('ok'):
+        action_desc = 'Test daily summary' if is_test else 'Daily summary'
+        log_admin_event(
+            request.user,
+            config,
+            CHANGE,
+            f'{action_desc} email dispatched manually to {target_email}',
+        )
+        return JsonResponse({
+            'ok': True,
+            'message': f'Daily summary successfully dispatched to {target_email}.',
+            'recipient': target_email,
+        })
+    else:
+        return JsonResponse({
+            'ok': False,
+            'error': result.get('message', 'Failed to dispatch email.')
+        }, status=500)
+
+
+send_test_daily_summary = send_summary_now
+
 
 @login_required
 @require_POST

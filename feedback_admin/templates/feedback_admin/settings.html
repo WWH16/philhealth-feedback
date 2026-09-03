@@ -701,50 +701,94 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
       ═══════════════════════════════ -->
       <div class="settings-panel" id="panel-notifications">
 
-        <form onsubmit="event.preventDefault(); showToast('Notification settings saved successfully.','success')">
+        <form id="notificationSettingsForm" action="{% url 'update_notification_settings' %}" method="post" onsubmit="event.preventDefault(); saveNotificationSettings();">
+          {% csrf_token %}
           <div class="settings-section">
             <div class="settings-section-head">
               <div class="settings-section-icon"><span class="material-icons-round">notifications</span></div>
               <div>
                 <div class="settings-section-title">Notification Settings</div>
-                <div class="settings-section-desc">Configure alerts and notification preferences.</div>
+                <div class="settings-section-desc">Configure automated operational summaries, reports, and delivery targets.</div>
               </div>
             </div>
             <div class="settings-section-body">
+
+              <!-- Daily Summary Email Toggle & Policy -->
               <div class="settings-row">
                 <div class="settings-row-info">
-                  <div class="settings-row-label">Daily Summary Email</div>
-                  <div class="settings-row-hint">Receive a daily email summarizing the day's feedback count and satisfaction rate.</div>
+                  <div class="settings-row-label" style="display:flex;align-items:center;gap:8px;">
+                    <span>Daily Summary Email</span>
+                    <span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:2px;background:rgba(22,150,81,0.12);color:var(--primary);border:1px solid rgba(22,150,81,0.25);letter-spacing:0.04em;">OPERATIONAL DIGEST</span>
+                  </div>
+                  <div class="settings-row-hint">
+                    Receive an automated daily email at <strong>4:30 PM PHT</strong> summarizing the day's total feedback count, SQD0 satisfaction rate %, sentiment distribution, and flagged citizen complaints.
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;display:flex;align-items:center;gap:6px;">
+                    <span class="material-icons-round" style="font-size:14px;color:var(--primary);">check_circle</span>
+                    <span>Zero-Count Suppression active: emails are automatically skipped on zero-submission days (weekends/holidays).</span>
+                  </div>
                 </div>
                 <div class="settings-row-control">
-                  <label class="toggle-switch"><input type="checkbox"><span class="toggle-track"></span></label>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="dailySummaryToggle" name="daily_summary_enabled" {% if feedback_config.daily_summary_enabled %}checked{% endif %} onchange="syncNotificationSettingsState()">
+                    <span class="toggle-track"></span>
+                  </label>
                 </div>
               </div>
+
+              <!-- Weekly Report Email -->
               <div class="settings-row">
                 <div class="settings-row-info">
-                  <div class="settings-row-label">Weekly Report Email</div>
-                  <div class="settings-row-hint">Receive a weekly PDF report to your email address.</div>
+                  <div class="settings-row-label">Weekly Analytics Digest</div>
+                  <div class="settings-row-hint">Receive an executive weekly performance analysis and PDF report every Monday at 8:00 AM.</div>
                 </div>
                 <div class="settings-row-control">
-                  <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-track"></span></label>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="weeklyReportToggle" name="weekly_report_enabled" {% if feedback_config.weekly_report_enabled %}checked{% endif %} onchange="syncNotificationSettingsState()">
+                    <span class="toggle-track"></span>
+                  </label>
                 </div>
               </div>
+
+              <!-- Notification Recipient Email -->
               <div class="settings-row">
                 <div class="settings-row-info">
-                  <div class="settings-row-label">Notification Email Address</div>
-                  <div class="settings-row-hint">Email address where alerts and reports are sent.</div>
+                  <div class="settings-row-label">Primary Notification Recipient</div>
+                  <div class="settings-row-hint">Official email address where daily digests and performance alerts are delivered.</div>
                 </div>
                 <div class="settings-row-control">
-                  <input class="settings-input" type="email" value="{{ request.user.email|default:'' }}" placeholder="admin@philhealth.gov.ph" style="width:240px">
+                  <input class="settings-input" type="email" id="notificationEmailInput" name="notification_email" value="{{ feedback_config.notification_email|default:request.user.email|default:'' }}" placeholder="admin@philhealth.gov.ph" style="width:280px" oninput="syncNotificationSettingsState()">
                 </div>
               </div>
+
+              <!-- On-Demand Summary Dispatch Row -->
+              <div class="settings-row" style="background:#f8fafc;border-radius:4px;padding:16px;border:1px solid #e2e8f0;">
+                <div class="settings-row-info">
+                  <div class="settings-row-label" style="display:flex;align-items:center;gap:6px;">
+                    <span class="material-icons-round" style="font-size:16px;color:var(--text-secondary);">send</span>
+                    <span>Manual Summary Dispatch</span>
+                  </div>
+                  <div class="settings-row-hint">
+                    Instantly generate and dispatch today's feedback and satisfaction summary email to the configured recipient now.
+                  </div>
+                </div>
+                <div class="settings-row-control">
+                  <button type="button" class="btn-ph" id="sendNowBtn" onclick="sendSummaryNow()" style="font-size:12px;padding:8px 14px;border:1px solid var(--border-color);background:var(--white);color:var(--text-primary);">
+                    <span class="ph-loader"></span>
+                    <span class="material-icons-round" style="font-size:16px;">send</span>
+                    <span>Send Summary Now</span>
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
 
           <div class="settings-save-bar">
             <div class="settings-save-inner">
-              <span style="font-size:12px;color:var(--text-secondary)">Unsaved changes</span>
-              <button type="submit" class="btn-ph btn-ph-primary">
+              <span id="notificationSettingsState" style="font-size:12px;color:var(--text-secondary)">All changes saved</span>
+              <button type="submit" class="btn-ph btn-ph-primary" id="saveNotificationsBtn">
+                <span class="ph-loader"></span>
                 <span class="material-icons-round">save</span> Save Notifications
               </button>
             </div>
@@ -848,6 +892,118 @@ let savedAutoAnalysisEnabled = null;
 let sentimentSettingsSavePromise = null;
 // TASK 3: track pending backup filename for deletion
 let pendingDeleteBackupFilename = null;
+
+let savedDailySummaryEnabled = {{ feedback_config.daily_summary_enabled|yesno:"true,false" }};
+let savedWeeklyReportEnabled = {{ feedback_config.weekly_report_enabled|yesno:"true,false" }};
+let savedNotificationEmail = "{{ feedback_config.notification_email|default:request.user.email|default:''|escapejs }}";
+let notificationSettingsSavePromise = null;
+
+function syncNotificationSettingsState() {
+  const dailyToggle = document.getElementById('dailySummaryToggle');
+  const weeklyToggle = document.getElementById('weeklyReportToggle');
+  const emailInput = document.getElementById('notificationEmailInput');
+  const label = document.getElementById('notificationSettingsState');
+  if (!dailyToggle || !weeklyToggle || !emailInput || !label) return;
+
+  const isDirty = (
+    dailyToggle.checked !== savedDailySummaryEnabled ||
+    weeklyToggle.checked !== savedWeeklyReportEnabled ||
+    emailInput.value.trim() !== savedNotificationEmail.trim()
+  );
+
+  label.textContent = isDirty ? 'Unsaved changes' : 'All changes saved';
+}
+
+function saveNotificationSettings() {
+  const form = document.getElementById('notificationSettingsForm');
+  const btn = document.getElementById('saveNotificationsBtn');
+  if (!form || !btn) return Promise.resolve(false);
+
+  if (notificationSettingsSavePromise) return notificationSettingsSavePromise;
+
+  btn.classList.add('is-loading');
+
+  const formData = new FormData(form);
+
+  notificationSettingsSavePromise = fetch(form.action, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  })
+    .then(async r => {
+      const data = await r.json();
+      if (!r.ok || !data.ok) {
+        throw new Error(data.error || 'Unable to save notification settings.');
+      }
+      savedDailySummaryEnabled = !!data.daily_summary_enabled;
+      savedWeeklyReportEnabled = !!data.weekly_report_enabled;
+      savedNotificationEmail = data.notification_email || '';
+      syncNotificationSettingsState();
+      showToast(data.message || 'Notification settings saved successfully.', 'success');
+      return true;
+    })
+    .catch(err => {
+      showToast(err.message || 'Error saving notification settings.', 'error');
+      return false;
+    })
+    .finally(() => {
+      btn.classList.remove('is-loading');
+      notificationSettingsSavePromise = null;
+    });
+
+  return notificationSettingsSavePromise;
+}
+
+function sendSummaryNow(isTest = false) {
+  const btn = document.getElementById('sendNowBtn') || document.getElementById('sendTestEmailBtn');
+  const emailInput = document.getElementById('notificationEmailInput');
+  const email = emailInput ? emailInput.value.trim() : '';
+
+  if (!email) {
+    showToast('Please enter an email address before dispatching.', 'warning');
+    if (emailInput) emailInput.focus();
+    return;
+  }
+
+  if (btn) {
+    btn.classList.add('is-loading');
+    btn.disabled = true;
+  }
+
+  const formData = new FormData();
+  formData.append('email', email);
+  formData.append('is_test', isTest ? 'true' : 'false');
+  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  fetch("{% url 'send_summary_now' %}", {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  })
+    .then(async r => {
+      const data = await r.json();
+      if (!r.ok || !data.ok) {
+        throw new Error(data.error || 'Failed to dispatch summary email.');
+      }
+      showToast(data.message, 'success');
+    })
+    .catch(err => {
+      showToast(err.message || 'Error connecting to mail server.', 'error');
+    })
+    .finally(() => {
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
+    });
+}
+
+const sendTestSummaryEmail = () => sendSummaryNow(false);
+
 
 function runReanalysis() {
   const btn = document.getElementById('reanalyzeBtn');

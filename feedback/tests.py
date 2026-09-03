@@ -96,3 +96,72 @@ class SentimentServiceTests(TestCase):
         res = analyze_comment_sentiment('Comments: The staff was very helpful and accommodating.')
         self.assertIn(res, [FeedbackEntry.POSITIVE, FeedbackEntry.NEUTRAL])
 
+
+class DailySummaryEmailTests(TestCase):
+    def setUp(self):
+        from django.utils import timezone
+        self.today = timezone.localtime().date()
+        self.config = FeedbackConfiguration.get_solo()
+        self.config.daily_summary_enabled = True
+        self.config.notification_email = 'supervisor@philhealth.gov.ph'
+        self.config.save()
+
+    def test_metrics_calculation(self):
+        from .email_service import get_daily_summary_metrics
+        # Create test feedback entries
+        FeedbackEntry.objects.create(
+            experience=FeedbackEntry.STRONGLY_AGREE,
+            sqd0=5,
+            sentiment=FeedbackEntry.POSITIVE,
+            category=FeedbackEntry.COMPLIMENT,
+            comment='Great service at Window 2.'
+        )
+        FeedbackEntry.objects.create(
+            experience=FeedbackEntry.AGREE,
+            sqd0=4,
+            sentiment=FeedbackEntry.POSITIVE,
+            category=FeedbackEntry.SUGGESTION,
+            comment='Smooth transaction.'
+        )
+        FeedbackEntry.objects.create(
+            experience=FeedbackEntry.DISAGREE,
+            sqd0=2,
+            sentiment=FeedbackEntry.NEGATIVE,
+            category=FeedbackEntry.COMPLAINT,
+            comment='Long waiting queue.'
+        )
+
+        metrics = get_daily_summary_metrics(self.today)
+        self.assertEqual(metrics['total_count'], 3)
+        # (2 positive SQD0 out of 3) = 67%
+        self.assertEqual(metrics['satisfaction_rate'], 67)
+        self.assertEqual(metrics['pos_count'], 2)
+        self.assertEqual(metrics['neg_count'], 1)
+        self.assertEqual(metrics['categories']['complaints'], 1)
+        self.assertEqual(len(metrics['flagged_items']), 1)
+        self.assertIn('Long waiting queue', metrics['flagged_items'][0]['comment'])
+
+    def test_zero_count_suppression(self):
+        from .email_service import send_daily_summary_email
+        # When count is 0 and not forced, dispatch should be suppressed
+        result = send_daily_summary_email(target_date=self.today, force=False, is_test=False)
+        self.assertFalse(result['ok'])
+        self.assertEqual(result['reason'], 'zero_feedback_suppressed')
+
+    def test_send_test_email(self):
+        from .email_service import send_daily_summary_email
+        from django.core import mail
+        # Force dispatch in test mode
+        result = send_daily_summary_email(
+            target_date=self.today,
+            recipient_email='testadmin@philhealth.gov.ph',
+            force=True,
+            is_test=True
+        )
+        self.assertTrue(result['ok'])
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+        self.assertIn('[TEST]', sent_email.subject)
+        self.assertIn('testadmin@philhealth.gov.ph', sent_email.to)
+
+
