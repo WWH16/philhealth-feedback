@@ -22,17 +22,18 @@
   --g-forest:    #0f5a2b;
   --g-xlight:    #f0faf5;
 
-  --surface-page:   #e2e8f0;
+  --surface-page:   #eef1f5;
   --surface-paper:  #ffffff;
-  --surface-header: #f1f5f9;
-  --surface-box:    #f8fafc;
-  --border-dark:    #1e293b;
-  --border-light:   #cbd5e1;
+  --surface-header: #f8fafc;
+  --surface-box:    #fafbfc;
+  --border-dark:    #e2e8f0;
+  --border-light:   #e2e8f0;
+  --border:         #e2e8f0;
 
   --ink:         #0f172a;
   --ink2:        #1e293b;
   --ink3:        #334155;
-  --ink4:        #475569;
+  --ink4:        #64748b;
   --ink7:        #cbd5e1;
   --ink8:        #e2e8f0;
   --ink9:        #f8fafc;
@@ -78,17 +79,17 @@ body {
 /* ── PAPER FORM SHEET CONTAINER ────────────────────────────────────────── */
 .paper-sheet {
   background: var(--surface-paper);
-  border: 1px solid var(--border-dark);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
-  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+  border-radius: 6px;
   color: var(--ink);
   contain: layout style;
 }
 
 /* ── FORM TABLE & GRID BOXES ───────────────────────────────────────────── */
 .paper-box {
-  border: 1px solid var(--border-dark);
-  border-radius: 2px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
   overflow: hidden;
   background: var(--surface-paper);
   contain: layout style;
@@ -96,20 +97,20 @@ body {
 
 .paper-box-header {
   background: var(--surface-header);
-  border-bottom: 1px solid var(--border-dark);
-  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+  padding: 10px 14px;
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: #64748b;
 }
 
 /* ── RESPONDENT INFO MATRIX GRID ───────────────────────────────────────── */
 .paper-info-grid {
   display: grid;
   grid-template-columns: 1fr;
-  background: var(--border-dark);
+  background: var(--border-light);
   gap: 1px;
 }
 @media (min-width: 640px) {
@@ -120,15 +121,15 @@ body {
 }
 .paper-info-cell {
   background: var(--surface-paper);
-  padding: 12px;
+  padding: 12px 14px;
 }
 
-/* ── CITIZEN'S CHARTER CARDS ──────────────────────────────────────────── */
+/* ── CITIZEN'S CHARTER CARDS ──────────────────────────────────── */
 .paper-cc-card {
   padding: 14px;
-  border: 1px solid var(--border-dark);
+  border: 1px solid var(--border-light);
   background: var(--surface-box);
-  border-radius: 2px;
+  border-radius: 4px;
 }
 
 .csm-field-table {
@@ -137,7 +138,7 @@ body {
 }
 
 .csm-field-table td, .csm-field-table th {
-  border: 1px solid var(--border-dark);
+  border: 1px solid var(--border-light);
   padding: 10px 12px;
   vertical-align: top;
   color: var(--ink);
@@ -145,17 +146,18 @@ body {
 
 .csm-paper-input {
   width: 100%;
-  padding: 6px 10px;
+  padding: 7px 10px;
   font-size: 13px;
   border: 1px solid var(--border-light);
   background: var(--surface-paper);
   color: var(--ink);
-  border-radius: 2px;
+  border-radius: 4px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .csm-paper-input:focus {
   outline: none;
-  border-color: var(--g-primary);
-  box-shadow: 0 0 0 2px rgba(22, 150, 81, 0.2);
+  border-color: #14532d;
+  box-shadow: 0 0 0 2px rgba(20, 83, 45, 0.15);
 }
 
 input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator {
@@ -201,8 +203,8 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border: 1px solid var(--border-dark);
-  border-radius: 2px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
   background-color: var(--surface-paper);
 }
 
@@ -214,7 +216,7 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
 }
 
 .paper-sqd-table th, .paper-sqd-table td {
-  border: 1px solid var(--border-dark);
+  border: 1px solid var(--border-light);
   padding: 10px 10px;
   vertical-align: middle;
   color: var(--ink);
@@ -222,9 +224,10 @@ input[type="datetime-local"].csm-paper-input::-webkit-calendar-picker-indicator:
 
 .paper-sqd-table th {
   background: var(--surface-header);
-  color: var(--ink);
+  color: #64748b;
   font-weight: 700;
   text-align: center;
+  border-bottom: 1px solid var(--border-light);
 }
 
 /* Question Column */
