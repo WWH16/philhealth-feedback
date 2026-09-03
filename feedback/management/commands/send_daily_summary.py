@@ -22,7 +22,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--force',
             action='store_true',
-            help='Force send even if daily summary is disabled in settings or feedback count is 0.'
+            help='Force send even if daily summary is disabled in settings.'
         )
         parser.add_argument(
             '--test',

@@ -158,7 +158,6 @@ def get_daily_summary_metrics(target_date=None):
 def send_daily_summary_email(target_date=None, recipient_email=None, force=False, is_test=False, base_url='http://127.0.0.1:8000'):
     """
     Dispatches the official daily feedback summary email.
-    Respects zero-count suppression unless force=True or is_test=True.
     """
     config = FeedbackConfiguration.get_solo()
 
@@ -170,15 +169,6 @@ def send_daily_summary_email(target_date=None, recipient_email=None, force=False
         }
 
     metrics = get_daily_summary_metrics(target_date)
-
-    # Zero-count suppression policy (clarified in Discovery interview)
-    if metrics['total_count'] == 0 and not force and not is_test:
-        return {
-            'ok': False,
-            'reason': 'zero_feedback_suppressed',
-            'count': 0,
-            'message': f"No feedback submissions recorded for {metrics['short_date']}. Email dispatch suppressed."
-        }
 
     # Resolve recipient
     recipient = (recipient_email or config.notification_email or '').strip()

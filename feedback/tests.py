@@ -141,12 +141,19 @@ class DailySummaryEmailTests(TestCase):
         self.assertEqual(len(metrics['flagged_items']), 1)
         self.assertIn('Long waiting queue', metrics['flagged_items'][0]['comment'])
 
-    def test_zero_count_suppression(self):
+    def test_zero_count_allowed(self):
         from .email_service import send_daily_summary_email
-        # When count is 0 and not forced, dispatch should be suppressed
-        result = send_daily_summary_email(target_date=self.today, force=False, is_test=False)
-        self.assertFalse(result['ok'])
-        self.assertEqual(result['reason'], 'zero_feedback_suppressed')
+        from django.core import mail
+        # When count is 0, dispatch proceeds and sends the summary of 0 submissions
+        result = send_daily_summary_email(
+            target_date=self.today,
+            recipient_email='admin@philhealth.gov.ph',
+            force=True,
+            is_test=False
+        )
+        self.assertTrue(result['ok'])
+        self.assertEqual(result['metrics']['total_count'], 0)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_send_test_email(self):
         from .email_service import send_daily_summary_email
