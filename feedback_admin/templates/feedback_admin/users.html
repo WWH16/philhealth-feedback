@@ -70,7 +70,7 @@
 .modal-backdrop.open { display: flex; }
 .modal-card {
   background: var(--surface-card); border: 1px solid var(--border);
-  border-top: 3px solid var(--g-primary);
+  border-radius: 6px;
   width: 100%; max-width: 640px; flex-shrink: 0; position: relative;
 }
 .modal-head {
@@ -154,8 +154,7 @@
   .modal-backdrop { padding: 0; align-items: flex-end; }
   .modal-card {
     max-width: 100%;
-    border-radius: 20px 20px 0 0;
-    border-top: 4px solid var(--g-primary);
+    border-radius: 16px 16px 0 0;
     box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
   }
   .modal-body { max-height: 75vh; padding: 20px 20px 30px; }

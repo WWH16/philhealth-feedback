@@ -248,11 +248,8 @@ input:not(:checked) + .slider .sun {
   transition: color 120ms, background 120ms; position: relative;
 }
 .nav-item:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.06); }
-.nav-item.active { color: var(--g-primary); background: rgba(35,164,85,0.12); }
-.nav-item.active::before {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-  width: 3px; background: var(--g-primary);
-}
+.nav-item.active { color: #ffffff; background: rgba(255,255,255,0.1); font-weight: 700; }
+.nav-item.active .material-icons-round { color: var(--g-primary); }
 .nav-item .material-icons-round { font-size: 20px; flex-shrink: 0; }
 .nav-item-label { transition: opacity 180ms; flex: 1; }
 .sidebar.collapsed .nav-item-label { opacity: 0; }
@@ -342,13 +339,9 @@ input:not(:checked) + .slider .sun {
 .date-badge .material-icons-round { font-size: 14px; color: var(--g-primary); }
 
 /* ── STAT CARDS ───────────────────────────────────────────────────────── */
-.stat-card { background: var(--surface-card); border: 1px solid var(--border); border-top: 3px solid var(--g-primary); padding: 20px 20px 18px; transition: border-color 150ms, transform 150ms, box-shadow 150ms; position: relative; overflow: hidden; }
+.stat-card { background: var(--surface-card); border: 1px solid var(--border); border-radius: 6px; padding: 20px 20px 18px; transition: border-color 150ms, transform 150ms, box-shadow 150ms; position: relative; overflow: hidden; }
 .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-.stat-card.card-vsat { border-top-color: var(--g-deep); }
-.stat-card.card-sat  { border-top-color: var(--g-primary); }
-.stat-card.card-neu  { border-top-color: var(--gold); }
-.stat-card.card-neg  { border-top-color: var(--red); }
-.stat-card-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; flex-shrink: 0; }
+.stat-card-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; flex-shrink: 0; border-radius: 6px; }
 .stat-card-icon .material-icons-round { font-size: 20px; }
 .card-vsat .stat-card-icon { background: var(--g-xlight); }
 .card-vsat .stat-card-icon .material-icons-round { color: var(--g-deep); }
@@ -364,7 +357,7 @@ input:not(:checked) + .slider .sun {
 [data-theme="dark"] .card-neg  .stat-card-icon { background: rgba(192,0,26,0.12); }
 .stat-value { font-size: 36px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; color: var(--text-primary); margin-bottom: 5px; }
 .stat-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px; }
-.stat-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 2px 7px; }
+.stat-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
 .stat-delta.up   { background: var(--g-xlight); color: var(--g-forest); }
 .stat-delta.down { background: var(--red-bg); color: var(--red); }
 .stat-delta.flat { background: var(--ink8); color: var(--ink4); }
@@ -378,7 +371,6 @@ input:not(:checked) + .slider .sun {
 /* ── SECTION HEADER ───────────────────────────────────────────────────── */
 .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; margin: 0; }
-.section-title::before { content: ''; display: block; width: 3px; height: 14px; background: var(--g-primary); flex-shrink: 0; }
 .section-actions { display: flex; align-items: center; gap: 8px; }
 
 /* ── CARD BLOCK ───────────────────────────────────────────────────────── */
@@ -622,7 +614,7 @@ select.btn-ph { background: var(--surface-card); color: var(--text-secondary); b
 .logout-modal {
   background: var(--surface-card);
   border: 1px solid var(--border);
-  border-top: 3px solid var(--red);
+  border-radius: 6px;
   width: 100%;
   max-width: 380px;
   position: relative;

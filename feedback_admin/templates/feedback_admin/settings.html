@@ -16,16 +16,18 @@
 }
 .settings-nav-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px; font-size: 13px; font-weight: 600;
+  padding: 10px 14px; font-size: 13px; font-weight: 600;
   letter-spacing: 0.01em; border: none; background: transparent;
   color: var(--text-secondary); cursor: pointer;
   font-family: var(--font); text-align: left; width: 100%;
-  border-left: 3px solid transparent; transition: all 150ms;
+  border-radius: 6px; transition: all 150ms;
 }
 .settings-nav-item:hover { background: rgba(0,0,0,0.04); color: var(--text-primary); }
 [data-theme="dark"] .settings-nav-item:hover { background: rgba(255,255,255,0.04); }
-.settings-nav-item.is-active { color: var(--g-primary); border-left-color: var(--g-primary); background: var(--g-xlight); }
-[data-theme="dark"] .settings-nav-item.is-active { background: rgba(35,164,85,0.12); color: #5fcf8a; border-left-color: #5fcf8a; }
+.settings-nav-item.is-active { color: var(--text-primary); background: var(--g-xlight); font-weight: 700; }
+.settings-nav-item.is-active .material-icons-round { color: var(--g-primary); }
+[data-theme="dark"] .settings-nav-item.is-active { background: rgba(35,164,85,0.14); color: #ffffff; }
+[data-theme="dark"] .settings-nav-item.is-active .material-icons-round { color: #5fcf8a; }
 .settings-nav-item .material-icons-round { font-size: 19px; flex-shrink: 0; }
 .settings-nav-group-label {
   font-size: 9px; font-weight: 700; letter-spacing: 0.14em;
@@ -224,13 +226,14 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
   }
   .settings-nav::-webkit-scrollbar { display: none; }
   .settings-nav-item {
-    border-left: none; border-bottom: 3px solid transparent; white-space: nowrap;
-    padding: 12px 18px; width: auto; flex-shrink: 0;
+    border: none; white-space: nowrap;
+    padding: 10px 16px; width: auto; flex-shrink: 0;
+    border-radius: 6px; margin: 4px 2px;
   }
   .settings-nav-item.is-active {
-    border-bottom-color: var(--g-primary); border-left: none; background: var(--g-xlight);
+    background: var(--g-xlight);
   }
-  [data-theme="dark"] .settings-nav-item.is-active { border-bottom-color: #5fcf8a; background: rgba(35,164,85,0.08); }
+  [data-theme="dark"] .settings-nav-item.is-active { background: rgba(35,164,85,0.14); }
   .settings-nav-group-label { display: none; }
 }
 @media (max-width: 575px) {
