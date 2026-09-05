@@ -443,22 +443,30 @@
             <div class="form-section-label">
               <span class="material-icons-round">lock</span> Credentials
             </div>
+            <div class="form-row full" id="currentPasswordRow" style="display:none;margin-bottom:12px;">
+              <div class="form-group">
+                <label class="form-label" for="fieldCurrentPassword">Current Password <span class="req" id="pwCurrentRequired">*</span></label>
+                <input class="form-input" type="password" id="fieldCurrentPassword" name="current_password" placeholder="••••••••" autocomplete="current-password" oninput="clearFieldError('errCurrentPassword')">
+                <span class="field-error" id="errCurrentPassword"><span class="material-icons-round">error</span><span></span></span>
+                <span class="form-hint">Enter your current password to authorize this password update.</span>
+              </div>
+            </div>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" for="fieldPassword">Password <span class="req" id="pwRequired">*</span></label>
+                <label class="form-label" for="fieldPassword"><span id="pwLabelText">Password</span> <span class="req" id="pwRequired">*</span></label>
                 <input class="form-input" type="password" id="fieldPassword" name="password1" placeholder="••••••••" autocomplete="new-password" oninput="clearFieldError('errPassword')">
                 <span class="field-error" id="errPassword"><span class="material-icons-round">error</span><span></span></span>
                 <span class="form-hint">Min. 8 chars. Not too common. Not entirely numeric.</span>
               </div>
               <div class="form-group">
-                <label class="form-label" for="fieldPassword2">Confirm Password <span class="req" id="pw2Required">*</span></label>
+                <label class="form-label" for="fieldPassword2"><span id="pw2LabelText">Confirm Password</span> <span class="req" id="pw2Required">*</span></label>
                 <input class="form-input" type="password" id="fieldPassword2" name="password2" placeholder="••••••••" autocomplete="new-password" oninput="clearFieldError('errPassword2')">
                 <span class="field-error" id="errPassword2"><span class="material-icons-round">error</span><span></span></span>
               </div>
             </div>
             <div id="editPasswordNote" style="display:none;font-size:12px;color:var(--text-muted);padding:10px 12px;border:1px solid var(--border);background:var(--surface-page);">
               <span class="material-icons-round" style="font-size:14px;vertical-align:middle;color:var(--g-primary)">info</span>
-              Leave both fields blank to keep the current password.
+              <span id="editPasswordNoteText">Leave both fields blank to keep the current password.</span>
             </div>
           </div>
 
@@ -794,7 +802,7 @@ const CURRENT_USER_ID = {{ request.user.id }};
 function openUserModal(userId, username, email, first, last, isActive, isStaff, isSuperuser, groupIds, permIds) {
   clearAllFieldErrors();
   const isEdit = !!userId;
-  const isSelf = userId === CURRENT_USER_ID;
+  const isSelf = parseInt(userId, 10) === CURRENT_USER_ID;
 
   document.getElementById('userModalTitle').textContent      = isEdit ? 'Edit User' : 'Add User';
   document.getElementById('saveUserLabel').textContent       = isEdit ? 'Save Changes' : 'Add User';
@@ -803,6 +811,25 @@ function openUserModal(userId, username, email, first, last, isActive, isStaff, 
   document.getElementById('pwRequired').style.display        = isEdit ? 'none' : 'inline';
   document.getElementById('pw2Required').style.display       = isEdit ? 'none' : 'inline';
   document.getElementById('userFormUserId').value            = userId || '';
+
+  const currentPwRow = document.getElementById('currentPasswordRow');
+  if (currentPwRow) {
+    currentPwRow.style.display = (isEdit && isSelf) ? 'block' : 'none';
+  }
+  const currentPwInput = document.getElementById('fieldCurrentPassword');
+  if (currentPwInput) currentPwInput.value = '';
+
+  const pwLabel = document.getElementById('pwLabelText');
+  if (pwLabel) pwLabel.textContent = isEdit ? 'New Password' : 'Password';
+  const pw2Label = document.getElementById('pw2LabelText');
+  if (pw2Label) pw2Label.textContent = isEdit ? 'Confirm New Password' : 'Confirm Password';
+
+  const noteText = document.getElementById('editPasswordNoteText');
+  if (noteText) {
+    noteText.textContent = isSelf
+      ? 'Leave password fields blank to keep your current password.'
+      : 'Leave both fields blank to keep the user’s current password.';
+  }
 
   document.getElementById('userForm').action = isEdit
     ? `/dashboard/users/${userId}/edit/`
@@ -897,6 +924,7 @@ function setPermItem(rowId, cbId, checked) {
 
 /* ── FIELD ERROR HELPERS ── */
 const ERROR_FIELD_MAP = [
+  { match: 'current password',       field: 'fieldCurrentPassword', err: 'errCurrentPassword' },
   { match: 'username is required',   field: 'fieldUsername',  err: 'errUsername'  },
   { match: 'username',               field: 'fieldUsername',  err: 'errUsername'  },
   { match: 'email',                  field: 'fieldEmail',     err: 'errEmail'     },
@@ -925,30 +953,42 @@ function clearFieldError(errorElId) {
 }
 
 function clearAllFieldErrors() {
-  ['errUsername','errEmail','errPassword','errPassword2'].forEach(clearFieldError);
+  ['errUsername','errEmail','errCurrentPassword','errPassword','errPassword2'].forEach(clearFieldError);
   document.querySelectorAll('#userForm .form-input').forEach(i => i.classList.remove('input-error'));
 }
 
 function routeError(msg) {
+  if (!msg) return false;
   const lower = msg.toLowerCase();
   for (const rule of ERROR_FIELD_MAP) {
-    if (lower.includes(rule.match)) { showFieldError(rule.field, rule.err, msg); return; }
+    if (lower.includes(rule.match)) {
+      showFieldError(rule.field, rule.err, msg);
+      return true;
+    }
   }
-  showFieldError('fieldUsername', 'errUsername', msg);
+  return false;
 }
 
 /* ── SUBMIT USER FORM ── */
 function submitUserForm() {
   clearAllFieldErrors();
-  const isEdit   = !!document.getElementById('userFormUserId').value;
-  const username = document.getElementById('fieldUsername').value.trim();
-  const pw1      = document.getElementById('fieldPassword').value;
-  const pw2      = document.getElementById('fieldPassword2').value;
+  const userId    = document.getElementById('userFormUserId').value;
+  const isEdit    = !!userId;
+  const isSelf    = parseInt(userId, 10) === CURRENT_USER_ID;
+  const username  = document.getElementById('fieldUsername').value.trim();
+  const currentPw = document.getElementById('fieldCurrentPassword') ? document.getElementById('fieldCurrentPassword').value : '';
+  const pw1       = document.getElementById('fieldPassword').value;
+  const pw2       = document.getElementById('fieldPassword2').value;
 
   if (!username) { showFieldError('fieldUsername', 'errUsername', 'Username is required.'); return; }
   if (!/^[\w.@+\-]+$/.test(username)) { showFieldError('fieldUsername', 'errUsername', 'Letters, digits and @/./+/-/_ only.'); return; }
+  if (!isEdit && !pw1) { showFieldError('fieldPassword', 'errPassword', 'Password is required.'); return; }
   if (!isEdit && pw1.length < 8) { showFieldError('fieldPassword', 'errPassword', 'Password must be at least 8 characters.'); return; }
   if (!isEdit && pw1 !== pw2)    { showFieldError('fieldPassword2', 'errPassword2', 'Passwords do not match.'); return; }
+  if (isEdit && isSelf && pw1 && !currentPw) {
+    showFieldError('fieldCurrentPassword', 'errCurrentPassword', 'Current password is required to change your password.');
+    return;
+  }
   if (isEdit && pw1 && pw1.length < 8) { showFieldError('fieldPassword', 'errPassword', 'Password must be at least 8 characters.'); return; }
   if (isEdit && pw1 && pw1 !== pw2)    { showFieldError('fieldPassword2', 'errPassword2', 'Passwords do not match.'); return; }
 
@@ -978,8 +1018,10 @@ function submitUserForm() {
         showToast(json.message || 'User saved successfully.', 'success', true);
       } else {
         const errorMsg = json.error || 'An error occurred.';
-        routeError(errorMsg);
-        showToast(errorMsg, 'error', false);
+        const routed = routeError(errorMsg);
+        if (!routed) {
+          showToast(errorMsg, 'error', false);
+        }
       }
     })
     .catch(() => {
@@ -987,7 +1029,6 @@ function submitUserForm() {
         saveBtn.classList.remove('is-loading');
         saveBtn.disabled = false;
       }
-      routeError('Network error. Please try again.');
       showToast('Network error. Please try again.', 'error', false);
     });
 }
@@ -1044,10 +1085,10 @@ function submitGroupForm() {
 }
 
 /* ── TOAST ── */
-function showToast(msg, type = 'success', reloadAfter) {
+const showToast = function(msg, type = 'success', reloadAfter) {
   const isSuccess = type === 'success';
   const shouldReload = reloadAfter !== undefined ? !!reloadAfter : isSuccess;
-  if (window.showToast) {
+  if (typeof window.showToast === 'function') {
     window.showToast(msg, type, shouldReload);
   } else if (shouldReload) {
     try {
@@ -1055,7 +1096,7 @@ function showToast(msg, type = 'success', reloadAfter) {
     } catch (e) {}
     location.reload();
   }
-}
+};
 const _flashSuccessToast = showToast;
 
 function pageInit() { filterUsers(); }

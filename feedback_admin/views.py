@@ -914,6 +914,13 @@ def user_edit(request, user_id):
     pw1 = request.POST.get('password1', '')
     pw2 = request.POST.get('password2', '')
     if pw1:
+        if user == request.user:
+            current_pw = request.POST.get('current_password', '')
+            if not current_pw:
+                return err('Current password is required to change your password.')
+            if not user.check_password(current_pw):
+                return err('Current password is incorrect.')
+
         if pw1 != pw2:
             return err('Passwords do not match.')
         try:
@@ -921,6 +928,9 @@ def user_edit(request, user_id):
         except ValidationError as e:
             return err(' '.join(e.messages))
         user.set_password(pw1)
+        if user == request.user:
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, user)
 
     has_usable_password = request.POST.get('has_usable_password', 'on') == 'on'
     if not pw1:

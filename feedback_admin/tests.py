@@ -202,4 +202,77 @@ class UsersViewTests(TestCase):
         self.assertEqual(response.context['staff_users'], 1)
         self.assertContains(response, 'nav-item active')
 
+    def test_self_password_update_requires_current_password(self):
+        response = self.client.post(
+            reverse('user_edit', args=[self.user.id]),
+            {
+                'username': self.user.username,
+                'email': self.user.email,
+                'password1': 'newpassword12345',
+                'password2': 'newpassword12345',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data['ok'])
+        self.assertIn('Current password is required', data['error'])
+
+    def test_self_password_update_rejects_wrong_current_password(self):
+        response = self.client.post(
+            reverse('user_edit', args=[self.user.id]),
+            {
+                'username': self.user.username,
+                'email': self.user.email,
+                'current_password': 'wrongpassword',
+                'password1': 'newpassword12345',
+                'password2': 'newpassword12345',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data['ok'])
+        self.assertIn('Current password is incorrect', data['error'])
+
+    def test_self_password_update_succeeds_with_correct_current_password(self):
+        response = self.client.post(
+            reverse('user_edit', args=[self.user.id]),
+            {
+                'username': self.user.username,
+                'email': self.user.email,
+                'current_password': 'password123',
+                'password1': 'newpassword12345',
+                'password2': 'newpassword12345',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['ok'])
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('newpassword12345'))
+
+    def test_admin_reset_other_user_password_does_not_require_current_password(self):
+        other_user = User.objects.create_user(
+            username='staff_member',
+            password='oldpassword123',
+            is_staff=True,
+        )
+        response = self.client.post(
+            reverse('user_edit', args=[other_user.id]),
+            {
+                'username': other_user.username,
+                'email': other_user.email,
+                'password1': 'resetpassword12345',
+                'password2': 'resetpassword12345',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['ok'])
+        other_user.refresh_from_db()
+        self.assertTrue(other_user.check_password('resetpassword12345'))
+
 
