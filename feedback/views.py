@@ -86,11 +86,12 @@ def submit_feedback(request):
         return JsonResponse({'ok': False, 'error': 'Comments must be 1000 characters or fewer.'}, status=400)
 
     # 3. Sentiment Analysis
-    sentiment = (
-        analyze_comment_sentiment(comment, experience)
-        if (comment and FeedbackConfiguration.auto_analysis_is_enabled())
-        else FeedbackEntry.PENDING
-    )
+    if not comment:
+        sentiment = FeedbackEntry.NOT_APPLICABLE
+    elif FeedbackConfiguration.auto_analysis_is_enabled():
+        sentiment = analyze_comment_sentiment(comment, experience)
+    else:
+        sentiment = FeedbackEntry.PENDING
 
     # 4. Helper for date_time parsing
     dt_val = payload.get('date_time')

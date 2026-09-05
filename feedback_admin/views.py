@@ -392,6 +392,14 @@ def _entry_to_row(entry, activity=None):
         entry_activity = activity.get(entry.pk, {'notes': [], 'status_history': []})
         notes = entry_activity['notes']
         status_history = entry_activity['status_history']
+    has_comment = bool(entry.comment and entry.comment.strip())
+    if not has_comment or entry.sentiment == FeedbackEntry.NOT_APPLICABLE:
+        sentiment_display = 'N/A'
+        sentiment_value = FeedbackEntry.NOT_APPLICABLE
+    else:
+        sentiment_display = entry.get_sentiment_display()
+        sentiment_value = entry.sentiment
+
     return {
         'id': entry.id,
         'date': local_created.strftime('%Y-%m-%d'),
@@ -400,8 +408,8 @@ def _entry_to_row(entry, activity=None):
         'rating': entry.get_experience_display(),
         'category': entry.get_category_display(),
         'category_value': entry.category,
-        'sentiment': entry.get_sentiment_display(),
-        'sentiment_value': entry.sentiment,
+        'sentiment': sentiment_display,
+        'sentiment_value': sentiment_value,
         'status': entry.get_status_display(),
         'status_value': entry.status,
         'comment': entry.comment,

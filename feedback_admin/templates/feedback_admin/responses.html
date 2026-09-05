@@ -167,6 +167,8 @@
           <option value="Positive">Positive</option>
           <option value="Neutral">Neutral</option>
           <option value="Negative">Negative</option>
+          <option value="Pending">Pending (Unanalyzed)</option>
+          <option value="N/A">N/A (No Comment)</option>
         </select>
         <select class="btn-ph" id="statusFilter" onchange="applyFilters()" aria-label="Filter by status" style="cursor:pointer">
           <option value="">All Statuses</option>
@@ -252,9 +254,11 @@ const RATING_CONFIG = {
 };
 
 const SENTIMENT_CONFIG = {
-  'Positive': { cls:'chip-pos', icon:'thumb_up' },
-  'Neutral':  { cls:'chip-neu', icon:'remove'   },
-  'Negative': { cls:'chip-neg', icon:'thumb_down' },
+  'Positive': { cls:'chip-pos',     icon:'thumb_up' },
+  'Neutral':  { cls:'chip-neu',     icon:'sentiment_neutral' },
+  'Negative': { cls:'chip-neg',     icon:'thumb_down' },
+  'Pending':  { cls:'chip-pending', icon:'schedule' },
+  'N/A':      { cls:'chip-na',      icon:'' },
 };
 
 const STATUS_CLS = {
@@ -465,8 +469,8 @@ function renderTable() {
       </div></td></tr>`;
   } else {
     body.innerHTML = rows.flatMap(r => {
-      const rCfg      = RATING_CONFIG[r.rating]    || RATING_CONFIG['Satisfactory'];
-      const sCfg      = SENTIMENT_CONFIG[r.sentiment] || SENTIMENT_CONFIG['Neutral'];
+      const rCfg      = RATING_CONFIG[r.rating]    || RATING_CONFIG['Strongly Agree'] || { cls:'chip-sa', icon:'sentiment_very_satisfied' };
+      const sCfg      = SENTIMENT_CONFIG[r.sentiment] || { cls:'chip-na', icon:'' };
       const statusVal = r.status_value || String(r.status || 'Pending').toLowerCase();
       const stCls     = STATUS_CLS[statusVal] || STATUS_CLS[r.status] || 's-pending';
       const catVal    = r.category_value || '';
@@ -508,7 +512,7 @@ function renderTable() {
         </td>
         <td>
           <span class="rating-chip ${sCfg.cls}">
-            <span class="material-icons-round">${sCfg.icon}</span>${r.sentiment || '—'}
+            ${sCfg.icon ? `<span class="material-icons-round">${sCfg.icon}</span>` : ''}${r.sentiment || '—'}
           </span>
         </td>
         <td>

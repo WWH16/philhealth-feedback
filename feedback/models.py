@@ -34,6 +34,7 @@ class FeedbackEntry(models.Model):
         (NEUTRAL, 'Neutral'),
         (NEGATIVE, 'Negative'),
         (PENDING, 'Pending'),
+        (NOT_APPLICABLE, 'N/A'),
     ]
 
     STATUS_CHOICES = [

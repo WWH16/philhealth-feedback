@@ -90,11 +90,38 @@ class SubmitFeedbackAutoAnalysisTests(TestCase):
         self.assertIn('Commendation: Kudos to Frontdesk Staff Maria!', entry.comment)
 
 
+    def test_submit_feedback_without_comment_sets_sentiment_na(self):
+        response = self._submit({
+            'experience': FeedbackEntry.STRONGLY_AGREE,
+            'comment': '',
+        })
+        self.assertEqual(response.status_code, 201)
+        entry = FeedbackEntry.objects.get()
+        self.assertEqual(entry.sentiment, FeedbackEntry.NOT_APPLICABLE)
+
+
 class SentimentServiceTests(TestCase):
     def test_analyze_comment_with_form_headers(self):
         from .services import analyze_comment_sentiment
         res = analyze_comment_sentiment('Comments: The staff was very helpful and accommodating.')
         self.assertIn(res, [FeedbackEntry.POSITIVE, FeedbackEntry.NEUTRAL])
+
+    def test_analyze_comment_empty_returns_not_applicable(self):
+        from .services import analyze_comment_sentiment
+        self.assertEqual(analyze_comment_sentiment(''), FeedbackEntry.NOT_APPLICABLE)
+        self.assertEqual(analyze_comment_sentiment(None), FeedbackEntry.NOT_APPLICABLE)
+        self.assertEqual(analyze_comment_sentiment('   '), FeedbackEntry.NOT_APPLICABLE)
+
+    def test_entry_to_row_empty_comment_displays_na(self):
+        from feedback_admin.views import _entry_to_row
+        entry = FeedbackEntry.objects.create(
+            experience=FeedbackEntry.AGREE,
+            sentiment=FeedbackEntry.PENDING,
+            comment='',
+        )
+        row = _entry_to_row(entry)
+        self.assertEqual(row['sentiment'], 'N/A')
+        self.assertEqual(row['sentiment_value'], FeedbackEntry.NOT_APPLICABLE)
 
 
 class DailySummaryEmailTests(TestCase):

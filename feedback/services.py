@@ -69,7 +69,7 @@ def _fallback_from_experience(experience):
 
 def analyze_comment_sentiment(comment, experience=None):
     if not comment or not comment.strip():
-        return _fallback_from_experience(experience)
+        return FeedbackEntry.NOT_APPLICABLE
     model = _get_model()
     if not model:
         return _fallback_from_experience(experience)
