@@ -96,8 +96,8 @@
   <div class="filter-panel">
     <div class="filter-panel-row">
       <div class="search-box">
-        <span class="material-icons-round">search</span>
-        <input type="text" id="actSearch" placeholder="Search admin, action, object, or details…" oninput="onActSearchInput()" aria-label="Search audit logs">
+        <span class="material-icons-round search-icon">search</span>
+        <input type="text" id="actSearch" placeholder="Search user, action, object, or details…" oninput="onActSearchInput()" aria-label="Search audit logs">
       </div>
       <div class="date-range-inputs">
         <span class="filter-sep">From</span>
@@ -120,8 +120,8 @@
         <option value="event">Other Events</option>
         <option value="backup">Backups</option>
       </select>
-      <select class="btn-ph" id="adminFilter" onchange="applyActFilters()" aria-label="Filter by admin">
-        <option value="">All Admins</option>
+      <select class="btn-ph" id="adminFilter" onchange="applyActFilters()" aria-label="Filter by username">
+        <option value="">All Users</option>
       </select>
       <span class="table-info" id="actInfo" style="margin-left:auto;">—</span>
     </div>
@@ -133,7 +133,7 @@
         <thead>
           <tr>
             <th style="min-width:120px">Date &amp; Time</th>
-            <th style="min-width:150px">Admin</th>
+            <th style="min-width:150px">Username</th>
             <th style="min-width:140px">Action</th>
             <th>Details</th>
           </tr>
@@ -269,7 +269,7 @@ function renderActTable() {
         <div class="datetime-date">${dateStr}</div>
         <div class="datetime-time">${l.time}</div>
       </td>
-      <td><span style="font-size:12px;font-weight:600;color:var(--text-primary)">${escHtml(l.admin)}</span></td>
+      <td><span style="font-size:12px;font-weight:600;color:var(--text-primary)" title="${escHtml(l.full_name ? l.full_name + ' (' + l.admin + ')' : l.admin)}">${escHtml(l.admin)}</span></td>
       <td>${actionChip}</td>
       <td>${details}</td>
     </tr>`;
@@ -314,7 +314,7 @@ function actGoPage(p) {
 }
 
 function exportActivityCSV() {
-  const header = ['Date','Time','Admin','Action Type','Summary','Old Status','New Status'];
+  const header = ['Date','Time','Username','Action Type','Summary','Old Status','New Status'];
   const rows = [header, ...filteredLogs.map(l => [
     l.date, l.time, l.admin,
     (ACTION_META[l.action_type] || ACTION_META.event).label,

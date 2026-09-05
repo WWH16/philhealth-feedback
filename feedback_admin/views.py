@@ -143,16 +143,16 @@ def _build_feedback_activity_map(entry_ids):
 
 def _format_audit_row(log, entry=None):
     local_time = timezone.localtime(log.action_time)
-    author = (log.user.get_full_name() or log.user.username) if log.user else 'System'
+    username = log.user.username if log.user else 'System'
+    full_name = log.user.get_full_name() if log.user else ''
     ctype = log.content_type.model if log.content_type_id else ''
     message = log.change_message or ''
     action_label = 'Event'
     summary = message
     action_type = 'event'
     search_parts = [
-        author,
-        message,
-        author,
+        username,
+        full_name,
         message,
         ctype,
         log.object_repr or '',
@@ -249,7 +249,9 @@ def _format_audit_row(log, entry=None):
         'id': log.pk,
         'date': local_time.strftime('%Y-%m-%d'),
         'time': local_time.strftime('%H:%M'),
-        'admin': author,
+        'admin': username,
+        'username': username,
+        'full_name': full_name,
         'action_type': action_type,
         'action_label': action_label,
         'summary': summary,
