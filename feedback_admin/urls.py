@@ -35,6 +35,7 @@ urlpatterns = [
     path('settings/notifications/', views.update_notification_settings, name='update_notification_settings'),
     path('settings/notifications/send-now/', views.send_summary_now, name='send_summary_now'),
     path('settings/notifications/test/', views.send_test_daily_summary, name='send_test_daily_summary'),
+    path('cron/daily-summary/', views.cron_daily_summary, name='admin_cron_daily_summary'),
 
     # ── Sentiment trigger ──────────────────────────────────────────────
     path('settings/reanalyze/', views.reanalyze_sentiment_view, name='reanalyze_sentiment'),

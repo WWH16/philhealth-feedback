@@ -14,5 +14,11 @@
       "src": "/(.*)",
       "dest": "philhealth_feedback/wsgi.py"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-summary/",
+      "schedule": "30 8 * * *"
+    }
   ]
 }

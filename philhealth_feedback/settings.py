@@ -29,6 +29,20 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*', '165.22.60.115']
 
+# Reverse Proxy & SSL Configuration (Required for Vercel edge proxy and HTTPS)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# CSRF Trusted Origins for Admin Actions (Required for HTTPS POSTs on Vercel & custom domains)
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()
+]
+if not any('vercel.app' in o for o in CSRF_TRUSTED_ORIGINS):
+    CSRF_TRUSTED_ORIGINS.extend(['https://*.vercel.app', 'https://*.now.sh'])
+if os.environ.get('VERCEL_URL'):
+    CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ['VERCEL_URL']}")
+if os.environ.get('BASE_URL'):
+    CSRF_TRUSTED_ORIGINS.append(os.environ['BASE_URL'])
+
 
 # Application definition
 
@@ -148,5 +162,17 @@ EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1')
+
+# Support SSL (e.g. port 465) or STARTTLS (e.g. port 587) without mutually exclusive conflict
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() in ('true', '1')
+if EMAIL_USE_SSL:
+    EMAIL_USE_TLS = False
+else:
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1')
+
+# Prevent serverless lambdas from hanging on SMTP network latency
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', 10))
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'PhilHealth LHIO Cauayan <noreply@philhealth.gov.ph>')
+
+# Shared secret for automated Vercel Cron jobs and scheduled tasks
+CRON_SECRET = os.environ.get('CRON_SECRET', '')

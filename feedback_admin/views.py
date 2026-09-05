@@ -1,3 +1,4 @@
+import os
 import json
 from datetime import datetime, time, timedelta
 from collections import defaultdict
@@ -11,6 +12,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count, Q
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
@@ -1300,6 +1303,54 @@ def send_summary_now(request):
 
 
 send_test_daily_summary = send_summary_now
+
+
+@csrf_exempt
+def cron_daily_summary(request):
+    """
+    Automated daily feedback summary endpoint for Vercel Cron Jobs,
+    scheduled workflows, or external webhook calls.
+    Supports GET (standard Vercel Cron) and POST.
+    Protected by CRON_SECRET if configured in environment variables.
+    """
+    configured_secret = (getattr(settings, 'CRON_SECRET', '') or os.environ.get('CRON_SECRET', '')).strip()
+    if configured_secret:
+        auth_header = request.headers.get('Authorization', '')
+        secret_param = request.GET.get('secret') or request.GET.get('key')
+        expected_bearer = f"Bearer {configured_secret}"
+        if auth_header != expected_bearer and secret_param != configured_secret:
+            return JsonResponse({
+                'ok': False,
+                'error': 'Unauthorized: Invalid or missing cron secret.'
+            }, status=401)
+
+    # Optional query parameters: force, test, date (YYYY-MM-DD)
+    force = request.GET.get('force') == 'true' or request.POST.get('force') == 'true'
+    is_test = request.GET.get('test') == 'true' or request.POST.get('test') == 'true'
+    date_str = request.GET.get('date') or request.POST.get('date')
+    target_date = None
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({
+                'ok': False,
+                'error': f"Invalid date format '{date_str}'. Expected YYYY-MM-DD."
+            }, status=400)
+
+    base_url = request.build_absolute_uri('/')
+    result = send_daily_summary_email(
+        target_date=target_date,
+        force=force,
+        is_test=is_test,
+        base_url=base_url
+    )
+
+    status_code = 200 if result.get('ok') else 400
+    if result.get('reason') in ('disabled', 'zero_feedback_suppressed'):
+        status_code = 200
+
+    return JsonResponse(result, status=status_code)
 
 
 @login_required

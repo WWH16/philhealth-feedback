@@ -16,9 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from feedback_admin import views as feedback_admin_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/cron/daily-summary/', feedback_admin_views.cron_daily_summary, name='cron_daily_summary'),
     path('', include('feedback.urls')),
     path('dashboard/',    include('feedback_admin.urls')),
 ]

@@ -171,4 +171,56 @@ class DailySummaryEmailTests(TestCase):
         self.assertIn('[TEST]', sent_email.subject)
         self.assertIn('testadmin@philhealth.gov.ph', sent_email.to)
 
+    def test_dynamic_base_url_vercel(self):
+        import os
+        from .email_service import send_daily_summary_email
+        from django.core import mail
+
+        os.environ['VERCEL_URL'] = 'city-feedback.vercel.app'
+        try:
+            result = send_daily_summary_email(
+                target_date=self.today,
+                recipient_email='admin@philhealth.gov.ph',
+                force=True
+            )
+            self.assertTrue(result['ok'])
+            self.assertEqual(len(mail.outbox), 1)
+            sent_email = mail.outbox[0]
+            # Check html content has vercel https url
+            html_content = sent_email.alternatives[0][0]
+            self.assertIn('https://city-feedback.vercel.app/dashboard/', html_content)
+        finally:
+            os.environ.pop('VERCEL_URL', None)
+
+    def test_cron_daily_summary_view(self):
+        from django.test import Client
+        client = Client()
+        # Test endpoint
+        response = client.get('/api/cron/daily-summary/?force=true')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data.get('ok'))
+        self.assertEqual(data.get('recipient'), 'supervisor@philhealth.gov.ph')
+
+    def test_cron_daily_summary_with_secret(self):
+        from django.test import Client, override_settings
+        client = Client()
+        with override_settings(CRON_SECRET='my-secret-token'):
+            # Without secret -> 401
+            res_fail = client.get('/api/cron/daily-summary/')
+            self.assertEqual(res_fail.status_code, 401)
+
+            # With query param secret -> 200
+            res_param = client.get('/api/cron/daily-summary/?secret=my-secret-token&force=true')
+            self.assertEqual(res_param.status_code, 200)
+            self.assertTrue(res_param.json().get('ok'))
+
+            # With Bearer header secret -> 200
+            res_header = client.get(
+                '/api/cron/daily-summary/?force=true',
+                HTTP_AUTHORIZATION='Bearer my-secret-token'
+            )
+            self.assertEqual(res_header.status_code, 200)
+            self.assertTrue(res_header.json().get('ok'))
+
 

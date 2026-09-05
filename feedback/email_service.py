@@ -1,3 +1,5 @@
+import os
+import logging
 from datetime import datetime, time, timedelta
 from django.utils import timezone
 from django.db.models import Q, Count
@@ -6,6 +8,8 @@ from django.template.loader import render_to_string
 from django.conf import settings
 
 from .models import FeedbackEntry, FeedbackConfiguration
+
+logger = logging.getLogger(__name__)
 
 
 def get_daily_summary_metrics(target_date=None):
@@ -155,9 +159,10 @@ def get_daily_summary_metrics(target_date=None):
     }
 
 
-def send_daily_summary_email(target_date=None, recipient_email=None, force=False, is_test=False, base_url='http://127.0.0.1:8000'):
+def send_daily_summary_email(target_date=None, recipient_email=None, force=False, is_test=False, base_url=None):
     """
     Dispatches the official daily feedback summary email.
+    Supports localhost, Vercel preview/production deployments, and custom domains.
     """
     config = FeedbackConfiguration.get_solo()
 
@@ -179,12 +184,24 @@ def send_daily_summary_email(target_date=None, recipient_email=None, force=False
             'message': 'No notification email address configured. Please set an address in Admin Settings.'
         }
 
+    # Dynamically resolve base_url across environments (Vercel, custom domain, or local development)
+    if not base_url or '127.0.0.1' in base_url or 'localhost' in base_url:
+        env_base = os.environ.get('BASE_URL') or os.environ.get('SITE_URL')
+        if env_base:
+            base_url = env_base.rstrip('/')
+        elif os.environ.get('VERCEL_URL'):
+            base_url = f"https://{os.environ['VERCEL_URL'].rstrip('/')}"
+        elif not base_url:
+            base_url = 'http://127.0.0.1:8000'
+
+    resolved_base_url = (base_url or 'http://127.0.0.1:8000').rstrip('/')
+
     context = {
         'metrics': metrics,
         'is_test': is_test,
-        'base_url': base_url.rstrip('/'),
-        'dashboard_url': f"{base_url.rstrip('/')}/dashboard/",
-        'responses_url': f"{base_url.rstrip('/')}/dashboard/responses/?date={metrics['short_date']}",
+        'base_url': resolved_base_url,
+        'dashboard_url': f"{resolved_base_url}/dashboard/",
+        'responses_url': f"{resolved_base_url}/dashboard/responses/?date={metrics['short_date']}",
     }
 
     # Render HTML and Text templates
@@ -202,7 +219,18 @@ def send_daily_summary_email(target_date=None, recipient_email=None, force=False
         to=[recipient],
     )
     msg.attach_alternative(html_content, 'text/html')
-    msg.send()
+
+    try:
+        msg.send()
+    except Exception as exc:
+        logger.exception("Failed to deliver daily summary email to %s: %s", recipient, exc)
+        return {
+            'ok': False,
+            'reason': 'smtp_error',
+            'recipient': recipient,
+            'metrics': metrics,
+            'message': f"Failed to deliver email to {recipient}: {str(exc)}"
+        }
 
     return {
         'ok': True,
@@ -210,3 +238,4 @@ def send_daily_summary_email(target_date=None, recipient_email=None, force=False
         'metrics': metrics,
         'message': f"Daily summary email successfully dispatched to {recipient}."
     }
+
