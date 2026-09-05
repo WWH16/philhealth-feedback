@@ -492,7 +492,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
             <div class="settings-section-icon"><span class="material-icons-round">backup</span></div>
             <div>
               <div class="settings-section-title">Backup Database</div>
-              <div class="settings-section-desc">Export complete database snapshots including feedback records and system configuration.</div>
+              <div class="settings-section-desc">Export complete database backups including feedback records and system configuration.</div>
             </div>
           </div>
           <div class="settings-section-body">
@@ -501,8 +501,8 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
             {% else %}
             <div class="settings-row">
               <div class="settings-row-info">
-                <div class="settings-row-label">Export Snapshot</div>
-                <div class="settings-row-hint">Generates a complete JSON snapshot of all active records, configuration, and logs.</div>
+                <div class="settings-row-label">Create Backup</div>
+                <div class="settings-row-hint">Generates a complete JSON backup of all active records, configuration, and logs.</div>
                 <div id="backupCreatingStatus" style="display:none;font-size:11px;color:var(--g-primary);font-weight:600;margin-top:6px;align-items:center;gap:6px;">
                   <span class="ph-loader" style="width:13px;height:13px;border-width:2px;border-color:var(--g-primary);border-top-color:transparent;display:inline-block;"></span>
                   <span>Exporting database backup...</span>
@@ -553,14 +553,14 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
             <div class="settings-section-icon"><span class="material-icons-round">restore</span></div>
             <div>
               <div class="settings-section-title" style="color:var(--red)">Restore Database</div>
-              <div class="settings-section-desc">Restore database records from an uploaded JSON backup or a recent snapshot.</div>
+              <div class="settings-section-desc">Restore database records from an uploaded JSON backup or a recent backup.</div>
             </div>
           </div>
           <div class="settings-section-body">
             <div class="restore-alert-box">
               <span class="material-icons-round">warning</span>
               <div>
-                <strong>Warning:</strong> Restoring replaces active feedback records. An automated safety snapshot is saved before changes are applied.
+                <strong>Warning:</strong> Restoring replaces active feedback records. An automated safety backup is saved before changes are applied.
               </div>
             </div>
             <input type="file" accept=".json" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
@@ -753,7 +753,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
         <div class="confirm-file-target" id="restoreFileLabel">—</div>
         <div class="restore-alert-box" style="margin-bottom:12px;padding:10px 12px;font-weight:normal;">
           <span class="material-icons-round" style="font-size:17px;">warning</span>
-          <div><strong>Warning:</strong> Active records will be replaced. A safety snapshot is saved automatically first.</div>
+          <div><strong>Warning:</strong> Active records will be replaced. A safety backup is saved automatically first.</div>
         </div>
         <div class="confirm-stability-notice">
           <span class="material-icons-round">wifi</span>
