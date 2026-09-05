@@ -170,6 +170,108 @@ class ResponsesViewTests(TestCase):
         self.assertEqual(len(response.context['entries_data']), 1)
         self.assertContains(response, 'nav-item active')
 
+    def test_responses_delete_single(self):
+        from feedback.models import FeedbackEntry
+        from django.contrib.admin.models import LogEntry, DELETION
+        e1 = FeedbackEntry.objects.create(
+            experience=FeedbackEntry.STRONGLY_AGREE,
+            category='compliment',
+            comment='Response 1',
+        )
+        e2 = FeedbackEntry.objects.create(
+            experience=FeedbackEntry.AGREE,
+            category='suggestion',
+            comment='Response 2',
+        )
+
+        response = self.client.post(
+            reverse('responses_delete'),
+            data={'ids': [e1.id]},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['ok'])
+        self.assertEqual(data['deleted_count'], 1)
+        self.assertEqual(data['deleted_ids'], [e1.id])
+        self.assertEqual(data['counts']['total'], 1)
+        self.assertEqual(data['counts']['strongly_agree'], 0)
+        self.assertEqual(data['counts']['agree'], 1)
+
+        self.assertFalse(FeedbackEntry.objects.filter(id=e1.id).exists())
+        self.assertTrue(FeedbackEntry.objects.filter(id=e2.id).exists())
+
+        # Verify admin audit log
+        log = LogEntry.objects.filter(object_id=str(e1.id), action_flag=DELETION).first()
+        self.assertIsNotNone(log)
+        self.assertIn(f'Deleted feedback response #{e1.id}', log.change_message)
+
+    def test_responses_delete_multiple(self):
+        from feedback.models import FeedbackEntry
+        e1 = FeedbackEntry.objects.create(experience=FeedbackEntry.STRONGLY_AGREE)
+        e2 = FeedbackEntry.objects.create(experience=FeedbackEntry.DISAGREE)
+        e3 = FeedbackEntry.objects.create(experience=FeedbackEntry.NEITHER)
+
+        response = self.client.post(
+            reverse('responses_delete'),
+            data={'ids': [e1.id, e2.id]},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['ok'])
+        self.assertEqual(data['deleted_count'], 2)
+        self.assertEqual(set(data['deleted_ids']), {e1.id, e2.id})
+        self.assertEqual(data['counts']['total'], 1)
+        self.assertEqual(data['counts']['neither'], 1)
+
+        self.assertFalse(FeedbackEntry.objects.filter(id__in=[e1.id, e2.id]).exists())
+        self.assertTrue(FeedbackEntry.objects.filter(id=e3.id).exists())
+
+    def test_responses_delete_invalid_payload(self):
+        # Empty IDs list
+        res1 = self.client.post(
+            reverse('responses_delete'),
+            data={'ids': []},
+            content_type='application/json',
+        )
+        self.assertEqual(res1.status_code, 400)
+
+        # Non-integer IDs
+        res2 = self.client.post(
+            reverse('responses_delete'),
+            data={'ids': ['invalid']},
+            content_type='application/json',
+        )
+        self.assertEqual(res2.status_code, 400)
+
+        # Non-existent ID
+        res3 = self.client.post(
+            reverse('responses_delete'),
+            data={'ids': [999999]},
+            content_type='application/json',
+        )
+        self.assertEqual(res3.status_code, 404)
+
+    def test_responses_delete_requires_post(self):
+        response = self.client.get(reverse('responses_delete'))
+        self.assertEqual(response.status_code, 405)
+
+    def test_responses_delete_requires_staff(self):
+        regular_user = User.objects.create_user(
+            username='citizen',
+            password='password123',
+            is_staff=False,
+        )
+        self.client.force_login(regular_user)
+        response = self.client.post(
+            reverse('responses_delete'),
+            data={'ids': [1]},
+            content_type='application/json',
+        )
+        # staff_required redirects non-staff to admin_login
+        self.assertEqual(response.status_code, 302)
+
 
 class ActivityLogViewTests(TestCase):
     def setUp(self):

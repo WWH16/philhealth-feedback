@@ -54,10 +54,54 @@
   display: none; align-items: center; gap: 10px; padding: 10px 16px;
   background: var(--g-xlight); border-bottom: 1px solid var(--g-light);
   font-size: 12px; font-weight: 600; color: var(--g-forest);
+  flex-wrap: wrap;
 }
 [data-theme="dark"] .bulk-bar { background: rgba(35,164,85,0.08); border-color: rgba(35,164,85,0.15); color: #5fcf8a; }
 .bulk-bar.visible { display: flex; }
 .bulk-bar .material-icons-round { font-size: 16px; }
+
+/* ── CONFIRMATION MODALS (deletion) ── */
+.confirm-modal-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 600;
+  background: rgba(10,26,4,0.52); backdrop-filter: blur(3px);
+  align-items: center; justify-content: center; padding: 16px;
+}
+.confirm-modal-backdrop.open { display: flex; }
+.confirm-modal-card {
+  background: var(--surface-card); border: 1px solid var(--border);
+  width: 100%; max-width: 420px; position: relative;
+}
+.confirm-modal-head {
+  padding: 18px 22px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+}
+.confirm-modal-icon {
+  width: 36px; height: 36px; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.confirm-modal-icon .material-icons-round { font-size: 20px; }
+.confirm-modal-icon.danger { background: var(--red-bg); }
+.confirm-modal-icon.danger .material-icons-round { color: var(--red); }
+.confirm-modal-title { font-size: 13px; font-weight: 800; color: var(--text-primary); }
+.confirm-modal-close {
+  margin-left: auto; width: 28px; height: 28px; display: flex; align-items: center;
+  justify-content: center; border: 1px solid var(--border); background: transparent;
+  color: var(--text-muted); cursor: pointer; transition: all 120ms; flex-shrink: 0;
+}
+.confirm-modal-close:hover { border-color: var(--red); color: var(--red); }
+.confirm-modal-close .material-icons-round { font-size: 15px; }
+.confirm-modal-body { padding: 18px 22px 20px; }
+.confirm-modal-body p { font-size: 13px; color: var(--text-secondary); line-height: 1.65; margin: 0; }
+.confirm-modal-footer {
+  padding: 0 22px 18px; display: flex; align-items: center;
+  justify-content: flex-end; gap: 8px;
+}
+.confirm-target-box {
+  margin: 12px 0; padding: 10px 14px;
+  background: var(--surface-page); border: 1px solid var(--border);
+  font-family: var(--mono); font-size: 12px; color: var(--text-primary);
+  max-height: 100px; overflow-y: auto; word-break: break-all;
+}
 
 .status-select {
   font-size: 11px; font-weight: 700; padding: 3px 7px;
@@ -98,7 +142,7 @@
     <div class="col-6 col-md">
       <div class="stat-card card-vsat">
         <div class="stat-card-icon"><span class="material-icons-round" style="color:#15803d;background:#f0fdf4">sentiment_very_satisfied</span></div>
-        <div class="stat-value">{{ strongly_agree }}</div>
+        <div class="stat-value" id="saVal">{{ strongly_agree }}</div>
         <div class="stat-label">Strongly Agree</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_very_satisfied</span></div>
       </div>
@@ -106,7 +150,7 @@
     <div class="col-6 col-md">
       <div class="stat-card card-sat">
         <div class="stat-card-icon"><span class="material-icons-round" style="color:#16a34a;background:#f0fdf4">sentiment_satisfied</span></div>
-        <div class="stat-value">{{ agree }}</div>
+        <div class="stat-value" id="aVal">{{ agree }}</div>
         <div class="stat-label">Agree</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_satisfied</span></div>
       </div>
@@ -114,7 +158,7 @@
     <div class="col-6 col-md">
       <div class="stat-card card-neu">
         <div class="stat-card-icon"><span class="material-icons-round" style="color:#ca8a04;background:#fefce8">sentiment_neutral</span></div>
-        <div class="stat-value">{{ neither }}</div>
+        <div class="stat-value" id="nadVal">{{ neither }}</div>
         <div class="stat-label">Neither</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_neutral</span></div>
       </div>
@@ -122,7 +166,7 @@
     <div class="col-6 col-md">
       <div class="stat-card card-neg">
         <div class="stat-card-icon"><span class="material-icons-round" style="color:#dc2626;background:#fef2f2">sentiment_dissatisfied</span></div>
-        <div class="stat-value">{{ disagree }}</div>
+        <div class="stat-value" id="dVal">{{ disagree }}</div>
         <div class="stat-label">Disagree</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
       </div>
@@ -130,7 +174,7 @@
     <div class="col-6 col-md">
       <div class="stat-card card-neg">
         <div class="stat-card-icon"><span class="material-icons-round" style="color:#991b1b;background:#fef2f2">sentiment_very_dissatisfied</span></div>
-        <div class="stat-value">{{ strongly_disagree }}</div>
+        <div class="stat-value" id="sdVal">{{ strongly_disagree }}</div>
         <div class="stat-label">Strongly Disagree</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_very_dissatisfied</span></div>
       </div>
@@ -197,6 +241,9 @@
       <button type="button" class="btn-ph btn-ph-sm btn-ph-primary" onclick="exportSelected()">
         <span class="material-icons-round" aria-hidden="true">download</span> Export selected
       </button>
+      <button type="button" class="btn-ph btn-ph-sm" id="bulkDeleteBtn" style="color:var(--red);border-color:var(--red);margin-left:auto;" onclick="openDeleteResponsesModal()">
+        <span class="material-icons-round" aria-hidden="true">delete_forever</span> Delete selected
+      </button>
     </div>
 
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
@@ -233,6 +280,43 @@
       <div class="pg-btns" id="paginationBtns" role="navigation" aria-label="Table pagination"></div>
     </div>
 
+  </div>
+
+  <!-- DELETE RESPONSES CONFIRMATION MODAL -->
+  <div class="confirm-modal-backdrop" id="deleteResponsesModal"
+    role="dialog" aria-modal="true" aria-labelledby="deleteResponsesModalTitle"
+    onclick="if(event.target===this && !isDeletingResponses) closeDeleteResponsesModal()">
+    <div class="confirm-modal-card" onclick="event.stopPropagation()">
+      <div class="confirm-modal-head">
+        <div class="confirm-modal-icon danger">
+          <span class="material-icons-round">delete_forever</span>
+        </div>
+        <div class="confirm-modal-title" id="deleteResponsesModalTitle">Delete Feedback Response?</div>
+        <button class="confirm-modal-close" id="deleteResponsesCloseBtn" onclick="if(!isDeletingResponses) closeDeleteResponsesModal()" aria-label="Close">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+      <div class="confirm-modal-body">
+        <div id="deleteTargetCount" style="font-size:13px;font-weight:700;color:var(--text-primary);line-height:1.5;">
+          Permanently delete selected responses?
+        </div>
+        <div class="confirm-target-box" id="deleteTargetList">—</div>
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">
+          This action cannot be undone. All response ratings, feedback comments, and internal notes will be permanently removed.
+        </div>
+      </div>
+      <div class="confirm-modal-footer">
+        <button type="button" class="btn-ph" id="cancelDeleteResponsesBtn" onclick="if(!isDeletingResponses) closeDeleteResponsesModal()">
+          <span class="material-icons-round">close</span> Cancel
+        </button>
+        <button type="button" class="btn-ph" id="confirmDeleteResponsesBtn"
+          style="background:var(--red);border-color:var(--red);color:var(--white);"
+          onclick="executeDeleteResponses()">
+          <span class="ph-loader"></span>
+          <span class="material-icons-round">delete_forever</span> Delete
+        </button>
+      </div>
+    </div>
   </div>
 
 {% endblock %}
@@ -306,7 +390,7 @@ function onSearchInput() {
 }
 
 /* ── FILTER ── */
-function applyFilters() {
+function applyFilters(keepPage = false) {
   const q          = document.getElementById('tableSearch').value.toLowerCase();
   const experience = document.getElementById('ratingFilter').value;
   const category   = document.getElementById('categoryFilter').value;
@@ -327,7 +411,12 @@ function applyFilters() {
     const matchSt   = !status     || r.status     === status;
     return matchQ && matchE && matchC && matchS && matchSt && inDateRange(r);
   });
-  currentPage = 1;
+  const maxPage = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  if (keepPage) {
+    if (currentPage > maxPage) currentPage = maxPage;
+  } else {
+    currentPage = 1;
+  }
   renderTable();
 }
 
@@ -583,6 +672,11 @@ function renderTable() {
                     </div>
                   </div>
                 </div>
+                <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;align-items:center;">
+                  <button type="button" class="btn-ph btn-ph-sm" style="color:var(--red);border-color:var(--red);" onclick="openSingleDeleteModal(${r.id})">
+                    <span class="material-icons-round" aria-hidden="true" style="font-size:15px">delete_forever</span> Delete Response
+                  </button>
+                </div>
               </div>
             </td>
           </tr>`
@@ -657,6 +751,157 @@ function exportSelected() {
     href: URL.createObjectURL(blob), download: 'philhealth-responses-selected.csv'
   }).click();
 }
+
+/* ── DELETION ── */
+let pendingDeleteIds = [];
+let isDeletingResponses = false;
+
+function updateStatCards(counts) {
+  if (!counts) return;
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el && v !== undefined) el.textContent = v;
+  };
+  setVal('totalVal', counts.total);
+  setVal('saVal', counts.strongly_agree);
+  setVal('aVal', counts.agree);
+  setVal('nadVal', counts.neither);
+  setVal('dVal', counts.disagree);
+  setVal('sdVal', counts.strongly_disagree);
+}
+
+function openDeleteResponsesModal() {
+  const ids = Array.from(selectedIds);
+  if (!ids.length) return;
+  pendingDeleteIds = ids;
+  setupDeleteModal(ids);
+}
+
+function openSingleDeleteModal(id) {
+  pendingDeleteIds = [id];
+  setupDeleteModal([id]);
+}
+
+function setupDeleteModal(ids) {
+  const isSingle = ids.length === 1;
+  const titleEl = document.getElementById('deleteResponsesModalTitle');
+  const countEl = document.getElementById('deleteTargetCount');
+  const listEl = document.getElementById('deleteTargetList');
+  const confirmBtn = document.getElementById('confirmDeleteResponsesBtn');
+  const cancelBtn = document.getElementById('cancelDeleteResponsesBtn');
+  const closeBtn = document.getElementById('deleteResponsesCloseBtn');
+
+  if (titleEl) {
+    titleEl.textContent = isSingle ? 'Delete Feedback Response?' : 'Delete Feedback Responses?';
+  }
+  if (countEl) {
+    countEl.textContent = isSingle
+      ? `Permanently delete response #${ids[0]}?`
+      : `Permanently delete ${ids.length} selected responses?`;
+  }
+  if (listEl) {
+    listEl.textContent = ids.map(id => `#${id}`).join(', ');
+  }
+  if (confirmBtn) {
+    confirmBtn.classList.remove('is-loading');
+    confirmBtn.disabled = false;
+  }
+  if (cancelBtn) cancelBtn.disabled = false;
+  if (closeBtn) closeBtn.disabled = false;
+
+  document.getElementById('deleteResponsesModal').classList.add('open');
+}
+
+function closeDeleteResponsesModal() {
+  const modal = document.getElementById('deleteResponsesModal');
+  if (modal) modal.classList.remove('open');
+  pendingDeleteIds = [];
+}
+
+function executeDeleteResponses() {
+  if (isDeletingResponses || !pendingDeleteIds.length) return;
+  isDeletingResponses = true;
+
+  const confirmBtn = document.getElementById('confirmDeleteResponsesBtn');
+  const cancelBtn = document.getElementById('cancelDeleteResponsesBtn');
+  const closeBtn = document.getElementById('deleteResponsesCloseBtn');
+
+  if (confirmBtn) {
+    confirmBtn.classList.add('is-loading');
+    confirmBtn.disabled = true;
+  }
+  if (cancelBtn) cancelBtn.disabled = true;
+  if (closeBtn) closeBtn.disabled = true;
+
+  const idsToDelete = [...pendingDeleteIds];
+
+  fetch('/dashboard/responses/delete/', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': CSRF_TOKEN,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ids: idsToDelete })
+  })
+  .then(res => res.json().then(data => {
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || 'Failed to delete response(s).');
+    }
+    return data;
+  }))
+  .then(data => {
+    // 1. Close modal
+    closeDeleteResponsesModal();
+
+    // 2. Remove deleted IDs from local datasets and active selection sets
+    const deletedSet = new Set(data.deleted_ids || idsToDelete);
+    for (let i = ALL_DATA.length - 1; i >= 0; i--) {
+      if (deletedSet.has(ALL_DATA[i].id)) {
+        ALL_DATA.splice(i, 1);
+      }
+    }
+    deletedSet.forEach(id => {
+      selectedIds.delete(id);
+      expandedIds.delete(id);
+    });
+
+    // 3. Update summary stat cards
+    if (data.counts) {
+      updateStatCards(data.counts);
+    }
+
+    // 4. Update table, bulk bar and pagination BEFORE the toast shows up
+    applyFilters(true);
+    updateBulkBar();
+
+    // 5. Trigger success toast
+    if (typeof window.showToast === 'function') {
+      window.showToast(data.message || 'Responses deleted successfully.', 'success', false);
+    }
+  })
+  .catch(err => {
+    if (typeof window.showToast === 'function') {
+      window.showToast(err.message || 'An error occurred while deleting.', 'error', false);
+    } else {
+      alert(err.message || 'An error occurred while deleting.');
+    }
+  })
+  .finally(() => {
+    isDeletingResponses = false;
+    if (confirmBtn) {
+      confirmBtn.classList.remove('is-loading');
+      confirmBtn.disabled = false;
+    }
+    if (cancelBtn) cancelBtn.disabled = false;
+    if (closeBtn) closeBtn.disabled = false;
+  });
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && !isDeletingResponses) {
+    closeDeleteResponsesModal();
+  }
+});
 
 /* ── INIT ── */
 function pageInit() { renderTable(); }

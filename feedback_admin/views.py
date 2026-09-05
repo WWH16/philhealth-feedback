@@ -11,6 +11,7 @@ from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.hashers import make_password
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.db.models import Count, Q
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -543,6 +544,57 @@ def response_category_update(request, entry_id):
         'ok': True,
         'category': entry.get_category_display(),
         'category_value': entry.category,
+    })
+
+
+@staff_required
+@require_POST
+def responses_delete(request):
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+        return JsonResponse({'ok': False, 'error': 'Invalid request payload.'}, status=400)
+
+    raw_ids = payload.get('ids', [])
+    if not isinstance(raw_ids, list) or not raw_ids:
+        return JsonResponse({'ok': False, 'error': 'No response IDs provided.'}, status=400)
+
+    clean_ids = []
+    for item in raw_ids:
+        try:
+            clean_ids.append(int(item))
+        except (ValueError, TypeError):
+            continue
+
+    if not clean_ids:
+        return JsonResponse({'ok': False, 'error': 'No valid response IDs provided.'}, status=400)
+
+    entries = list(FeedbackEntry.objects.filter(id__in=clean_ids))
+    if not entries:
+        return JsonResponse({'ok': False, 'error': 'Selected responses not found or already deleted.'}, status=404)
+
+    deleted_count = len(entries)
+    deleted_ids = [entry.id for entry in entries]
+
+    with transaction.atomic():
+        for entry in entries:
+            log_admin_event(
+                request.user,
+                entry,
+                DELETION,
+                f'Deleted feedback response #{entry.id}',
+            )
+        FeedbackEntry.objects.filter(id__in=deleted_ids).delete()
+
+    counts = _experience_counts(FeedbackEntry.objects.all())
+    noun = 'response' if deleted_count == 1 else 'responses'
+
+    return JsonResponse({
+        'ok': True,
+        'message': f'Successfully deleted {deleted_count} {noun}.',
+        'deleted_ids': deleted_ids,
+        'deleted_count': deleted_count,
+        'counts': counts,
     })
 
 
