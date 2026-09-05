@@ -259,22 +259,36 @@
         <div class="summary-item">
           <div class="summary-icon pos"><span class="material-icons-round">check_circle</span></div>
           <div class="summary-content">
-            <div class="summary-title">Very Satisfactory</div>
-            <div class="summary-value" id="summaryVsat">11 responses</div>
+            <div class="summary-title">Strongly Agree</div>
+            <div class="summary-value" id="summarySa">0 responses</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon pos"><span class="material-icons-round">check_circle</span></div>
+          <div class="summary-content">
+            <div class="summary-title">Agree</div>
+            <div class="summary-value" id="summaryA">0 responses</div>
           </div>
         </div>
         <div class="summary-item">
           <div class="summary-icon neu"><span class="material-icons-round">circle</span></div>
           <div class="summary-content">
-            <div class="summary-title">Satisfactory</div>
-            <div class="summary-value" id="summarySat">5 responses</div>
+            <div class="summary-title">Neither</div>
+            <div class="summary-value" id="summaryNad">0 responses</div>
           </div>
         </div>
         <div class="summary-item">
           <div class="summary-icon neg"><span class="material-icons-round">cancel</span></div>
           <div class="summary-content">
-            <div class="summary-title">Unsatisfactory</div>
-            <div class="summary-value" id="summaryNeg">2 responses</div>
+            <div class="summary-title">Disagree</div>
+            <div class="summary-value" id="summaryD">0 responses</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon neg"><span class="material-icons-round">cancel</span></div>
+          <div class="summary-content">
+            <div class="summary-title">Strongly Disagree</div>
+            <div class="summary-value" id="summarySd">0 responses</div>
           </div>
         </div>
         <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);">
@@ -355,8 +369,8 @@ function updateReport(forceRecreate = false) {
   const data = REPORT_DATA[currentPeriod];
   document.getElementById('trendRangeCaption').textContent = TREND_CAPTIONS[currentPeriod];
 
-  const sa  = data.strongly_agree || data.vsat || 0;
-  const a   = data.agree || data.sat || 0;
+  const sa  = data.strongly_agree || 0;
+  const a   = data.agree || 0;
   const nad = data.neither || 0;
   const d   = data.disagree || 0;
   const sd  = data.strongly_disagree || 0;
@@ -402,9 +416,11 @@ function updateReport(forceRecreate = false) {
     const el = document.getElementById(id);
     if (el) el.textContent = val.toLocaleString() + ' responses';
   };
-  setSummary('summaryVsat', sa);
-  setSummary('summarySat', a);
-  setSummary('summaryNeg', neg);
+  setSummary('summarySa', sa);
+  setSummary('summaryA', a);
+  setSummary('summaryNad', nad);
+  setSummary('summaryD', d);
+  setSummary('summarySd', sd);
   document.getElementById('summaryScore').textContent = data.satisfaction + '/100';
 
   const cats = data.categories;

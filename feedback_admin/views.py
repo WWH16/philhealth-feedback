@@ -345,13 +345,6 @@ def dashboard(request):
         'disagree_pct': pct(d),
         'strongly_disagree_pct': pct(sd),
         'na_pct': pct(na),
-        # Legacy fallbacks
-        'very_satisfactory': sa,
-        'satisfactory': a,
-        'unsatisfactory': sd + d,
-        'very_satisfactory_pct': pct(sa),
-        'satisfactory_pct': pct(a),
-        'unsatisfactory_pct': pct(sd + d),
         'recent_entries_data': [_entry_to_row(entry, recent_activity) for entry in recent_entries_data],
         'filter_data': {
             'today': _experience_counts(qs.filter(created_at__range=(today_start, today_end))),
@@ -367,9 +360,6 @@ def dashboard(request):
         'trend_disagree': trend_for(FeedbackEntry.DISAGREE),
         'trend_strongly_disagree': trend_for(FeedbackEntry.STRONGLY_DISAGREE),
         'trend_na': trend_for(FeedbackEntry.NOT_APPLICABLE),
-        'trend_very_satisfactory': trend_for(FeedbackEntry.STRONGLY_AGREE),
-        'trend_satisfactory': trend_for(FeedbackEntry.AGREE),
-        'trend_unsatisfactory': trend_for(FeedbackEntry.DISAGREE),
     }
     return render(request, 'feedback_admin/dashboard.html', context)
 
@@ -389,9 +379,6 @@ def responses(request):
         'disagree': counts['disagree'],
         'strongly_disagree': counts['strongly_disagree'],
         'na': counts['na'],
-        'very_satisfactory': counts['strongly_agree'],
-        'satisfactory': counts['agree'],
-        'unsatisfactory': counts['disagree'] + counts['strongly_disagree'],
         'entries_data': [_entry_to_row(entry, activity_map) for entry in entries_data],
     }
     return render(request, 'feedback_admin/responses.html', context)
@@ -448,13 +435,6 @@ def _experience_counts(qs):
         'disagree': d,
         'strongly_disagree': sd,
         'na': na_count,
-        # Legacy fallback keys
-        'vsat': sa,
-        'sat': a,
-        'unsat': sd + d,
-        'very_satisfactory': sa,
-        'satisfactory': a,
-        'unsatisfactory': sd + d,
     }
 
 

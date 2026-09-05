@@ -95,28 +95,44 @@
         <div class="stat-card-bg-icon"><span class="material-icons-round">forum</span></div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="stat-card card-vsat">
-        <div class="stat-card-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
-        <div class="stat-value">{{ very_satisfactory }}</div>
-        <div class="stat-label">Very Satisfactory</div>
-        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_satisfied_alt</span></div>
+        <div class="stat-card-icon"><span class="material-icons-round" style="color:#15803d;background:#f0fdf4">sentiment_very_satisfied</span></div>
+        <div class="stat-value">{{ strongly_agree }}</div>
+        <div class="stat-label">Strongly Agree</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_very_satisfied</span></div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
+      <div class="stat-card card-sat">
+        <div class="stat-card-icon"><span class="material-icons-round" style="color:#16a34a;background:#f0fdf4">sentiment_satisfied</span></div>
+        <div class="stat-value">{{ agree }}</div>
+        <div class="stat-label">Agree</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_satisfied</span></div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
       <div class="stat-card card-neu">
-        <div class="stat-card-icon"><span class="material-icons-round">sentiment_neutral</span></div>
-        <div class="stat-value">{{ satisfactory }}</div>
-        <div class="stat-label">Satisfactory</div>
+        <div class="stat-card-icon"><span class="material-icons-round" style="color:#ca8a04;background:#fefce8">sentiment_neutral</span></div>
+        <div class="stat-value">{{ neither }}</div>
+        <div class="stat-label">Neither</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_neutral</span></div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md">
       <div class="stat-card card-neg">
-        <div class="stat-card-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
-        <div class="stat-value">{{ unsatisfactory }}</div>
-        <div class="stat-label">Unsatisfactory</div>
+        <div class="stat-card-icon"><span class="material-icons-round" style="color:#dc2626;background:#fef2f2">sentiment_dissatisfied</span></div>
+        <div class="stat-value">{{ disagree }}</div>
+        <div class="stat-label">Disagree</div>
         <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_dissatisfied</span></div>
+      </div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="stat-card card-neg">
+        <div class="stat-card-icon"><span class="material-icons-round" style="color:#991b1b;background:#fef2f2">sentiment_very_dissatisfied</span></div>
+        <div class="stat-value">{{ strongly_disagree }}</div>
+        <div class="stat-label">Strongly Disagree</div>
+        <div class="stat-card-bg-icon"><span class="material-icons-round">sentiment_very_dissatisfied</span></div>
       </div>
     </div>
   </div>
@@ -233,9 +249,6 @@ const RATING_CONFIG = {
   'Disagree':                   { cls:'chip-d',   icon:'sentiment_dissatisfied' },
   'Strongly Disagree':          { cls:'chip-sd',  icon:'sentiment_very_dissatisfied' },
   'Not Applicable':             { cls:'chip-na',  icon:'block' },
-  'Very Satisfactory':          { cls:'chip-sa',  icon:'sentiment_very_satisfied' },
-  'Satisfactory':               { cls:'chip-a',   icon:'sentiment_satisfied' },
-  'Unsatisfactory':             { cls:'chip-sd',  icon:'sentiment_very_dissatisfied' },
 };
 
 const SENTIMENT_CONFIG = {
