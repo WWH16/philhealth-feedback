@@ -60,6 +60,85 @@
 .bulk-bar.visible { display: flex; }
 .bulk-bar .material-icons-round { font-size: 16px; }
 
+/* ── BULK ACTION DROPDOWN ── */
+.bulk-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+.bulk-dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.bulk-dropdown-btn .chevron {
+  font-size: 15px;
+  transition: transform 150ms ease;
+}
+.bulk-dropdown.open .bulk-dropdown-btn .chevron {
+  transform: rotate(180deg);
+}
+.bulk-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 150;
+  min-width: 195px;
+  background: var(--surface-card);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.16);
+  padding: 4px 0;
+  border-radius: 2px;
+}
+.bulk-dropdown.open .bulk-dropdown-menu {
+  display: block;
+}
+.bulk-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font);
+  transition: background 120ms, color 120ms;
+}
+.bulk-dropdown-item:hover {
+  background: var(--surface-page);
+  color: var(--g-primary);
+}
+.bulk-dropdown-item .material-icons-round {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+.bulk-dropdown-item:hover .material-icons-round {
+  color: var(--g-primary);
+}
+.bulk-dropdown-item.item-danger {
+  color: var(--red) !important;
+}
+.bulk-dropdown-item.item-danger .material-icons-round {
+  color: var(--red) !important;
+}
+.bulk-dropdown-item.item-danger:hover {
+  background: var(--red-bg) !important;
+  color: var(--red) !important;
+}
+.bulk-dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
 /* ── CONFIRMATION MODALS (deletion) ── */
 .confirm-modal-backdrop {
   display: none; position: fixed; inset: 0; z-index: 600;
@@ -238,12 +317,25 @@
       <button type="button" class="btn-ph btn-ph-sm" onclick="clearSelection()">
         <span class="material-icons-round" aria-hidden="true">close</span> Deselect
       </button>
-      <button type="button" class="btn-ph btn-ph-sm btn-ph-primary" onclick="exportSelected()">
-        <span class="material-icons-round" aria-hidden="true">download</span> Export selected
-      </button>
-      <button type="button" class="btn-ph btn-ph-sm" id="bulkDeleteBtn" style="color:var(--red);border-color:var(--red);margin-left:auto;" onclick="openDeleteResponsesModal()">
-        <span class="material-icons-round" aria-hidden="true">delete_forever</span> Delete selected
-      </button>
+
+      <div class="bulk-dropdown" id="bulkDropdown">
+        <button type="button" class="btn-ph btn-ph-sm btn-ph-primary bulk-dropdown-btn" id="bulkDropdownBtn"
+                onclick="toggleBulkDropdown(event)" aria-haspopup="true" aria-expanded="false" aria-label="Choose bulk action for selected responses">
+          <span>Choose Action</span>
+          <span class="material-icons-round chevron" aria-hidden="true">expand_more</span>
+        </button>
+        <div class="bulk-dropdown-menu" id="bulkDropdownMenu" role="menu" aria-label="Bulk actions">
+          <button type="button" class="bulk-dropdown-item" role="menuitem" onclick="exportSelected(); closeBulkDropdown();">
+            <span class="material-icons-round" aria-hidden="true">download</span>
+            <span>Export selected (CSV)</span>
+          </button>
+          <div class="bulk-dropdown-divider" role="separator"></div>
+          <button type="button" class="bulk-dropdown-item item-danger" id="bulkDeleteBtn" role="menuitem" onclick="openDeleteResponsesModal(); closeBulkDropdown();">
+            <span class="material-icons-round" aria-hidden="true">delete_forever</span>
+            <span>Delete selected</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
@@ -512,14 +604,20 @@ function toggleSelectAll(cb) {
   updateBulkBar(); renderTable();
 }
 function clearSelection() {
-  selectedIds.clear(); updateBulkBar();
+  selectedIds.clear();
+  closeBulkDropdown();
+  updateBulkBar();
   document.getElementById('selectAll').checked = false;
   renderTable();
 }
 function updateBulkBar() {
   const bar = document.getElementById('bulkBar');
   bar.classList.toggle('visible', selectedIds.size > 0);
-  if (selectedIds.size > 0) document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
+  if (selectedIds.size > 0) {
+    document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
+  } else {
+    closeBulkDropdown();
+  }
 }
 function updateSelectAll() {
   const page = getPageRows(), cb = document.getElementById('selectAll');
@@ -752,6 +850,31 @@ function exportSelected() {
   }).click();
 }
 
+/* ── BULK DROPDOWN ── */
+function toggleBulkDropdown(e) {
+  if (e) e.stopPropagation();
+  const dropdown = document.getElementById('bulkDropdown');
+  const btn = document.getElementById('bulkDropdownBtn');
+  if (!dropdown) return;
+  const willOpen = !dropdown.classList.contains('open');
+  dropdown.classList.toggle('open', willOpen);
+  if (btn) btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+}
+
+function closeBulkDropdown() {
+  const dropdown = document.getElementById('bulkDropdown');
+  const btn = document.getElementById('bulkDropdownBtn');
+  if (dropdown) dropdown.classList.remove('open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('bulkDropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    closeBulkDropdown();
+  }
+});
+
 /* ── DELETION ── */
 let pendingDeleteIds = [];
 let isDeletingResponses = false;
@@ -819,6 +942,7 @@ function setupDeleteModal(ids) {
 function closeDeleteResponsesModal() {
   const modal = document.getElementById('deleteResponsesModal');
   if (modal) modal.classList.remove('open');
+  closeBulkDropdown();
   pendingDeleteIds = [];
 }
 
@@ -902,8 +1026,11 @@ function executeDeleteResponses() {
 }
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && !isDeletingResponses) {
-    closeDeleteResponsesModal();
+  if (e.key === 'Escape') {
+    closeBulkDropdown();
+    if (!isDeletingResponses) {
+      closeDeleteResponsesModal();
+    }
   }
 });
 
