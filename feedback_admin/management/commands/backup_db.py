@@ -4,7 +4,7 @@ from feedback_admin.backup_utils import create_backup
 
 
 class Command(BaseCommand):
-    help = 'Creates a manual backup of the MySQL database (BASE_DIR/backups by default).'
+    help = 'Creates a manual backup of the database (BASE_DIR/backups by default).'
 
     def handle(self, *args, **options):
         result = create_backup()

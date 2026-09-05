@@ -522,7 +522,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
               <span class="material-icons-round" style="color:var(--red);font-size:18px;flex-shrink:0;margin-top:1px">warning</span>
               <div style="font-size:12px;color:var(--red-text);font-weight:600;line-height:1.6">This permanently replaces all current data with the uploaded file. A safety backup is taken automatically first, but plan for brief downtime.</div>
             </div>
-<input type="file" accept=".sql" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
+<input type="file" accept=".json,.sql" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
             <div id="restoreDropZone" class="restore-drop-zone"
               ondrop="handleRestoreDrop(event)"
               ondragover="handleRestoreDragOver(event)"
@@ -530,8 +530,8 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
               onclick="document.getElementById('restoreFile').click()">
               <div id="restoreDropIdle">
                 <span class="material-icons-round restore-drop-icon">cloud_upload</span>
-                <div class="restore-drop-label">Drop your .sql backup file here</div>
-                <div class="restore-drop-hint">or click to browse &nbsp;·&nbsp; .sql files only</div>
+                <div class="restore-drop-label">Drop your backup file here (.json or .sql)</div>
+                <div class="restore-drop-hint">or click to browse &nbsp;·&nbsp; .json or .sql files</div>
               </div>
               <div id="restoreDropSelected" style="display:none;" onclick="event.stopPropagation()">
                 <div class="restore-file-selected">
@@ -1153,10 +1153,13 @@ function applyRestoreFile(file) {
 
 function onRestoreFileSelected(input) {
   const file = input.files[0] || null;
-  if (file && !file.name.toLowerCase().endsWith('.sql')) {
-    showToast('Only .sql files are accepted for restore.', 'error');
-    clearRestoreFile();
-    return;
+  if (file) {
+    const name = file.name.toLowerCase();
+    if (!name.endsWith('.json') && !name.endsWith('.sql')) {
+      showToast('Only .json and .sql backup files are accepted for restore.', 'error');
+      clearRestoreFile();
+      return;
+    }
   }
   applyRestoreFile(file);
 }
@@ -1188,8 +1191,9 @@ function handleRestoreDrop(e) {
   if (zone) zone.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
   if (!file) return;
-  if (!file.name.toLowerCase().endsWith('.sql')) {
-    showToast('Only .sql files are accepted for restore.', 'error');
+  const name = file.name.toLowerCase();
+  if (!name.endsWith('.json') && !name.endsWith('.sql')) {
+    showToast('Only .json and .sql backup files are accepted for restore.', 'error');
     return;
   }
   applyRestoreFile(file);

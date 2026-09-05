@@ -1177,7 +1177,7 @@ def settings_page(request):
     try:
         backups = list_backups()
         backup_error = None
-    except NotImplementedError as e:
+    except Exception as e:
         backups = []
         backup_error = str(e)
 
@@ -1386,12 +1386,8 @@ def backup_create(request):
         return JsonResponse({'ok': False, 'error': 'Only superusers can create backups.'}, status=403)
     try:
         result = create_backup()
-    except NotImplementedError as e:
-        return JsonResponse({'ok': False, 'error': str(e)}, status=400)
-    except RuntimeError as e:
+    except Exception as e:
         return JsonResponse({'ok': False, 'error': f'Backup failed: {e}'}, status=500)
-    except Exception:
-        return JsonResponse({'ok': False, 'error': 'Backup failed. Check server logs.'}, status=500)
 
     log_admin_event(request.user, FeedbackConfiguration.get_solo(), ADDITION,
                      f'Created backup "{result["filename"]}"')
@@ -1402,11 +1398,13 @@ def backup_create(request):
 @superuser_required
 def backup_download(request, filename):
     if not request.user.is_superuser:
-        raise Http404()
+        messages.error(request, 'Only superusers can download backups.')
+        return redirect('settings_page')
     try:
         path = resolve_backup_path(filename)
     except (SuspiciousFileOperation, FileNotFoundError):
-        raise Http404()
+        messages.error(request, f'Backup file "{filename}" was not found on disk. The list has been refreshed.')
+        return redirect(reverse('settings_page') + '#system-settings')
     return FileResponse(open(path, 'rb'), as_attachment=True, filename=filename)
 
 
@@ -1419,6 +1417,8 @@ def backup_delete(request, filename):
         delete_backup(filename)
     except (SuspiciousFileOperation, FileNotFoundError):
         return JsonResponse({'ok': False, 'error': 'Backup not found.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': f'Delete failed: {e}'}, status=500)
 
     log_admin_event(request.user, FeedbackConfiguration.get_solo(), DELETION,
                      f'Deleted backup "{filename}"')
@@ -1439,10 +1439,8 @@ def backup_restore(request):
         safety = restore_backup(uploaded)
     except ValueError as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=400)
-    except RuntimeError as e:
+    except Exception as e:
         return JsonResponse({'ok': False, 'error': f'Restore failed: {e}'}, status=500)
-    except Exception:
-        return JsonResponse({'ok': False, 'error': 'Restore failed. Check server logs.'}, status=500)
 
     log_admin_event(request.user, FeedbackConfiguration.get_solo(), CHANGE,
                      f'Restored database from upload (safety backup: "{safety["filename"]}")')
@@ -1450,6 +1448,6 @@ def backup_restore(request):
     return JsonResponse({
         'ok': True,
         'message': (
-            f'Database restored from SQL dump. The previous data was saved as "{safety["filename"]}".'
+            f'Database restored successfully. The previous data was saved as "{safety["filename"]}".'
         ),
     })

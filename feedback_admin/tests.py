@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 
 from feedback.models import FeedbackConfiguration
@@ -358,3 +358,108 @@ class RoleBasedAccessControlTests(TestCase):
         )
         self.assertContains(response, 'Invalid username or password. Please check your credentials and try again.')
         self.assertFalse('_auth_user_id' in self.client.session)
+
+
+class DatabaseBackupTests(TransactionTestCase):
+    def setUp(self):
+        self.superuser = User.objects.create_user(
+            username='super_admin',
+            password='password123',
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.staff_user = User.objects.create_user(
+            username='staff_member',
+            password='password123',
+            is_staff=True,
+            is_superuser=False,
+        )
+        self.client.force_login(self.superuser)
+
+    def test_create_and_list_backup(self):
+        from feedback_admin.backup_utils import create_backup, list_backups, delete_backup, BACKUP_FILENAME_RE
+        result = create_backup()
+        self.assertTrue(BACKUP_FILENAME_RE.match(result['filename']))
+        self.assertTrue(result['filename'].endswith('.json'))
+
+        backups = list_backups()
+        filenames = [b['filename'] for b in backups]
+        self.assertIn(result['filename'], filenames)
+
+        # Clean up
+        delete_backup(result['filename'])
+
+    def test_backup_create_view_and_download_delete(self):
+        from feedback_admin.backup_utils import delete_backup, resolve_backup_path
+        res = self.client.post(reverse('backup_create'), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data['ok'])
+        filename = data['message'].replace('Backup created: ', '').strip()
+
+        # Download
+        res_dl = self.client.get(reverse('backup_download', args=[filename]))
+        self.assertEqual(res_dl.status_code, 200)
+        res_dl.close()
+
+        # Delete
+        res_del = self.client.post(reverse('backup_delete', args=[filename]), HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(res_del.status_code, 200)
+        self.assertTrue(res_del.json()['ok'])
+
+    def test_backup_restore_json_flow(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from feedback.models import FeedbackEntry
+        from feedback_admin.backup_utils import create_backup, resolve_backup_path, delete_backup
+
+        entry1 = FeedbackEntry.objects.create(
+            experience=FeedbackEntry.STRONGLY_AGREE,
+            comment='Original entry before backup',
+        )
+
+        backup_res = create_backup()
+        backup_file_path = resolve_backup_path(backup_res['filename'])
+
+        # Add a new entry after backup
+        entry2 = FeedbackEntry.objects.create(
+            experience=FeedbackEntry.DISAGREE,
+            comment='Entry created after backup',
+        )
+        self.assertEqual(FeedbackEntry.objects.count(), 2)
+
+        with open(backup_file_path, 'rb') as f:
+            uploaded = SimpleUploadedFile(backup_res['filename'], f.read(), content_type='application/json')
+
+        res_restore = self.client.post(
+            reverse('backup_restore'),
+            {'backup_file': uploaded},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(res_restore.status_code, 200)
+        self.assertTrue(res_restore.json()['ok'])
+
+        # The entry created after backup should be gone, only original restored
+        self.assertEqual(FeedbackEntry.objects.count(), 1)
+        self.assertEqual(FeedbackEntry.objects.first().comment, 'Original entry before backup')
+
+        # Clean up
+        delete_backup(backup_res['filename'])
+
+    def test_staff_cannot_create_or_restore_backup(self):
+        self.client.force_login(self.staff_user)
+
+        res_create = self.client.post(reverse('backup_create'))
+        self.assertEqual(res_create.status_code, 302)  # Redirected by superuser_required
+
+        res_restore = self.client.post(reverse('backup_restore'))
+        self.assertEqual(res_restore.status_code, 302)
+
+    def test_get_backup_dir_fallback_when_readonly(self):
+        import tempfile
+        from unittest.mock import patch
+        from pathlib import Path
+        from feedback_admin.backup_utils import get_backup_dir
+
+        with patch.object(Path, 'touch', side_effect=PermissionError('Read-only file system')):
+            backup_dir = get_backup_dir()
+            self.assertEqual(backup_dir, Path(tempfile.gettempdir()) / 'backups')
