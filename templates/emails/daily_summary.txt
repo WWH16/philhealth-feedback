@@ -4,7 +4,6 @@ LHIO CAUAYAN CITY - CLIENT SATISFACTION MEASUREMENT (CSM)
 DAILY FEEDBACK & SATISFACTION PULSE
 ======================================================================
 Summary Date: {{ metrics.date_str }}
-Scheduled Close: 4:30 PM PHT
 
 1. OPERATIONAL PERFORMANCE INDICATORS
 ----------------------------------------------------------------------
