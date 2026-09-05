@@ -241,6 +241,60 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
   .settings-row { flex-direction: column; gap: 10px; }
   .settings-input { min-width: 0; width: 100%; }
 }
+
+/* ── Dispatch Action Card ── */
+.dispatch-action-card {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--surface-page);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.dispatch-action-info {
+  flex: 1;
+  min-width: 200px;
+}
+.dispatch-action-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+}
+.dispatch-action-header .material-icons-round {
+  font-size: 16px;
+  color: var(--g-forest);
+}
+[data-theme="dark"] .dispatch-action-header .material-icons-round {
+  color: #5fcf8a;
+}
+.dispatch-action-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.dispatch-action-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+@media (max-width: 767px) {
+  .dispatch-action-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .dispatch-action-actions {
+    justify-content: flex-end;
+  }
+}
 {% endblock %}
 
 {% block page_content %}
@@ -719,10 +773,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
               <!-- Daily Summary Email Toggle & Policy -->
               <div class="settings-row">
                 <div class="settings-row-info">
-                  <div class="settings-row-label" style="display:flex;align-items:center;gap:8px;">
-                    <span>Daily Summary Email</span>
-                    <span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:2px;background:rgba(22,150,81,0.12);color:var(--primary);border:1px solid rgba(22,150,81,0.25);letter-spacing:0.04em;">OPERATIONAL DIGEST</span>
-                  </div>
+                  <div class="settings-row-label">Daily Summary Email</div>
                   <div class="settings-row-hint">
                     Receive an automated daily email at <strong>4:30 PM PHT</strong> summarizing the day's total feedback count, SQD0 satisfaction rate %, sentiment distribution, and flagged citizen complaints.
                   </div>
@@ -747,21 +798,21 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 </div>
               </div>
 
-              <!-- On-Demand Summary Dispatch Row -->
-              <div class="settings-row" style="background:#f8fafc;border-radius:4px;padding:16px;border:1px solid #e2e8f0;">
-                <div class="settings-row-info">
-                  <div class="settings-row-label" style="display:flex;align-items:center;gap:6px;">
-                    <span class="material-icons-round" style="font-size:16px;color:var(--text-secondary);">send</span>
+              <!-- Manual Summary Dispatch Action Card -->
+              <div class="dispatch-action-card">
+                <div class="dispatch-action-info">
+                  <div class="dispatch-action-header">
+                    <span class="material-icons-round">send</span>
                     <span>Manual Summary Dispatch</span>
                   </div>
-                  <div class="settings-row-hint">
-                    Instantly generate and dispatch today's feedback and satisfaction summary email to the configured recipient now.
+                  <div class="dispatch-action-hint">
+                    Instantly generate and email today's satisfaction summary report to the primary notification recipient on demand.
                   </div>
                 </div>
-                <div class="settings-row-control">
-                  <button type="button" class="btn-ph" id="sendNowBtn" onclick="sendSummaryNow()" style="font-size:12px;padding:8px 14px;border:1px solid var(--border-color);background:var(--white);color:var(--text-primary);">
+                <div class="dispatch-action-actions">
+                  <button type="button" class="btn-ph btn-ph-primary" id="sendNowBtn" onclick="sendSummaryNow()">
                     <span class="ph-loader"></span>
-                    <span class="material-icons-round" style="font-size:16px;">send</span>
+                    <span class="material-icons-round">send</span>
                     <span>Send Summary Now</span>
                   </button>
                 </div>
@@ -939,8 +990,8 @@ function saveNotificationSettings() {
   return notificationSettingsSavePromise;
 }
 
-function sendSummaryNow(isTest = false) {
-  const btn = document.getElementById('sendNowBtn') || document.getElementById('sendTestEmailBtn');
+function sendSummaryNow() {
+  const btn = document.getElementById('sendNowBtn');
   const emailInput = document.getElementById('notificationEmailInput');
   const email = emailInput ? emailInput.value.trim() : '';
 
@@ -957,7 +1008,7 @@ function sendSummaryNow(isTest = false) {
 
   const formData = new FormData();
   formData.append('email', email);
-  formData.append('is_test', isTest ? 'true' : 'false');
+  formData.append('is_test', 'false');
   formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
   fetch("{% url 'send_summary_now' %}", {
@@ -985,8 +1036,6 @@ function sendSummaryNow(isTest = false) {
       }
     });
 }
-
-const sendTestSummaryEmail = () => sendSummaryNow(false);
 
 
 function runReanalysis() {
