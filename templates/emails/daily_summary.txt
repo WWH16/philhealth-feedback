@@ -3,8 +3,6 @@ PHILIPPINE HEALTH INSURANCE CORPORATION
 LHIO CAUAYAN CITY - CLIENT SATISFACTION MEASUREMENT (CSM)
 DAILY FEEDBACK & SATISFACTION PULSE
 ======================================================================
-{% if is_test %}*** TEST DISPATCH - PREVIEW GENERATED FROM ADMIN SETTINGS ***
-{% endif %}
 Summary Date: {{ metrics.date_str }}
 Scheduled Close: 4:30 PM PHT
 
