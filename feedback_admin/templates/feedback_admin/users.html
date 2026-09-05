@@ -706,7 +706,10 @@ function openDeleteConfirm(type, id, name) {
 
 async function executeGenericDelete() {
   const btn = document.getElementById('confirmDeleteBtn');
-  btn.classList.add('is-loading');
+  if (btn) {
+    btn.classList.add('is-loading');
+    btn.disabled = true;
+  }
   const { type, id } = currentDeleteAction;
   const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
   try {
@@ -719,11 +722,19 @@ async function executeGenericDelete() {
         fd.append('form_type', 'delete_user');
         fd.append('user_id', uid);
         const res  = await fetch(`/dashboard/users/${uid}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        const json = await res.json();
+        const json = await res.json().catch(() => ({}));
         if (json.ok) successCount++; else lastError = json.error;
       }
       closeModal('deleteConfirmModal');
-      _flashSuccessToast(successCount > 0 ? `${successCount} user(s) deleted.` : (lastError || 'Failed.'), successCount > 0 ? 'success' : 'error');
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
+      if (successCount > 0) {
+        showToast(`${successCount} user(s) deleted successfully.`, 'success', true);
+      } else {
+        showToast(lastError || 'Failed to delete selected users.', 'error', false);
+      }
       return;
     }
     if (type === 'user') {
@@ -732,9 +743,18 @@ async function executeGenericDelete() {
       fd.append('form_type', 'delete_user');
       fd.append('user_id', id);
       const res  = await fetch(`/dashboard/users/${id}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const json = await res.json();
-      if (json.ok) { closeModal('deleteConfirmModal'); closeModal('userModal'); _flashSuccessToast(json.message, 'success'); }
-      else throw new Error(json.error);
+      const json = await res.json().catch(() => ({}));
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
+      if (json.ok) {
+        closeModal('deleteConfirmModal');
+        closeModal('userModal');
+        showToast(json.message || 'User deleted successfully.', 'success', true);
+      } else {
+        throw new Error(json.error || 'Failed to delete user.');
+      }
       return;
     }
     if (type === 'group') {
@@ -743,15 +763,28 @@ async function executeGenericDelete() {
       fd.append('form_type', 'delete_group');
       fd.append('group_id', id);
       const res  = await fetch(`/dashboard/groups/${id}/delete/`, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const json = await res.json();
-      if (json.ok) { closeModal('deleteConfirmModal'); if (document.getElementById('groupModal').classList.contains('open')) closeModal('groupModal'); _flashSuccessToast(json.message, 'success'); }
-      else throw new Error(json.error);
+      const json = await res.json().catch(() => ({}));
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
+      if (json.ok) {
+        closeModal('deleteConfirmModal');
+        const gm = document.getElementById('groupModal');
+        if (gm && gm.classList.contains('open')) closeModal('groupModal');
+        showToast(json.message || 'Group deleted successfully.', 'success', true);
+      } else {
+        throw new Error(json.error || 'Failed to delete group.');
+      }
       return;
     }
   } catch (err) {
     closeModal('deleteConfirmModal');
-    _flashSuccessToast(err.message || 'An error occurred.', 'error', false);
-    btn.classList.remove('is-loading');
+    if (btn) {
+      btn.classList.remove('is-loading');
+      btn.disabled = false;
+    }
+    showToast(err.message || 'An error occurred.', 'error', false);
   }
 }
 
@@ -920,7 +953,10 @@ function submitUserForm() {
   if (isEdit && pw1 && pw1 !== pw2)    { showFieldError('fieldPassword2', 'errPassword2', 'Passwords do not match.'); return; }
 
   const saveBtn = document.querySelector('#userModal .btn-ph-primary');
-  saveBtn.classList.add('is-loading');
+  if (saveBtn) {
+    saveBtn.classList.add('is-loading');
+    saveBtn.disabled = true;
+  }
 
   const form = document.getElementById('userForm');
   const fd   = new FormData(form);
@@ -930,21 +966,36 @@ function submitUserForm() {
     body: fd,
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
   })
-    .then(r => r.json())
-    .then(json => {
-      saveBtn.classList.remove('is-loading');
-      if (json.ok) { closeModal('userModal'); _flashSuccessToast(json.message, 'success'); }
-      else routeError(json.error || 'An error occurred.');
+    .then(async r => {
+      let json = {};
+      try { json = await r.json(); } catch (e) {}
+      if (saveBtn) {
+        saveBtn.classList.remove('is-loading');
+        saveBtn.disabled = false;
+      }
+      if (json.ok) {
+        closeModal('userModal');
+        showToast(json.message || 'User saved successfully.', 'success', true);
+      } else {
+        const errorMsg = json.error || 'An error occurred.';
+        routeError(errorMsg);
+        showToast(errorMsg, 'error', false);
+      }
     })
     .catch(() => {
-      saveBtn.classList.remove('is-loading');
+      if (saveBtn) {
+        saveBtn.classList.remove('is-loading');
+        saveBtn.disabled = false;
+      }
       routeError('Network error. Please try again.');
+      showToast('Network error. Please try again.', 'error', false);
     });
 }
 
 /* ── SUBMIT GROUP FORM ── */
 function submitGroupForm() {
   const nameInput = document.getElementById('fieldGroupName');
+  if (!nameInput) return;
   const name = nameInput.value.trim();
   if (!name) {
     nameInput.classList.add('input-error');
@@ -953,9 +1004,13 @@ function submitGroupForm() {
   }
 
   const saveBtn = document.querySelector('#groupModal .btn-ph-primary');
-  saveBtn.classList.add('is-loading');
+  if (saveBtn) {
+    saveBtn.classList.add('is-loading');
+    saveBtn.disabled = true;
+  }
 
   const form = document.getElementById('groupForm');
+  if (!form) return;
   const fd   = new FormData(form);
 
   fetch(form.action, {
@@ -963,30 +1018,45 @@ function submitGroupForm() {
     body: fd,
     headers: { 'X-Requested-With': 'XMLHttpRequest' },
   })
-    .then(r => r.json())
-    .then(json => {
-      saveBtn.classList.remove('is-loading');
-      if (json.ok) { closeModal('groupModal'); _flashSuccessToast(json.message, 'success'); }
-      else { nameInput.classList.add('input-error'); nameInput.focus(); _flashSuccessToast(json.error || 'An error occurred.', 'error', false); }
+    .then(async r => {
+      let json = {};
+      try { json = await r.json(); } catch (e) {}
+      if (saveBtn) {
+        saveBtn.classList.remove('is-loading');
+        saveBtn.disabled = false;
+      }
+      if (json.ok) {
+        closeModal('groupModal');
+        showToast(json.message || 'Group saved successfully.', 'success', true);
+      } else {
+        nameInput.classList.add('input-error');
+        nameInput.focus();
+        showToast(json.error || 'An error occurred.', 'error', false);
+      }
     })
     .catch(() => {
-      saveBtn.classList.remove('is-loading');
-      _flashSuccessToast('Network error. Please try again.', 'error', false);
+      if (saveBtn) {
+        saveBtn.classList.remove('is-loading');
+        saveBtn.disabled = false;
+      }
+      showToast('Network error. Please try again.', 'error', false);
     });
 }
 
 /* ── TOAST ── */
-function _flashSuccessToast(msg, type, reloadAfter) {
-  const shouldReload = reloadAfter !== false;
+function showToast(msg, type = 'success', reloadAfter) {
+  const isSuccess = type === 'success';
+  const shouldReload = reloadAfter !== undefined ? !!reloadAfter : isSuccess;
   if (window.showToast) {
-    window.showToast(msg, type || 'success', shouldReload);
-  } else {
-    if (shouldReload) {
-      sessionStorage.setItem('pendingToast', JSON.stringify({ msg, type: type || 'success' }));
-      location.reload();
-    }
+    window.showToast(msg, type, shouldReload);
+  } else if (shouldReload) {
+    try {
+      sessionStorage.setItem('pendingToast', JSON.stringify({ msg, type }));
+    } catch (e) {}
+    location.reload();
   }
 }
+const _flashSuccessToast = showToast;
 
 function pageInit() { filterUsers(); }
 </script>
