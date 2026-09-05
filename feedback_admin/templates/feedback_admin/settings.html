@@ -304,7 +304,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
       <div>
         <div class="page-eyebrow"><span class="material-icons-round">tune</span> System Configuration</div>
         <h1 class="page-title">Settings</h1>
-        <p class="page-subtitle">Manage users, survey configuration, sentiment rules, and system settings.</p>
+        <p class="page-subtitle">Manage survey configuration, sentiment rules, database backups, and notification digests.</p>
       </div>
     </div>
   </div>
@@ -314,13 +314,8 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
     <!-- SETTINGS NAV -->
     <div class="col-12 col-lg-3">
       <div class="settings-nav" id="settingsNav">
-        <div class="settings-nav-group-label">Account & Users</div>
-        <button type="button" id="btn-user-management" class="settings-nav-item is-active" onclick="showPanelNav('user-management', this)">
-          <span class="material-icons-round" aria-hidden="true">manage_accounts</span> User Management
-        </button>
-
         <div class="settings-nav-group-label">Configuration</div>
-        <button type="button" id="btn-survey-settings" class="settings-nav-item" onclick="showPanelNav('survey-settings', this)">
+        <button type="button" id="btn-survey-settings" class="settings-nav-item is-active" onclick="showPanelNav('survey-settings', this)">
           <span class="material-icons-round" aria-hidden="true">quiz</span> Survey Settings
         </button>
         <button type="button" id="btn-sentiment-analysis" class="settings-nav-item" onclick="showPanelNav('sentiment-analysis', this)">
@@ -339,194 +334,9 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
     <div class="col-12 col-lg-9">
 
       <!-- ═══════════════════════════════
-           PANEL 1 — USER MANAGEMENT
+           PANEL 1 — SURVEY SETTINGS
       ═══════════════════════════════ -->
-      <div class="settings-panel active" id="panel-user-management">
-
-        <!-- ADD Staff -->
-        <div class="settings-section">
-          <div class="settings-section-head">
-            <div class="settings-section-icon"><span class="material-icons-round">person_add</span></div>
-            <div>
-              <div class="settings-section-title">Add Staff User</div>
-              <div class="settings-section-desc">Create a new administrator account with staff access.</div>
-            </div>
-          </div>
-          <div class="settings-section-body">
-            <form id="addAdminForm" method="post" action="{% url 'user_add' %}" style="display:none">
-              {% csrf_token %}
-              <input type="hidden" name="is_active"    value="on">
-              <input type="hidden" name="is_staff"     value="on">
-              <input type="hidden" id="fa-username"  name="username">
-              <input type="hidden" id="fa-email"     name="email">
-              <input type="hidden" id="fa-first"     name="first_name">
-              <input type="hidden" id="fa-last"      name="last_name">
-              <input type="hidden" id="fa-pw1"       name="password1">
-              <input type="hidden" id="fa-pw2"       name="password2">
-            </form>
-
-            <div class="row g-3">
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newUsername">Username <span style="color:var(--red)">*</span></label>
-                <input class="settings-input w-100" type="text" id="newUsername" placeholder="e.g. admin.santos" autocomplete="off">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newEmail">Email Address</label>
-                <input class="settings-input w-100" type="email" id="newEmail" placeholder="user@philhealth.gov.ph">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newFirst">First Name</label>
-                <input class="settings-input w-100" type="text" id="newFirst" placeholder="Maria">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newLast">Last Name</label>
-                <input class="settings-input w-100" type="text" id="newLast" placeholder="Santos">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newPw">Password <span style="color:var(--red)">*</span></label>
-                <input class="settings-input w-100" type="password" id="newPw" placeholder="Min. 8 characters" autocomplete="new-password">
-              </div>
-              <div class="col-12 col-sm-6">
-                <label class="form-label" for="newPw2">Confirm Password <span style="color:var(--red)">*</span></label>
-                <input class="settings-input w-100" type="password" id="newPw2" placeholder="Repeat password" autocomplete="new-password">
-              </div>
-              <div class="col-12">
-                <button type="button" class="btn-ph btn-ph-primary" id="addAdminBtn" onclick="submitAddAdmin()">
-                  <span class="ph-loader"></span>
-                  <span class="material-icons-round">person_add</span> Add Staff
-                </button>
-              </div>
-            </div>
-
-            {% if messages %}
-              {% for message in messages %}
-                {% if message.tags == 'error' %}
-                  <div class="settings-field-err" style="margin-top:12px;">
-                    <span class="material-icons-round">error</span> {{ message }}
-                  </div>
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- EXISTING ADMINS TABLE -->
-        <div class="settings-section">
-          <div class="settings-section-head">
-            <div class="settings-section-icon"><span class="material-icons-round">manage_accounts</span></div>
-            <div>
-              <div class="settings-section-title">Existing Admin Users</div>
-              <div class="settings-section-desc">Manage accounts from the Users page for full control.</div>
-            </div>
-          </div>
-          <div class="settings-section-body" style="padding:0">
-            <div style="overflow-x:auto">
-              <table class="ph-table" aria-label="Admin users quick list">
-                <thead>
-                  <tr>
-                    <th>Username</th>
-                    <th>Full Name</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th style="width:100px">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for u in users %}
-                  <tr>
-                    <td style="font-weight:700;font-size:13px">
-                      {{ u.username }}
-                      {% if u.id == request.user.id %}
-                        <span style="font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:var(--g-xlight);color:var(--g-forest);padding:2px 6px;margin-left:4px;">You</span>
-                      {% endif %}
-                    </td>
-                    <td style="font-size:12px;color:var(--text-secondary)">{{ u.get_full_name|default:"—" }}</td>
-                    <td>
-                      {% if u.is_superuser %}
-                        <span class="status-chip chip-super"><span class="material-icons-round">verified</span>Superuser</span>
-                      {% elif u.is_staff %}
-                        <span class="status-chip chip-staff"><span class="material-icons-round">admin_panel_settings</span>Staff</span>
-                      {% else %}
-                        <span class="status-chip" style="background:var(--surface-page);border:1px solid var(--border);color:var(--text-muted)"><span class="material-icons-round">person</span>Regular</span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      {% if u.is_active %}
-                        <span class="status-chip chip-active"><span class="material-icons-round">check_circle</span>Active</span>
-                      {% else %}
-                        <span class="status-chip chip-inactive"><span class="material-icons-round">cancel</span>Inactive</span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      <a href="{% url 'users' %}" class="btn-ph btn-ph-sm" title="Manage in Users page">
-                        <span class="material-icons-round">open_in_new</span>
-                      </a>
-                    </td>
-                  </tr>
-                  {% empty %}
-                  <tr><td colspan="5" style="text-align:center;color:var(--text-muted);font-size:12px;padding:20px">No users found.</td></tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- CHANGE OWN PASSWORD -->
-        <div class="settings-section">
-          <div class="settings-section-head">
-            <div class="settings-section-icon"><span class="material-icons-round">lock_reset</span></div>
-            <div>
-              <div class="settings-section-title">Change Password</div>
-              <div class="settings-section-desc">Update your own account password.</div>
-            </div>
-          </div>
-          <div class="settings-section-body">
-            <form id="changePwForm" method="post" action="{% url 'change_password' %}">
-              {% csrf_token %}
-              <div class="row g-3">
-                <div class="col-12 col-md-4">
-                  <label class="form-label" for="curPw">Current Password</label>
-                  <input class="settings-input w-100" type="password" id="curPw" name="current_password"
-                    placeholder="Current password" autocomplete="current-password">
-                  <p class="settings-field-err" id="err-current_password" style="display:none">
-                    <span class="material-icons-round">error</span><span></span>
-                  </p>
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label" for="changePw1">New Password</label>
-                  <input class="settings-input w-100" type="password" id="changePw1" name="new_password1"
-                    placeholder="Min. 8 characters" autocomplete="new-password">
-                  <p class="settings-field-err" id="err-new_password1" style="display:none">
-                    <span class="material-icons-round">error</span><span></span>
-                  </p>
-                </div>
-                <div class="col-12 col-md-4">
-                  <label class="form-label" for="changePw2">Confirm New</label>
-                  <input class="settings-input w-100" type="password" id="changePw2" name="new_password2"
-                    placeholder="Repeat new password" autocomplete="new-password">
-                  <p class="settings-field-err" id="err-new_password2" style="display:none">
-                    <span class="material-icons-round">error</span><span></span>
-                  </p>
-                </div>
-                <div class="col-12">
-                  <button type="button" class="btn-ph btn-ph-primary" id="changePwBtn" onclick="submitChangePw()">
-                    <span class="ph-loader"></span>
-                    <span class="material-icons-round">lock_reset</span> Update Password
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-
-      </div><!-- /panel-user-management -->
-
-
-      <!-- ═══════════════════════════════
-           PANEL 2 — SURVEY SETTINGS
-      ═══════════════════════════════ -->
-      <div class="settings-panel" id="panel-survey-settings">
+      <div class="settings-panel active" id="panel-survey-settings">
 
         <form onsubmit="event.preventDefault(); showToast('Survey settings saved successfully.','success')">
           <div class="settings-section">
@@ -1166,39 +976,9 @@ function clearFieldErr(inputId) {
   input.parentElement.querySelectorAll('.settings-field-err').forEach(e => e.remove());
 }
 
-function showPwFieldErr(field, text, scroll) {
-  const INPUT_MAP = {
-    'current_password': { input: 'curPw',     err: 'err-current_password' },
-    'new_password1':    { input: 'changePw1', err: 'err-new_password1'    },
-    'new_password2':    { input: 'changePw2', err: 'err-new_password2'    },
-  };
-  const map = INPUT_MAP[field];
-  if (!map) return;
-
-  const input = document.getElementById(map.input);
-  const errEl = document.getElementById(map.err);
-  if (input) {
-    input.classList.add('field-error');
-    if (scroll) {
-      setTimeout(() => {
-        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 50);
-    }
-  }
-  if (errEl) {
-    errEl.querySelector('span:last-child').textContent = text;
-    errEl.style.display = 'flex';
-    input.addEventListener('input', function clear() {
-      input.classList.remove('field-error');
-      errEl.style.display = 'none';
-      errEl.querySelector('span:last-child').textContent = '';
-      input.removeEventListener('input', clear);
-    }, { once: true });
-  }
-}
-
 /* ── PANEL SWITCHING ── */
 function showPanel(id, btn) {
+  if (!id || id === 'user-management' || id === 'account-security') id = 'survey-settings';
   document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('is-active'));
 
@@ -1238,7 +1018,6 @@ function openPanelFromHash() {
   if (!hash) return;
 
   const validIds = [
-    'user-management',
     'survey-settings',
     'sentiment-analysis',
     'system-settings',
@@ -1248,55 +1027,6 @@ function openPanelFromHash() {
   if (validIds.includes(hash)) {
     showPanel(hash);
   }
-}
-
-/* ── ADD ADMIN ── */
-function submitAddAdmin() {
-  const u  = document.getElementById('newUsername').value.trim();
-  const p1 = document.getElementById('newPw').value;
-  const p2 = document.getElementById('newPw2').value;
-
-  clearFieldErr('newUsername');
-  clearFieldErr('newPw');
-  clearFieldErr('newPw2');
-
-  if (!u) { showFieldErr('newUsername', 'Username is required.'); return; }
-  if (!/^[\w.@+-]+$/.test(u)) { showFieldErr('newUsername', 'Letters, digits and @/./+/-/_ only.'); return; }
-  if (p1.length < 8) { showFieldErr('newPw', 'Password must be at least 8 characters.'); return; }
-  if (p1 !== p2) { showFieldErr('newPw2', 'Passwords do not match.'); return; }
-
-  document.getElementById('fa-username').value = u;
-  document.getElementById('fa-email').value    = document.getElementById('newEmail').value.trim();
-  document.getElementById('fa-first').value    = document.getElementById('newFirst').value.trim();
-  document.getElementById('fa-last').value     = document.getElementById('newLast').value.trim();
-  document.getElementById('fa-pw1').value      = p1;
-  document.getElementById('fa-pw2').value      = p2;
-
-  document.getElementById('addAdminBtn').classList.add('is-loading');
-  document.getElementById('addAdminForm').submit();
-}
-
-/* ── CHANGE PASSWORD ── */
-function submitChangePw() {
-  const cur = document.getElementById('curPw').value;
-  const p1  = document.getElementById('changePw1').value;
-  const p2  = document.getElementById('changePw2').value;
-
-  ['curPw', 'changePw1', 'changePw2'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('field-error');
-  });
-  ['err-current_password', 'err-new_password1', 'err-new_password2'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.style.display = 'none'; el.querySelector('span:last-child').textContent = ''; }
-  });
-
-  if (!cur) { showPwFieldErr('current_password', 'Please enter your current password.', false); return; }
-  if (p1.length < 8) { showPwFieldErr('new_password1', 'New password must be at least 8 characters.', false); return; }
-  if (p1 !== p2) { showPwFieldErr('new_password2', 'Passwords do not match.', false); return; }
-
-  document.getElementById('changePwBtn').classList.add('is-loading');
-  document.getElementById('changePwForm').submit();
 }
 
 /* ── SURVEY TOGGLE ── */
@@ -1607,23 +1337,8 @@ function pageInit() {
 
   {% for message in messages %}
     (function() {
-      const raw  = "{{ message|escapejs }}";
-      const tags = "{{ message.extra_tags|default:'' }}";
-
-      if (tags !== 'pw_field') {
-        showToast(raw, "{{ message.tags }}".includes('error') ? 'error' : 'success');
-        return;
-      }
-
-      if (!raw.includes('|')) {
-        showToast(raw, 'success');
-        return;
-      }
-
-      const sep   = raw.indexOf('|');
-      const field = raw.slice(0, sep);
-      const text  = raw.slice(sep + 1);
-      showPwFieldErr(field, text, true);
+      const raw = "{{ message|escapejs }}";
+      showToast(raw, "{{ message.tags }}".includes('error') ? 'error' : 'success');
     })();
   {% endfor %}
 }
