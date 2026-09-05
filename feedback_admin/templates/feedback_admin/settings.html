@@ -735,19 +735,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
                 </div>
               </div>
 
-              <!-- Weekly Report Email -->
-              <div class="settings-row">
-                <div class="settings-row-info">
-                  <div class="settings-row-label">Weekly Analytics Digest</div>
-                  <div class="settings-row-hint">Receive an executive weekly performance analysis and PDF report every Monday at 8:00 AM.</div>
-                </div>
-                <div class="settings-row-control">
-                  <label class="toggle-switch">
-                    <input type="checkbox" id="weeklyReportToggle" name="weekly_report_enabled" {% if feedback_config.weekly_report_enabled %}checked{% endif %} onchange="syncNotificationSettingsState()">
-                    <span class="toggle-track"></span>
-                  </label>
-                </div>
-              </div>
 
               <!-- Notification Recipient Email -->
               <div class="settings-row">
@@ -893,20 +880,17 @@ let sentimentSettingsSavePromise = null;
 let pendingDeleteBackupFilename = null;
 
 let savedDailySummaryEnabled = {{ feedback_config.daily_summary_enabled|yesno:"true,false" }};
-let savedWeeklyReportEnabled = {{ feedback_config.weekly_report_enabled|yesno:"true,false" }};
 let savedNotificationEmail = "{{ feedback_config.notification_email|default:request.user.email|default:''|escapejs }}";
 let notificationSettingsSavePromise = null;
 
 function syncNotificationSettingsState() {
   const dailyToggle = document.getElementById('dailySummaryToggle');
-  const weeklyToggle = document.getElementById('weeklyReportToggle');
   const emailInput = document.getElementById('notificationEmailInput');
   const label = document.getElementById('notificationSettingsState');
-  if (!dailyToggle || !weeklyToggle || !emailInput || !label) return;
+  if (!dailyToggle || !emailInput || !label) return;
 
   const isDirty = (
     dailyToggle.checked !== savedDailySummaryEnabled ||
-    weeklyToggle.checked !== savedWeeklyReportEnabled ||
     emailInput.value.trim() !== savedNotificationEmail.trim()
   );
 
@@ -937,7 +921,6 @@ function saveNotificationSettings() {
         throw new Error(data.error || 'Unable to save notification settings.');
       }
       savedDailySummaryEnabled = !!data.daily_summary_enabled;
-      savedWeeklyReportEnabled = !!data.weekly_report_enabled;
       savedNotificationEmail = data.notification_email || '';
       syncNotificationSettingsState();
       showToast(data.message || 'Notification settings saved successfully.', 'success');

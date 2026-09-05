@@ -103,7 +103,6 @@ class FeedbackEntry(models.Model):
 class FeedbackConfiguration(models.Model):
     auto_analysis_enabled = models.BooleanField(default=True)
     daily_summary_enabled = models.BooleanField(default=False)
-    weekly_report_enabled = models.BooleanField(default=True)
     notification_email = models.EmailField(blank=True, default='')
     daily_summary_time = models.CharField(max_length=5, default='16:30')
     updated_at = models.DateTimeField(auto_now=True)
@@ -129,7 +128,6 @@ class FeedbackConfiguration(models.Model):
                 pk=1,
                 auto_analysis_enabled=True,
                 daily_summary_enabled=False,
-                weekly_report_enabled=True,
                 notification_email='',
                 daily_summary_time='16:30'
             )

@@ -1212,7 +1212,6 @@ def update_notification_settings(request):
     config = FeedbackConfiguration.get_solo()
 
     daily_summary_enabled = request.POST.get('daily_summary_enabled') == 'on'
-    weekly_report_enabled = request.POST.get('weekly_report_enabled') == 'on'
     notification_email = request.POST.get('notification_email', '').strip()
     daily_summary_time = request.POST.get('daily_summary_time', '17:30').strip()
 
@@ -1226,12 +1225,10 @@ def update_notification_settings(request):
             }, status=400)
 
     config.daily_summary_enabled = daily_summary_enabled
-    config.weekly_report_enabled = weekly_report_enabled
     config.notification_email = notification_email
     config.daily_summary_time = daily_summary_time or '17:30'
     config.save(update_fields=[
         'daily_summary_enabled',
-        'weekly_report_enabled',
         'notification_email',
         'daily_summary_time',
         'updated_at',
@@ -1248,7 +1245,6 @@ def update_notification_settings(request):
         'ok': True,
         'message': 'Notification settings saved successfully.',
         'daily_summary_enabled': daily_summary_enabled,
-        'weekly_report_enabled': weekly_report_enabled,
         'notification_email': notification_email,
         'daily_summary_time': config.daily_summary_time,
     })
