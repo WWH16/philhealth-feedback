@@ -1124,6 +1124,26 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLogoutModal();
 });
 
+window.updateResponsesCount = function(count) {
+  const badge = document.getElementById('nav-badge-count');
+  if (badge && count !== undefined && count !== null) {
+    badge.textContent = count;
+  }
+};
+
+window.reloadResponsesCount = function() {
+  fetch("{% url 'responses_count' %}", {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data && data.ok && data.count !== undefined) {
+      window.updateResponsesCount(data.count);
+    }
+  })
+  .catch(() => {});
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof pageInit === 'function') pageInit();
 });

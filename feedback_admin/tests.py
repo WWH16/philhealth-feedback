@@ -272,6 +272,17 @@ class ResponsesViewTests(TestCase):
         # staff_required redirects non-staff to admin_login
         self.assertEqual(response.status_code, 302)
 
+    def test_responses_count(self):
+        from feedback.models import FeedbackEntry
+        FeedbackEntry.objects.create(experience=FeedbackEntry.STRONGLY_AGREE)
+        FeedbackEntry.objects.create(experience=FeedbackEntry.AGREE)
+
+        response = self.client.get(reverse('responses_count'))
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['ok'])
+        self.assertEqual(data['count'], 2)
+
 
 class ActivityLogViewTests(TestCase):
     def setUp(self):
@@ -603,6 +614,7 @@ class DatabaseBackupTests(TransactionTestCase):
         data = res.json()
         self.assertTrue(data['ok'])
         self.assertIn('safety_backup', data)
+        self.assertEqual(data.get('feedback_count'), 1)
 
         # Verify only original entry exists
         self.assertEqual(FeedbackEntry.objects.count(), 1)

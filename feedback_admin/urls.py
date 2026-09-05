@@ -29,6 +29,7 @@ urlpatterns = [
 
     # ── Management ──────────────────────────────────────────────
     path('responses/', views.responses, name='responses'),
+    path('responses/count/', views.responses_count, name='responses_count'),
     path('responses/delete/', views.responses_delete, name='responses_delete'),
     path('settings/', views.settings_page, name='settings_page'),
     path('settings/sentiment/', views.update_sentiment_settings, name='update_sentiment_settings'),

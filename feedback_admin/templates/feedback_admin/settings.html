@@ -1292,6 +1292,11 @@ function createBackup() {
       let data = {};
       try { data = await r.json(); } catch (e) {}
       if (data.ok) {
+        if (typeof window.updateResponsesCount === 'function' && data.feedback_count !== undefined) {
+          window.updateResponsesCount(data.feedback_count);
+        } else if (typeof window.reloadResponsesCount === 'function') {
+          window.reloadResponsesCount();
+        }
         showToast(data.message || 'Database backup created successfully.', 'success', false);
         if (data.backup) {
           prependBackupRow(data.backup);
@@ -1632,7 +1637,14 @@ function executeRestore() {
           prependBackupRow(data.safety_backup);
         }
 
-        // 4. Show success toast
+        // 4. Reload responses count shown on the responses tab badge
+        if (typeof window.updateResponsesCount === 'function' && data.feedback_count !== undefined) {
+          window.updateResponsesCount(data.feedback_count);
+        } else if (typeof window.reloadResponsesCount === 'function') {
+          window.reloadResponsesCount();
+        }
+
+        // 5. Show success toast
         showToast(data.message || 'Database restored successfully.', 'success', false);
       } else {
         showToast(data.error || data.message || 'Database restore failed.', 'error', false);

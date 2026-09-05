@@ -548,6 +548,14 @@ def response_category_update(request, entry_id):
 
 
 @staff_required
+def responses_count(request):
+    return JsonResponse({
+        'ok': True,
+        'count': FeedbackEntry.objects.count(),
+    })
+
+
+@staff_required
 @require_POST
 def responses_delete(request):
     try:
@@ -1445,9 +1453,12 @@ def backup_create(request):
     log_admin_event(request.user, FeedbackConfiguration.get_solo(), ADDITION,
                      f'Created backup "{result["filename"]}"')
 
+    feedback_count = FeedbackEntry.objects.count()
+
     return JsonResponse({
         'ok': True,
         'message': f'Backup created: {result["filename"]}',
+        'feedback_count': feedback_count,
         'backup': {
             'filename': result['filename'],
             'size_bytes': result['size_bytes'],
@@ -1519,9 +1530,12 @@ def backup_restore(request):
     log_admin_event(request.user, FeedbackConfiguration.get_solo(), CHANGE,
                      f'Restored database from "{source_label}" (safety backup: "{safety["filename"]}")')
 
+    feedback_count = FeedbackEntry.objects.count()
+
     return JsonResponse({
         'ok': True,
         'message': f'Database restored successfully from "{source_label}". Previous data was saved as "{safety["filename"]}".',
+        'feedback_count': feedback_count,
         'safety_backup': {
             'filename': safety['filename'],
             'size_bytes': safety['size_bytes'],

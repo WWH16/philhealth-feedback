@@ -768,6 +768,10 @@ function updateStatCards(counts) {
   setVal('nadVal', counts.neither);
   setVal('dVal', counts.disagree);
   setVal('sdVal', counts.strongly_disagree);
+  setVal('nav-badge-count', counts.total);
+  if (typeof window.updateResponsesCount === 'function') {
+    window.updateResponsesCount(counts.total);
+  }
 }
 
 function openDeleteResponsesModal() {
