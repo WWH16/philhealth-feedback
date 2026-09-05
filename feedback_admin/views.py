@@ -14,14 +14,13 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.contrib.auth.forms import PasswordChangeForm
 from django.utils import timezone
 from django.db.models.functions import TruncDate, TruncWeek, TruncMonth, ExtractHour
 from feedback.models import FeedbackConfiguration, FeedbackEntry
@@ -1137,33 +1136,6 @@ def settings_page(request):
     }
     return render(request, 'feedback_admin/settings.html', context)
 
-
-@login_required
-@require_POST
-def change_password(request):
-    current_password = request.POST.get('current_password', '')
-    new_password1    = request.POST.get('new_password1', '')
-    new_password2    = request.POST.get('new_password2', '')
-
-    if not request.user.check_password(current_password):
-        messages.error(request, 'current_password|Current password is incorrect.', extra_tags='pw_field')
-        return redirect('settings_page')
-    if new_password1 != new_password2:
-        messages.error(request, 'new_password2|New passwords do not match.', extra_tags='pw_field')
-        return redirect('settings_page')
-
-    try:
-        validate_password(new_password1, user=request.user)
-    except ValidationError as e:
-        messages.error(request, 'new_password1|' + ' '.join(e.messages), extra_tags='pw_field')
-        return redirect('settings_page')
-
-    request.user.set_password(new_password1)
-    request.user.save()
-    update_session_auth_hash(request, request.user)
-    log_admin_event(request.user, request.user, CHANGE, 'Password updated')
-    messages.success(request, 'Password updated successfully.', extra_tags='pw_field')
-    return redirect('settings_page')
 
 from feedback.services import reanalyze_pending_entries
 
