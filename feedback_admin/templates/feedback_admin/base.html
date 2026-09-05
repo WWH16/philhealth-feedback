@@ -950,7 +950,9 @@ function adjustToastPosition() {
 
 window.showToast = function(msg, type = 'success', shouldReload = false) {
   if (shouldReload) {
-    sessionStorage.setItem('pendingToast', JSON.stringify({ msg, type }));
+    try {
+      sessionStorage.setItem('pendingToast', JSON.stringify({ msg, type }));
+    } catch (e) {}
     location.reload();
     return;
   }

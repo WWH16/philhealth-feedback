@@ -1307,19 +1307,35 @@ function onToggleSurvey(cb) {
 /* ── BACKUP ── */
 function createBackup() {
   const btn = document.getElementById('createBackupBtn');
-  btn.classList.add('is-loading');
+  if (btn) {
+    btn.classList.add('is-loading');
+    btn.disabled = true;
+  }
   fetch("{% url 'backup_create' %}", {
     method: 'POST',
     headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
   })
-    .then(r => r.json())
-    .then(data => {
-      btn.classList.remove('is-loading');
-      showToast(data.message || data.error, data.ok ? 'success' : 'error');
-      if (data.ok) setTimeout(() => location.reload(), 800);
+    .then(async r => {
+      let data = {};
+      try {
+        data = await r.json();
+      } catch (e) {}
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
+      if (data.ok) {
+        window.location.hash = 'system-settings';
+        showToast(data.message || 'Database backup created successfully.', 'success', true);
+      } else {
+        showToast(data.error || data.message || 'Failed to create database backup.', 'error');
+      }
     })
     .catch(() => {
-      btn.classList.remove('is-loading');
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
       showToast('Network error while creating backup.', 'error');
     });
 }
@@ -1327,28 +1343,52 @@ function createBackup() {
 /* ── TASK 3: Delete Backup Modal ── */
 function openDeleteBackupModal(filename) {
   pendingDeleteBackupFilename = filename;
-  document.getElementById('deleteBackupFilenameLabel').textContent = filename;
-  document.getElementById('confirmDeleteBackupBtn').classList.remove('is-loading');
-  document.getElementById('deleteBackupModal').classList.add('open');
+  const label = document.getElementById('deleteBackupFilenameLabel');
+  if (label) label.textContent = filename;
+  const btn = document.getElementById('confirmDeleteBackupBtn');
+  if (btn) {
+    btn.classList.remove('is-loading');
+    btn.disabled = false;
+  }
+  const modal = document.getElementById('deleteBackupModal');
+  if (modal) modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 function executeDeleteBackup() {
   if (!pendingDeleteBackupFilename) return;
   const btn = document.getElementById('confirmDeleteBackupBtn');
-  btn.classList.add('is-loading');
+  if (btn) {
+    btn.classList.add('is-loading');
+    btn.disabled = true;
+  }
 
   fetch(`/dashboard/settings/backup/${encodeURIComponent(pendingDeleteBackupFilename)}/delete/`, {
     method: 'POST',
     headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
   })
-    .then(r => r.json())
-    .then(data => {
+    .then(async r => {
+      let data = {};
+      try {
+        data = await r.json();
+      } catch (e) {}
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
       closeConfirmModal('deleteBackupModal');
-      showToast(data.message || data.error, data.ok ? 'success' : 'error');
-      if (data.ok) setTimeout(() => location.reload(), 600);
+      if (data.ok) {
+        window.location.hash = 'system-settings';
+        showToast(data.message || `Backup "${pendingDeleteBackupFilename}" deleted.`, 'success', true);
+      } else {
+        showToast(data.error || data.message || 'Failed to delete backup.', 'error');
+      }
     })
     .catch(() => {
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
       closeConfirmModal('deleteBackupModal');
       showToast('Network error while deleting backup.', 'error');
     });
@@ -1366,32 +1406,56 @@ function _humanBytes(b) {
 function applyRestoreFile(file) {
   if (!file) return;
   pendingRestoreFile = file;
-  document.getElementById('restoreFileName').textContent = file.name;
-  document.getElementById('restoreFileSize').textContent = _humanBytes(file.size);
-  document.getElementById('restoreDropIdle').style.display = 'none';
-  document.getElementById('restoreDropSelected').style.display = '';
-  document.getElementById('restoreBtn').disabled = false;
-  document.getElementById('restoreRemoveBtn').style.display = '';
+  const nameEl = document.getElementById('restoreFileName');
+  const sizeEl = document.getElementById('restoreFileSize');
+  const idleEl = document.getElementById('restoreDropIdle');
+  const selEl  = document.getElementById('restoreDropSelected');
+  const btnEl  = document.getElementById('restoreBtn');
+  const rmEl   = document.getElementById('restoreRemoveBtn');
+
+  if (nameEl) nameEl.textContent = file.name;
+  if (sizeEl) sizeEl.textContent = _humanBytes(file.size);
+  if (idleEl) idleEl.style.display = 'none';
+  if (selEl)  selEl.style.display = '';
+  if (btnEl)  btnEl.disabled = false;
+  if (rmEl)   rmEl.style.display = '';
 }
 
 function onRestoreFileSelected(input) {
-  applyRestoreFile(input.files[0] || null);
+  const file = input.files[0] || null;
+  if (file && !file.name.toLowerCase().endsWith('.sql')) {
+    showToast('Only .sql files are accepted for restore.', 'error');
+    clearRestoreFile();
+    return;
+  }
+  applyRestoreFile(file);
 }
 
 function clearRestoreFile(e) {
   if (e) e.stopPropagation();
   pendingRestoreFile = null;
-  document.getElementById('restoreFile').value = '';
-  document.getElementById('restoreDropIdle').style.display = '';
-  document.getElementById('restoreDropSelected').style.display = 'none';
-  document.getElementById('restoreBtn').disabled = true;
-  document.getElementById('restoreRemoveBtn').style.display = 'none';
+  const fileInput = document.getElementById('restoreFile');
+  const idleEl    = document.getElementById('restoreDropIdle');
+  const selEl     = document.getElementById('restoreDropSelected');
+  const btnEl     = document.getElementById('restoreBtn');
+  const rmEl      = document.getElementById('restoreRemoveBtn');
+  const nameEl    = document.getElementById('restoreFileName');
+  const sizeEl    = document.getElementById('restoreFileSize');
+
+  if (fileInput) fileInput.value = '';
+  if (idleEl) idleEl.style.display = '';
+  if (selEl) selEl.style.display = 'none';
+  if (btnEl) btnEl.disabled = true;
+  if (rmEl) rmEl.style.display = 'none';
+  if (nameEl) nameEl.textContent = '—';
+  if (sizeEl) sizeEl.textContent = '—';
 }
 
 function handleRestoreDrop(e) {
   e.preventDefault();
   e.stopPropagation();
-  document.getElementById('restoreDropZone').classList.remove('drag-over');
+  const zone = document.getElementById('restoreDropZone');
+  if (zone) zone.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
   if (!file) return;
   if (!file.name.toLowerCase().endsWith('.sql')) {
@@ -1404,27 +1468,39 @@ function handleRestoreDrop(e) {
 function handleRestoreDragOver(e) {
   e.preventDefault();
   e.stopPropagation();
-  document.getElementById('restoreDropZone').classList.add('drag-over');
+  const zone = document.getElementById('restoreDropZone');
+  if (zone) zone.classList.add('drag-over');
 }
 
 function handleRestoreDragLeave(e) {
   e.preventDefault();
-  document.getElementById('restoreDropZone').classList.remove('drag-over');
+  e.stopPropagation();
+  const zone = document.getElementById('restoreDropZone');
+  if (zone) zone.classList.remove('drag-over');
 }
 
 /* ── TASK 4: Restore confirmation modal ── */
 function openRestoreModal() {
   if (!pendingRestoreFile) return;
-  document.getElementById('restoreFileLabel').textContent = pendingRestoreFile.name;
-  document.getElementById('confirmRestoreBtn').classList.remove('is-loading');
-  document.getElementById('restoreConfirmModal').classList.add('open');
+  const label = document.getElementById('restoreFileLabel');
+  if (label) label.textContent = pendingRestoreFile.name;
+  const btn = document.getElementById('confirmRestoreBtn');
+  if (btn) {
+    btn.classList.remove('is-loading');
+    btn.disabled = false;
+  }
+  const modal = document.getElementById('restoreConfirmModal');
+  if (modal) modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 function executeRestore() {
   if (!pendingRestoreFile) return;
   const btn = document.getElementById('confirmRestoreBtn');
-  btn.classList.add('is-loading');
+  if (btn) {
+    btn.classList.add('is-loading');
+    btn.disabled = true;
+  }
 
   const fd = new FormData();
   fd.append('backup_file', pendingRestoreFile);
@@ -1434,20 +1510,29 @@ function executeRestore() {
     body: fd,
     headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
   })
-    .then(r => r.json())
-    .then(data => {
+    .then(async r => {
+      let data = {};
+      try {
+        data = await r.json();
+      } catch (e) {}
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
       closeConfirmModal('restoreConfirmModal');
-      showToast(data.message || data.error, data.ok ? 'success' : 'error');
       if (data.ok) {
-        pendingRestoreFile = null;
-        document.getElementById('restoreFile').value = '';
-        document.getElementById('restoreBtn').disabled = true;
-        document.getElementById('restoreFilePill').classList.remove('visible');
-        document.getElementById('restoreFileName').textContent = '—';
-        setTimeout(() => location.reload(), 1500);
+        clearRestoreFile();
+        window.location.hash = 'system-settings';
+        showToast(data.message || 'Database restored successfully.', 'success', true);
+      } else {
+        showToast(data.error || data.message || 'Database restore failed.', 'error');
       }
     })
     .catch(() => {
+      if (btn) {
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+      }
       closeConfirmModal('restoreConfirmModal');
       showToast('Network error during restore.', 'error');
     });
@@ -1455,33 +1540,50 @@ function executeRestore() {
 
 /* ── SHARED MODAL CLOSE ── */
 function closeConfirmModal(id) {
-  document.getElementById(id).classList.remove('open');
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.remove('open');
   document.body.style.overflow = '';
 }
 
 /* ── TOAST ── */
-function showToast(msg, type) {
+function showToast(msg, type = 'success', shouldReload = false) {
   if (window.showToast && window.showToast !== showToast) {
-    window.showToast(msg, type);
+    window.showToast(msg, type, shouldReload);
     return;
   }
   const isError    = type === 'error';
-  const toastColor = isError ? 'var(--red)' : 'var(--g-primary)';
-  const icon       = isError ? 'error' : 'check_circle';
+  const isWarning  = type === 'warning';
+  const toastColor = isError ? 'var(--red)' : (isWarning ? 'var(--gold)' : 'var(--g-primary)');
+  const icon       = isError ? 'error' : (isWarning ? 'warning' : 'check_circle');
+
+  if (shouldReload) {
+    try {
+      sessionStorage.setItem('pendingToast', JSON.stringify({ msg, type }));
+    } catch (e) {}
+    location.reload();
+    return;
+  }
+
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  container.querySelectorAll('.ph-toast').forEach(t => t.remove());
+
   const div        = document.createElement('div');
   div.className    = 'toast ph-toast fade align-items-center border-0';
   div.setAttribute('role', 'alert');
-  div.setAttribute('data-bs-delay', '4000');
+  div.setAttribute('data-bs-delay', '5000');
   div.style.setProperty('--toast-color', toastColor);
   div.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body d-flex align-items-center gap-3 py-3" style="color:var(--text-primary);font-size:13px;font-weight:600;">
-        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>${escHtml(msg)}
+    <div class="d-flex w-100">
+      <div class="toast-body d-flex align-items-center gap-3 py-3" style="color:var(--text-primary);font-size:13px;font-weight:600;width:100%;">
+        <span class="material-icons-round" style="font-size:20px;color:${toastColor}">${icon}</span>
+        <span class="toast-text">${escHtml(msg)}</span>
       </div>
-      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" style="font-size:10px;"></button>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" style="font-size:10px;"></button>
     </div>
     <div class="ph-toast-progress"></div>`;
-  document.getElementById('toastContainer').appendChild(div);
+  container.appendChild(div);
   new bootstrap.Toast(div).show();
   div.addEventListener('hidden.bs.toast', () => div.remove());
 }
