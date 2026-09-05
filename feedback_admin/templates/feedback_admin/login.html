@@ -305,6 +305,21 @@ body {
 }
 .alert-error .material-icons-round { font-size: 16px; color: var(--red); flex-shrink: 0; margin-top: 1px; }
 
+.alert-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--g-xlight);
+  border: 1.5px solid var(--g-primary);
+  margin-bottom: 20px;
+  font-size: 12px;
+  color: var(--g-forest);
+  font-weight: 600;
+  line-height: 1.55;
+}
+.alert-success .material-icons-round { font-size: 16px; color: var(--g-primary); flex-shrink: 0; margin-top: 1px; }
+
 /* ── SUBMIT BUTTON ── */
 .btn-login {
   width: 100%;
@@ -463,20 +478,18 @@ body {
 
         <h1 class="card-title">Admin Login</h1>
 
-        {% if form.errors %}
+        {% if messages %}
+          {% for message in messages %}
+          <div class="{% if message.tags == 'success' %}alert-success{% else %}alert-error{% endif %}" role="alert">
+            <span class="material-icons-round">{% if message.tags == 'success' %}check_circle{% else %}error{% endif %}</span>
+            <span>{{ message }}</span>
+          </div>
+          {% endfor %}
+        {% elif form.errors %}
         <div class="alert-error" role="alert">
           <span class="material-icons-round">error</span>
           <span>Invalid username or password. Please check your credentials and try again.</span>
         </div>
-        {% endif %}
-
-        {% if messages %}
-          {% for message in messages %}
-          <div class="alert-error" role="alert">
-            <span class="material-icons-round">error</span>
-            <span>{{ message }}</span>
-          </div>
-          {% endfor %}
         {% endif %}
 
         <form method="post" action="" novalidate>

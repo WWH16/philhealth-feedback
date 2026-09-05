@@ -2,6 +2,7 @@ import os
 import json
 from datetime import datetime, time, timedelta
 from collections import defaultdict
+from functools import wraps
 
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -264,7 +265,35 @@ def _is_ajax(request):
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 
-@login_required
+def staff_required(view_func):
+    """Requires user to be authenticated and have staff or superuser status."""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('admin_login')
+        if not (request.user.is_staff or request.user.is_superuser):
+            messages.error(request, 'Access denied. Staff privileges are required.')
+            return redirect('admin_login')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+def superuser_required(view_func):
+    """Requires user to be authenticated and have superuser status."""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('admin_login')
+        if not request.user.is_superuser:
+            if _is_ajax(request):
+                return JsonResponse({'ok': False, 'error': 'Access restricted to administrators.'}, status=403)
+            messages.error(request, 'Access restricted to administrators.')
+            return redirect('dashboard')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+@staff_required
 @require_POST
 def response_note_add(request, entry_id):
     entry = get_object_or_404(FeedbackEntry, pk=entry_id)
@@ -289,7 +318,7 @@ def response_note_add(request, entry_id):
     })
 
 
-@login_required
+@staff_required
 def dashboard(request):
     qs = FeedbackEntry.objects.all()
     now = timezone.localtime(timezone.now())
@@ -364,7 +393,7 @@ def dashboard(request):
     return render(request, 'feedback_admin/dashboard.html', context)
 
 
-@login_required
+@staff_required
 def responses(request):
     entries = FeedbackEntry.objects.order_by('-created_at')
     counts = _experience_counts(entries)
@@ -446,7 +475,7 @@ def _experience_counts(qs):
     }
 
 
-@login_required
+@staff_required
 @require_POST
 def response_status_update(request, entry_id):
     entry = get_object_or_404(FeedbackEntry, pk=entry_id)
@@ -484,7 +513,7 @@ def response_status_update(request, entry_id):
     })
 
 
-@login_required
+@staff_required
 @require_POST
 def response_category_update(request, entry_id):
     entry = get_object_or_404(FeedbackEntry, pk=entry_id)
@@ -516,7 +545,7 @@ def response_category_update(request, entry_id):
     })
 
 
-@login_required
+@superuser_required
 def sentiment_analysis(request):
     entries = FeedbackEntry.objects.all()
     counts = entries.aggregate(
@@ -566,7 +595,7 @@ def sentiment_analysis(request):
     return render(request, 'feedback_admin/sentiment_analysis.html', context)
 
 
-@login_required
+@staff_required
 def reports(request):
     now = timezone.localtime(timezone.now())
     today = now.date()
@@ -746,7 +775,7 @@ def reports(request):
     return render(request, 'feedback_admin/reports.html', context)
 
 
-@login_required
+@superuser_required
 def activity_log(request):
     """
     Government-facing audit trail sourced entirely from Django's built-in
@@ -780,7 +809,7 @@ def activity_log(request):
 
 # ── user management ───────────────────────────────────────────────────
 
-@login_required
+@superuser_required
 def users(request):
     all_users = User.objects.all().order_by('-date_joined').prefetch_related('groups', 'user_permissions')
     all_groups = Group.objects.annotate(member_count=Count('user')).prefetch_related('permissions')
@@ -805,7 +834,7 @@ def users(request):
     return render(request, 'feedback_admin/users.html', context)
 
 
-@login_required
+@superuser_required
 @require_POST
 def user_add(request):
     def err(msg):
@@ -869,10 +898,16 @@ def user_add(request):
     return redirect('users')
 
 
-@login_required
+@staff_required
 @require_POST
 def user_edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
+    if not (request.user.is_superuser or request.user == user):
+        if _is_ajax(request):
+            return JsonResponse({'ok': False, 'error': 'Access restricted to administrators.'}, status=403)
+        messages.error(request, 'Access restricted to administrators.')
+        return redirect('dashboard')
+
     original = {
         'username': user.username,
         'email': user.email,
@@ -903,13 +938,14 @@ def user_edit(request, user_id):
     user.first_name = request.POST.get('first_name', '').strip()
     user.last_name = request.POST.get('last_name', '').strip()
 
-    if user == request.user:
-        user.is_active = True
-    else:
-        user.is_active = 'is_active' in request.POST
+    if request.user.is_superuser:
+        if user == request.user:
+            user.is_active = True
+        else:
+            user.is_active = 'is_active' in request.POST
 
-    user.is_staff = 'is_staff' in request.POST
-    user.is_superuser = 'is_superuser' in request.POST
+        user.is_staff = 'is_staff' in request.POST
+        user.is_superuser = 'is_superuser' in request.POST
 
     pw1 = request.POST.get('password1', '')
     pw2 = request.POST.get('password2', '')
@@ -940,8 +976,9 @@ def user_edit(request, user_id):
             user.set_unusable_password()
 
     user.save()
-    user.groups.set(Group.objects.filter(id__in=request.POST.getlist('groups')))
-    user.user_permissions.set(Permission.objects.filter(id__in=request.POST.getlist('user_permissions')))
+    if request.user.is_superuser:
+        user.groups.set(Group.objects.filter(id__in=request.POST.getlist('groups')))
+        user.user_permissions.set(Permission.objects.filter(id__in=request.POST.getlist('user_permissions')))
 
     changed_fields = []
     for key, label in [
@@ -981,7 +1018,7 @@ def user_edit(request, user_id):
     return redirect('users')
 
 
-@login_required
+@superuser_required
 @require_POST
 def user_delete(request, user_id):
     user = get_object_or_404(User, pk=user_id)
@@ -1001,7 +1038,7 @@ def user_delete(request, user_id):
     return redirect('users')
 
 
-@login_required
+@superuser_required
 @require_POST
 def user_toggle_active(request, user_id):
     user = get_object_or_404(User, pk=user_id)
@@ -1016,7 +1053,7 @@ def user_toggle_active(request, user_id):
     return redirect('users')
 
 
-@login_required
+@superuser_required
 @require_POST
 def group_add(request):
     def err(msg):
@@ -1045,7 +1082,7 @@ def group_add(request):
     return redirect('users')
 
 
-@login_required
+@superuser_required
 @require_POST
 def group_edit(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
@@ -1078,7 +1115,7 @@ def group_edit(request, group_id):
     return redirect('users')
 
 
-@login_required
+@superuser_required
 @require_POST
 def group_delete(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
@@ -1096,16 +1133,33 @@ def group_delete(request, group_id):
 # ── LOGIN ─────────────────────────────────────────────────────────────
 def admin_login(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        if request.user.is_staff or request.user.is_superuser:
+            return redirect('dashboard')
+        logout(request)
 
     form = AuthenticationForm(request, data=request.POST or None)
 
     if request.method == 'POST':
         if form.is_valid():
             user = form.get_user()
+            if not (user.is_staff or user.is_superuser):
+                messages.error(request, 'Access denied. Staff privileges are required.')
+                return render(request, 'feedback_admin/login.html', {'form': form})
             login(request, user)
             log_admin_event(user, user, ADDITION, 'Logged in')
             return redirect('dashboard')
+        else:
+            username = request.POST.get('username', '').strip()
+            password = request.POST.get('password', '')
+            try:
+                potential_user = User.objects.get(username=username)
+                if potential_user.check_password(password):
+                    if not potential_user.is_active:
+                        messages.error(request, 'This account has been deactivated. Please contact your system administrator.')
+                    elif not (potential_user.is_staff or potential_user.is_superuser):
+                        messages.error(request, 'Access denied. Staff privileges are required.')
+            except User.DoesNotExist:
+                pass
 
     return render(request, 'feedback_admin/login.html', {'form': form})
 
@@ -1118,7 +1172,7 @@ def admin_logout(request):
     messages.success(request, 'You have been signed out.')
     return redirect('admin_login')
 
-@login_required
+@superuser_required
 def settings_page(request):
     try:
         backups = list_backups()
@@ -1138,7 +1192,7 @@ def settings_page(request):
 from feedback.services import reanalyze_pending_entries
 
 
-@login_required
+@superuser_required
 @require_POST
 def update_sentiment_settings(request):
     old_value = FeedbackConfiguration.get_solo().auto_analysis_enabled
@@ -1163,7 +1217,7 @@ def update_sentiment_settings(request):
     })
 
 
-@login_required
+@superuser_required
 @require_POST
 def reanalyze_sentiment_view(request):
     total, processed = reanalyze_pending_entries(force=False)
@@ -1181,7 +1235,7 @@ def reanalyze_sentiment_view(request):
     return JsonResponse({'ok': True, 'message': message, 'processed': processed, 'total': total})
 
 
-@login_required
+@superuser_required
 @require_POST
 def update_notification_settings(request):
     config = FeedbackConfiguration.get_solo()
@@ -1225,7 +1279,7 @@ def update_notification_settings(request):
     })
 
 
-@login_required
+@superuser_required
 @require_POST
 def send_summary_now(request):
     config = FeedbackConfiguration.get_solo()
@@ -1325,7 +1379,7 @@ def cron_daily_summary(request):
     return JsonResponse(result, status=status_code)
 
 
-@login_required
+@superuser_required
 @require_POST
 def backup_create(request):
     if not request.user.is_superuser:
@@ -1345,7 +1399,7 @@ def backup_create(request):
     return JsonResponse({'ok': True, 'message': f'Backup created: {result["filename"]}'})
 
 
-@login_required
+@superuser_required
 def backup_download(request, filename):
     if not request.user.is_superuser:
         raise Http404()
@@ -1356,7 +1410,7 @@ def backup_download(request, filename):
     return FileResponse(open(path, 'rb'), as_attachment=True, filename=filename)
 
 
-@login_required
+@superuser_required
 @require_POST
 def backup_delete(request, filename):
     if not request.user.is_superuser:
@@ -1371,7 +1425,7 @@ def backup_delete(request, filename):
     return JsonResponse({'ok': True, 'message': f'Backup "{filename}" deleted.'})
 
 
-@login_required
+@superuser_required
 @require_POST
 def backup_restore(request):
     if not request.user.is_superuser:

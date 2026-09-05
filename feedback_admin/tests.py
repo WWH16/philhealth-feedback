@@ -11,6 +11,7 @@ class SentimentSettingsTests(TestCase):
             username='admin',
             password='password123',
             is_staff=True,
+            is_superuser=True,
         )
         self.client.force_login(self.user)
 
@@ -89,6 +90,7 @@ class SentimentAnalysisViewTests(TestCase):
             username='admin',
             password='password123',
             is_staff=True,
+            is_superuser=True,
         )
         self.client.force_login(self.user)
 
@@ -175,6 +177,7 @@ class ActivityLogViewTests(TestCase):
             username='admin',
             password='password123',
             is_staff=True,
+            is_superuser=True,
         )
         self.client.force_login(self.user)
 
@@ -191,6 +194,7 @@ class UsersViewTests(TestCase):
             username='admin',
             password='password123',
             is_staff=True,
+            is_superuser=True,
         )
         self.client.force_login(self.user)
 
@@ -276,3 +280,81 @@ class UsersViewTests(TestCase):
         self.assertTrue(other_user.check_password('resetpassword12345'))
 
 
+class RoleBasedAccessControlTests(TestCase):
+    def setUp(self):
+        self.staff_user = User.objects.create_user(
+            username='staff_member',
+            password='password123',
+            is_active=True,
+            is_staff=True,
+            is_superuser=False,
+        )
+        self.superuser = User.objects.create_user(
+            username='superuser_admin',
+            password='password123',
+            is_active=True,
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.regular_user = User.objects.create_user(
+            username='regular_juan',
+            password='password123',
+            is_active=True,
+            is_staff=False,
+            is_superuser=False,
+        )
+        self.inactive_user = User.objects.create_user(
+            username='inactive_pedro',
+            password='password123',
+            is_active=False,
+            is_staff=True,
+            is_superuser=False,
+        )
+
+    def test_staff_can_access_core_operations(self):
+        self.client.force_login(self.staff_user)
+
+        # Dashboard, Responses, and Reports
+        res_dash = self.client.get(reverse('dashboard'))
+        self.assertEqual(res_dash.status_code, 200)
+
+        res_resp = self.client.get(reverse('responses'))
+        self.assertEqual(res_resp.status_code, 200)
+
+        res_rep = self.client.get(reverse('reports'))
+        self.assertEqual(res_rep.status_code, 200)
+
+    def test_staff_is_blocked_from_superuser_views(self):
+        self.client.force_login(self.staff_user)
+
+        for route_name in ['users', 'settings_page', 'activity_log', 'sentiment_analysis']:
+            response = self.client.get(reverse(route_name), follow=True)
+            self.assertRedirects(response, reverse('dashboard'))
+            self.assertContains(response, 'Access restricted to administrators.')
+
+    def test_regular_user_cannot_login(self):
+        response = self.client.post(
+            reverse('admin_login'),
+            {'username': 'regular_juan', 'password': 'password123'},
+            follow=True,
+        )
+        self.assertContains(response, 'Access denied. Staff privileges are required.')
+        self.assertFalse('_auth_user_id' in self.client.session)
+
+    def test_inactive_user_login_shows_deactivated_message(self):
+        response = self.client.post(
+            reverse('admin_login'),
+            {'username': 'inactive_pedro', 'password': 'password123'},
+            follow=True,
+        )
+        self.assertContains(response, 'This account has been deactivated. Please contact your system administrator.')
+        self.assertFalse('_auth_user_id' in self.client.session)
+
+    def test_invalid_password_shows_generic_error(self):
+        response = self.client.post(
+            reverse('admin_login'),
+            {'username': 'staff_member', 'password': 'wrongpassword'},
+            follow=True,
+        )
+        self.assertContains(response, 'Invalid username or password. Please check your credentials and try again.')
+        self.assertFalse('_auth_user_id' in self.client.session)
