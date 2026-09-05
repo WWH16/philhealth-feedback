@@ -473,12 +473,16 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
             <div class="settings-row">
               <div class="settings-row-info">
                 <div class="settings-row-label">Create Backup Now</div>
-                <div class="settings-row-hint">Generates a full database backup. Recommended before any major changes.</div>
+                <div class="settings-row-hint">Generates a complete database snapshot including feedback, configuration, and audit logs.</div>
+                <div id="backupCreatingStatus" style="display:none;font-size:11px;color:var(--g-primary);font-weight:600;margin-top:6px;align-items:center;gap:6px;">
+                  <span class="ph-loader" style="width:13px;height:13px;border-width:2px;border-color:var(--g-primary);border-top-color:transparent;display:inline-block;"></span>
+                  <span>Exporting database backup...</span>
+                </div>
               </div>
               <div class="settings-row-control">
                 <button class="btn-ph btn-ph-primary" id="createBackupBtn" onclick="createBackup()">
                   <span class="ph-loader"></span>
-                  <span class="material-icons-round">backup</span> Backup Now
+                  <span class="material-icons-round">backup</span> <span id="createBackupBtnText">Backup Now</span>
                 </button>
               </div>
             </div>
@@ -486,22 +490,28 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
               <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Recent Backups</div>
               <div id="backupLogList">
                 {% for b in backups %}
-                <div class="backup-log-item">
-                  <div><div class="backup-log-name">{{ b.filename }}</div><div class="backup-log-date">{{ b.created_display }}</div></div>
+                <div class="backup-log-item" id="backup-row-{{ b.filename|slugify }}">
+                  <div>
+                    <div class="backup-log-name">{{ b.filename }}</div>
+                    <div class="backup-log-date">{{ b.created_display }}</div>
+                  </div>
                   <div style="display:flex;align-items:center;gap:8px;">
                     <span class="backup-log-size">{{ b.size_display }}</span>
+                    <button type="button" class="btn-ph btn-ph-sm" style="border-color:var(--border);color:var(--text-secondary);"
+                      onclick="openRestoreExistingModal('{{ b.filename }}')" title="Restore from this backup">
+                      <span class="material-icons-round" style="font-size:14px;color:var(--gold);">settings_backup_restore</span> Restore
+                    </button>
                     <a class="btn-ph btn-ph-sm" href="{% url 'backup_download' b.filename %}" title="Download">
                       <span class="material-icons-round">download</span>
                     </a>
-                    {# TASK 3: uses openDeleteBackupModal() instead of confirm() #}
-                    <button class="btn-ph btn-ph-sm" style="color:var(--red);border-color:var(--red)"
+                    <button type="button" class="btn-ph btn-ph-sm" style="color:var(--red);border-color:var(--red)"
                       onclick="openDeleteBackupModal('{{ b.filename }}')" title="Delete">
                       <span class="material-icons-round">delete</span>
                     </button>
                   </div>
                 </div>
                 {% empty %}
-                <div style="font-size:12px;color:var(--text-muted);font-style:italic;">No backups yet. Click "Backup Now" to create the first one.</div>
+                <div id="backupEmptyNotice" style="font-size:12px;color:var(--text-muted);font-style:italic;">No backups yet. Click "Backup Now" to create the first one.</div>
                 {% endfor %}
               </div>
             </div>
@@ -514,15 +524,17 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
             <div class="settings-section-icon"><span class="material-icons-round">restore</span></div>
             <div>
               <div class="settings-section-title" style="color:var(--red)">Restore Database</div>
-              <div class="settings-section-desc">Restore the database from a backup. This will overwrite current data.</div>
+              <div class="settings-section-desc">Restore the database from an uploaded JSON backup file or a recent backup.</div>
             </div>
           </div>
           <div class="settings-section-body">
             <div style="padding:12px 14px;background:var(--red-bg);border:1.5px solid var(--red);display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;border-radius:0;">
               <span class="material-icons-round" style="color:var(--red);font-size:18px;flex-shrink:0;margin-top:1px">warning</span>
-              <div style="font-size:12px;color:var(--red-text);font-weight:600;line-height:1.6">This permanently replaces all current data with the uploaded file. A safety backup is taken automatically first, but plan for brief downtime.</div>
+              <div style="font-size:12px;color:var(--red-text);font-weight:600;line-height:1.6">
+                <strong>Important:</strong> Restoring replaces active feedback records with the contents of the backup. An automated safety backup of current live data is always generated before changes are applied.
+              </div>
             </div>
-<input type="file" accept=".json,.sql" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
+            <input type="file" accept=".json" id="restoreFile" style="display:none" onchange="onRestoreFileSelected(this)">
             <div id="restoreDropZone" class="restore-drop-zone"
               ondrop="handleRestoreDrop(event)"
               ondragover="handleRestoreDragOver(event)"
@@ -530,32 +542,43 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
               onclick="document.getElementById('restoreFile').click()">
               <div id="restoreDropIdle">
                 <span class="material-icons-round restore-drop-icon">cloud_upload</span>
-                <div class="restore-drop-label">Drop your backup file here (.json or .sql)</div>
-                <div class="restore-drop-hint">or click to browse &nbsp;·&nbsp; .json or .sql files</div>
+                <div class="restore-drop-label">Drop your backup file here (.json)</div>
+                <div class="restore-drop-hint">or click to browse &nbsp;&bull;&nbsp; JSON backup files supported</div>
               </div>
               <div id="restoreDropSelected" style="display:none;" onclick="event.stopPropagation()">
                 <div class="restore-file-selected">
-                  <span class="material-icons-round restore-file-icon">description</span>
-                  <div class="restore-file-details">
-                    <div class="restore-file-name-text" id="restoreFileName">—</div>
-                    <div class="restore-file-size-text" id="restoreFileSize">—</div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span class="material-icons-round restore-file-icon">description</span>
+                    <div class="restore-file-details">
+                      <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="restore-file-name-text" id="restoreFileName">—</div>
+                        <span class="status-chip chip-active" id="restoreFileTypeBadge" style="font-size:9px;">JSON</span>
+                      </div>
+                      <div class="restore-file-size-text" id="restoreFileSize">—</div>
+                    </div>
                   </div>
                   <div class="restore-file-actions">
-                    <button class="btn-ph btn-ph-sm" onclick="document.getElementById('restoreFile').click()" title="Pick a different file">
+                    <button type="button" class="btn-ph btn-ph-sm" onclick="document.getElementById('restoreFile').click()" title="Pick a different file">
                       <span class="material-icons-round">autorenew</span> Replace
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-            <div style="margin-top:10px;display:flex;justify-content:flex-end;gap:8px;">
-              <button class="btn-ph" id="restoreRemoveBtn" style="display:none;" onclick="clearRestoreFile(event)" title="Remove selected file">
-                <span class="material-icons-round">delete</span> Remove
-              </button>
-              <button class="btn-ph" id="restoreBtn" disabled style="border-color:var(--red);color:var(--red);" onclick="openRestoreModal()">
-                <span class="ph-loader"></span>
-                <span class="material-icons-round">restore</span> Restore Database
-              </button>
+            <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+              <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px;">
+                <span class="material-icons-round" style="font-size:15px;color:var(--g-primary)">verified_user</span>
+                Safety snapshot generated automatically before restore
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="button" class="btn-ph" id="restoreRemoveBtn" style="display:none;" onclick="clearRestoreFile(event)" title="Remove selected file">
+                  <span class="material-icons-round">close</span> Clear
+                </button>
+                <button type="button" class="btn-ph" id="restoreBtn" disabled style="border-color:var(--red);color:var(--red);" onclick="openRestoreModal()">
+                  <span class="ph-loader"></span>
+                  <span class="material-icons-round">restore</span> Restore Database
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -725,7 +748,7 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
           style="background:var(--red);border-color:var(--red);color:var(--white);"
           onclick="executeRestore()">
           <span class="ph-loader"></span>
-          <span class="material-icons-round">restore</span> Yes, Restore Database
+          <span class="material-icons-round">restore</span> <span id="confirmRestoreBtnText">Yes, Restore Database</span>
         </button>
       </div>
     </div>
@@ -737,8 +760,6 @@ input:checked + .toggle-track::after { transform: translateX(20px); }
 <script>
 let savedAutoAnalysisEnabled = null;
 let sentimentSettingsSavePromise = null;
-// TASK 3: track pending backup filename for deletion
-let pendingDeleteBackupFilename = null;
 
 let savedDailySummaryEnabled = {{ feedback_config.daily_summary_enabled|yesno:"true,false" }};
 let savedNotificationEmail = "{{ feedback_config.notification_email|default:request.user.email|default:''|escapejs }}";
@@ -1034,43 +1055,125 @@ function onToggleSurvey(cb) {
   document.getElementById('surveyOffMsg').style.display = cb.checked ? 'none' : 'flex';
 }
 
-/* ── BACKUP ── */
+/* ── BACKUP & RESTORE UTILITIES ── */
+let pendingDeleteBackupFilename = null;
+let pendingRestoreFile = null;
+let pendingRestoreExistingFilename = null;
+
+function _escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function _humanBytes(b) {
+  if (!b || isNaN(b)) return '0 B';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(1) + ' MB';
+}
+
+function prependBackupRow(b) {
+  const list = document.getElementById('backupLogList');
+  if (!list || !b || !b.filename) return;
+
+  const emptyNotice = document.getElementById('backupEmptyNotice');
+  if (emptyNotice) emptyNotice.remove();
+
+  const safeId = 'backup-row-' + b.filename.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+  const existing = document.getElementById(safeId);
+  if (existing) existing.remove();
+
+  const downloadUrl = b.download_url || `/dashboard/settings/backup/${encodeURIComponent(b.filename)}/download/`;
+
+  const item = document.createElement('div');
+  item.className = 'backup-log-item';
+  item.id = safeId;
+  item.style.transition = 'background-color 1.2s ease';
+  item.style.backgroundColor = 'var(--g-xlight)';
+
+  item.innerHTML = `
+    <div>
+      <div class="backup-log-name">${_escapeHtml(b.filename)}</div>
+      <div class="backup-log-date">${_escapeHtml(b.created_display || 'Just now')}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="backup-log-size">${_escapeHtml(b.size_display || _humanBytes(b.size_bytes))}</span>
+      <button type="button" class="btn-ph btn-ph-sm" style="border-color:var(--border);color:var(--text-secondary);"
+        onclick="openRestoreExistingModal('${_escapeHtml(b.filename)}')" title="Restore from this backup">
+        <span class="material-icons-round" style="font-size:14px;color:var(--gold);">settings_backup_restore</span> Restore
+      </button>
+      <a class="btn-ph btn-ph-sm" href="${downloadUrl}" title="Download">
+        <span class="material-icons-round">download</span>
+      </a>
+      <button type="button" class="btn-ph btn-ph-sm" style="color:var(--red);border-color:var(--red)"
+        onclick="openDeleteBackupModal('${_escapeHtml(b.filename)}')" title="Delete">
+        <span class="material-icons-round">delete</span>
+      </button>
+    </div>
+  `;
+
+  list.insertBefore(item, list.firstChild);
+  setTimeout(() => {
+    item.style.backgroundColor = 'transparent';
+  }, 1000);
+}
+
+/* ── CREATE BACKUP ── */
 function createBackup() {
   const btn = document.getElementById('createBackupBtn');
+  const btnText = document.getElementById('createBackupBtnText');
+  const statusEl = document.getElementById('backupCreatingStatus');
+
   if (btn) {
     btn.classList.add('is-loading');
     btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
+    if (btnText) btnText.textContent = 'Backing up...';
   }
+  if (statusEl) statusEl.style.display = 'inline-flex';
+
   fetch("{% url 'backup_create' %}", {
     method: 'POST',
     headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
   })
     .then(async r => {
       let data = {};
-      try {
-        data = await r.json();
-      } catch (e) {}
+      try { data = await r.json(); } catch (e) {}
       if (btn) {
         btn.classList.remove('is-loading');
         btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+        if (btnText) btnText.textContent = 'Backup Now';
       }
+      if (statusEl) statusEl.style.display = 'none';
+
       if (data.ok) {
-        window.location.hash = 'system-settings';
-        showToast(data.message || 'Database backup created successfully.', 'success', true);
+        showToast(data.message || 'Database backup created successfully.', 'success', false);
+        if (data.backup) {
+          prependBackupRow(data.backup);
+        }
       } else {
-        showToast(data.error || data.message || 'Failed to create database backup.', 'error');
+        showToast(data.error || data.message || 'Failed to create database backup.', 'error', false);
       }
     })
     .catch(() => {
       if (btn) {
         btn.classList.remove('is-loading');
         btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+        if (btnText) btnText.textContent = 'Backup Now';
       }
-      showToast('Network error while creating backup.', 'error');
+      if (statusEl) statusEl.style.display = 'none';
+      showToast('Network error while creating backup.', 'error', false);
     });
 }
 
-/* ── TASK 3: Delete Backup Modal ── */
+/* ── DELETE BACKUP ── */
 function openDeleteBackupModal(filename) {
   pendingDeleteBackupFilename = filename;
   const label = document.getElementById('deleteBackupFilenameLabel');
@@ -1093,25 +1196,37 @@ function executeDeleteBackup() {
     btn.disabled = true;
   }
 
-  fetch(`/dashboard/settings/backup/${encodeURIComponent(pendingDeleteBackupFilename)}/delete/`, {
+  const filenameToDelete = pendingDeleteBackupFilename;
+  fetch(`/dashboard/settings/backup/${encodeURIComponent(filenameToDelete)}/delete/`, {
     method: 'POST',
     headers: { 'X-CSRFToken': '{{ csrf_token }}', 'X-Requested-With': 'XMLHttpRequest' },
   })
     .then(async r => {
       let data = {};
-      try {
-        data = await r.json();
-      } catch (e) {}
+      try { data = await r.json(); } catch (e) {}
       if (btn) {
         btn.classList.remove('is-loading');
         btn.disabled = false;
       }
       closeConfirmModal('deleteBackupModal');
       if (data.ok) {
-        window.location.hash = 'system-settings';
-        showToast(data.message || `Backup "${pendingDeleteBackupFilename}" deleted.`, 'success', true);
+        showToast(data.message || `Backup "${filenameToDelete}" deleted.`, 'success', false);
+        const safeId = 'backup-row-' + filenameToDelete.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
+        const row = document.getElementById(safeId);
+        if (row) {
+          row.style.transition = 'opacity 180ms ease, transform 180ms ease';
+          row.style.opacity = '0';
+          row.style.transform = 'translateX(10px)';
+          setTimeout(() => {
+            row.remove();
+            const list = document.getElementById('backupLogList');
+            if (list && list.querySelectorAll('.backup-log-item').length === 0) {
+              list.innerHTML = '<div id="backupEmptyNotice" style="font-size:12px;color:var(--text-muted);font-style:italic;">No backups yet. Click "Backup Now" to create the first one.</div>';
+            }
+          }, 180);
+        }
       } else {
-        showToast(data.error || data.message || 'Failed to delete backup.', 'error');
+        showToast(data.error || data.message || 'Failed to delete backup.', 'error', false);
       }
     })
     .catch(() => {
@@ -1120,24 +1235,19 @@ function executeDeleteBackup() {
         btn.disabled = false;
       }
       closeConfirmModal('deleteBackupModal');
-      showToast('Network error while deleting backup.', 'error');
+      showToast('Network error while deleting backup.', 'error', false);
     });
 }
 
-/* ── Restore file — drag-and-drop + click to browse ── */
-let pendingRestoreFile = null;
-
-function _humanBytes(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
-  return (b / 1048576).toFixed(1) + ' MB';
-}
-
+/* ── RESTORE FILE (DROPZONE + FILE PICKER) ── */
 function applyRestoreFile(file) {
   if (!file) return;
   pendingRestoreFile = file;
+  pendingRestoreExistingFilename = null;
+
   const nameEl = document.getElementById('restoreFileName');
   const sizeEl = document.getElementById('restoreFileSize');
+  const badgeEl = document.getElementById('restoreFileTypeBadge');
   const idleEl = document.getElementById('restoreDropIdle');
   const selEl  = document.getElementById('restoreDropSelected');
   const btnEl  = document.getElementById('restoreBtn');
@@ -1145,18 +1255,22 @@ function applyRestoreFile(file) {
 
   if (nameEl) nameEl.textContent = file.name;
   if (sizeEl) sizeEl.textContent = _humanBytes(file.size);
+  if (badgeEl) {
+    badgeEl.textContent = 'JSON';
+    badgeEl.className = 'status-chip chip-active';
+  }
   if (idleEl) idleEl.style.display = 'none';
-  if (selEl)  selEl.style.display = '';
+  if (selEl)  selEl.style.display = 'block';
   if (btnEl)  btnEl.disabled = false;
-  if (rmEl)   rmEl.style.display = '';
+  if (rmEl)   rmEl.style.display = 'inline-flex';
 }
 
 function onRestoreFileSelected(input) {
   const file = input.files[0] || null;
   if (file) {
     const name = file.name.toLowerCase();
-    if (!name.endsWith('.json') && !name.endsWith('.sql')) {
-      showToast('Only .json and .sql backup files are accepted for restore.', 'error');
+    if (!name.endsWith('.json')) {
+      showToast('Only .json backup files are accepted for restore.', 'error', false);
       clearRestoreFile();
       return;
     }
@@ -1167,6 +1281,7 @@ function onRestoreFileSelected(input) {
 function clearRestoreFile(e) {
   if (e) e.stopPropagation();
   pendingRestoreFile = null;
+  pendingRestoreExistingFilename = null;
   const fileInput = document.getElementById('restoreFile');
   const idleEl    = document.getElementById('restoreDropIdle');
   const selEl     = document.getElementById('restoreDropSelected');
@@ -1192,8 +1307,8 @@ function handleRestoreDrop(e) {
   const file = e.dataTransfer.files[0];
   if (!file) return;
   const name = file.name.toLowerCase();
-  if (!name.endsWith('.json') && !name.endsWith('.sql')) {
-    showToast('Only .json and .sql backup files are accepted for restore.', 'error');
+  if (!name.endsWith('.json')) {
+    showToast('Only .json backup files are accepted for restore.', 'error', false);
     return;
   }
   applyRestoreFile(file);
@@ -1213,31 +1328,59 @@ function handleRestoreDragLeave(e) {
   if (zone) zone.classList.remove('drag-over');
 }
 
-/* ── TASK 4: Restore confirmation modal ── */
-function openRestoreModal() {
-  if (!pendingRestoreFile) return;
+/* ── RESTORE MODALS (1-CLICK & UPLOAD) ── */
+function openRestoreExistingModal(filename) {
+  pendingRestoreExistingFilename = filename;
+  pendingRestoreFile = null;
+
   const label = document.getElementById('restoreFileLabel');
-  if (label) label.textContent = pendingRestoreFile.name;
+  if (label) label.textContent = filename;
   const btn = document.getElementById('confirmRestoreBtn');
+  const btnText = document.getElementById('confirmRestoreBtnText');
   if (btn) {
     btn.classList.remove('is-loading');
     btn.disabled = false;
   }
+  if (btnText) btnText.textContent = 'Yes, Restore Database';
+  const modal = document.getElementById('restoreConfirmModal');
+  if (modal) modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openRestoreModal() {
+  if (!pendingRestoreFile) return;
+  pendingRestoreExistingFilename = null;
+
+  const label = document.getElementById('restoreFileLabel');
+  if (label) label.textContent = `${pendingRestoreFile.name} (${_humanBytes(pendingRestoreFile.size)})`;
+  const btn = document.getElementById('confirmRestoreBtn');
+  const btnText = document.getElementById('confirmRestoreBtnText');
+  if (btn) {
+    btn.classList.remove('is-loading');
+    btn.disabled = false;
+  }
+  if (btnText) btnText.textContent = 'Yes, Restore Database';
   const modal = document.getElementById('restoreConfirmModal');
   if (modal) modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 function executeRestore() {
-  if (!pendingRestoreFile) return;
+  if (!pendingRestoreFile && !pendingRestoreExistingFilename) return;
   const btn = document.getElementById('confirmRestoreBtn');
+  const btnText = document.getElementById('confirmRestoreBtnText');
   if (btn) {
     btn.classList.add('is-loading');
     btn.disabled = true;
   }
+  if (btnText) btnText.textContent = 'Restoring database...';
 
   const fd = new FormData();
-  fd.append('backup_file', pendingRestoreFile);
+  if (pendingRestoreFile) {
+    fd.append('backup_file', pendingRestoreFile);
+  } else if (pendingRestoreExistingFilename) {
+    fd.append('existing_filename', pendingRestoreExistingFilename);
+  }
 
   fetch("{% url 'backup_restore' %}", {
     method: 'POST',
@@ -1246,20 +1389,21 @@ function executeRestore() {
   })
     .then(async r => {
       let data = {};
-      try {
-        data = await r.json();
-      } catch (e) {}
+      try { data = await r.json(); } catch (e) {}
       if (btn) {
         btn.classList.remove('is-loading');
         btn.disabled = false;
       }
+      if (btnText) btnText.textContent = 'Yes, Restore Database';
       closeConfirmModal('restoreConfirmModal');
       if (data.ok) {
         clearRestoreFile();
-        window.location.hash = 'system-settings';
-        showToast(data.message || 'Database restored successfully.', 'success', true);
+        showToast(data.message || 'Database restored successfully.', 'success', false);
+        if (data.safety_backup) {
+          prependBackupRow(data.safety_backup);
+        }
       } else {
-        showToast(data.error || data.message || 'Database restore failed.', 'error');
+        showToast(data.error || data.message || 'Database restore failed.', 'error', false);
       }
     })
     .catch(() => {
@@ -1267,8 +1411,9 @@ function executeRestore() {
         btn.classList.remove('is-loading');
         btn.disabled = false;
       }
+      if (btnText) btnText.textContent = 'Yes, Restore Database';
       closeConfirmModal('restoreConfirmModal');
-      showToast('Network error during restore.', 'error');
+      showToast('Network error during restore.', 'error', false);
     });
 }
 

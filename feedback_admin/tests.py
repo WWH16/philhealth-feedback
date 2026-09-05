@@ -362,6 +362,8 @@ class RoleBasedAccessControlTests(TestCase):
 
 class DatabaseBackupTests(TransactionTestCase):
     def setUp(self):
+        from feedback.models import FeedbackEntry
+        FeedbackEntry.objects.all().delete()
         self.superuser = User.objects.create_user(
             username='super_admin',
             password='password123',
@@ -375,6 +377,11 @@ class DatabaseBackupTests(TransactionTestCase):
             is_superuser=False,
         )
         self.client.force_login(self.superuser)
+
+    def tearDown(self):
+        from feedback.models import FeedbackEntry
+        FeedbackEntry.objects.all().delete()
+        super().tearDown()
 
     def test_create_and_list_backup(self):
         from feedback_admin.backup_utils import create_backup, list_backups, delete_backup, BACKUP_FILENAME_RE
@@ -444,6 +451,7 @@ class DatabaseBackupTests(TransactionTestCase):
 
         # Clean up
         delete_backup(backup_res['filename'])
+        delete_backup(res_restore.json()['safety_backup']['filename'])
 
     def test_staff_cannot_create_or_restore_backup(self):
         self.client.force_login(self.staff_user)
@@ -463,3 +471,41 @@ class DatabaseBackupTests(TransactionTestCase):
         with patch.object(Path, 'touch', side_effect=PermissionError('Read-only file system')):
             backup_dir = get_backup_dir()
             self.assertEqual(backup_dir, Path(tempfile.gettempdir()) / 'backups')
+
+    def test_backup_restore_existing_file_flow(self):
+        from feedback.models import FeedbackEntry
+        from feedback_admin.backup_utils import create_backup, delete_backup
+
+        FeedbackEntry.objects.create(
+            experience=FeedbackEntry.AGREE,
+            comment='Pre-existing backup entry',
+        )
+
+        backup_res = create_backup()
+        fn = backup_res['filename']
+
+        # Add another entry
+        FeedbackEntry.objects.create(
+            experience=FeedbackEntry.DISAGREE,
+            comment='Should disappear after restore',
+        )
+        self.assertEqual(FeedbackEntry.objects.count(), 2)
+
+        # 1-click restore using existing_filename
+        res = self.client.post(
+            reverse('backup_restore'),
+            {'existing_filename': fn},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data['ok'])
+        self.assertIn('safety_backup', data)
+
+        # Verify only original entry exists
+        self.assertEqual(FeedbackEntry.objects.count(), 1)
+        self.assertEqual(FeedbackEntry.objects.first().comment, 'Pre-existing backup entry')
+
+        # Clean up
+        delete_backup(fn)
+        delete_backup(data['safety_backup']['filename'])

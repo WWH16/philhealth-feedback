@@ -15,8 +15,6 @@ import datetime
 import json
 import os
 import re
-import shutil
-import subprocess
 import tempfile
 from pathlib import Path
 
@@ -26,7 +24,7 @@ from django.core.management import call_command
 from django.db import connection, transaction
 from django.utils import timezone
 
-BACKUP_FILENAME_RE = re.compile(r'^philhealth_backup_\d{8}_\d{6}\.(json|sql)$')
+BACKUP_FILENAME_RE = re.compile(r'^philhealth_backup_\d{8}_\d{6}(?:_\d+)?\.json$')
 
 
 def get_backup_dir() -> Path:
@@ -54,26 +52,6 @@ def get_backup_dir() -> Path:
     return backup_dir
 
 
-def get_db_settings():
-    return settings.DATABASES['default']
-
-
-def _defaults_file(db_settings):
-    """Writes a short-lived 0600 mysql options file for MySQL cli fallback."""
-    fd = tempfile.NamedTemporaryFile(mode='w', suffix='.cnf', delete=False)
-    fd.write('[client]\n')
-    fd.write(f"user={db_settings.get('USER', '')}\n")
-    fd.write(f"password={db_settings.get('PASSWORD', '')}\n")
-    fd.write(f"host={db_settings.get('HOST') or 'localhost'}\n")
-    fd.write(f"port={db_settings.get('PORT') or '3306'}\n")
-    fd.close()
-    try:
-        Path(fd.name).chmod(0o600)
-    except (OSError, NotImplementedError):
-        pass
-    return fd.name
-
-
 def _human_size(num_bytes):
     size = float(num_bytes)
     for unit in ('B', 'KB', 'MB', 'GB'):
@@ -92,6 +70,11 @@ def create_backup():
     timestamp = timezone.localtime(timezone.now()).strftime('%Y%m%d_%H%M%S')
     filename = f'philhealth_backup_{timestamp}.json'
     dest_path = backup_dir / filename
+    counter = 1
+    while dest_path.exists():
+        filename = f'philhealth_backup_{timestamp}_{counter}.json'
+        dest_path = backup_dir / filename
+        counter += 1
 
     try:
         with open(dest_path, 'w', encoding='utf-8') as out:
@@ -107,14 +90,21 @@ def create_backup():
         dest_path.unlink(missing_ok=True)
         raise RuntimeError(f'Backup creation failed: {exc}') from exc
 
-    return {'filename': filename, 'size_bytes': dest_path.stat().st_size}
+    stat = dest_path.stat()
+    created = timezone.localtime(timezone.now())
+    return {
+        'filename': filename,
+        'size_bytes': stat.st_size,
+        'size_display': _human_size(stat.st_size),
+        'created_display': created.strftime('%b %d, %Y at %I:%M %p'),
+    }
 
 
 def list_backups():
-    """Returns backup metadata, newest first (supports both .json and .sql dumps)."""
+    """Returns backup metadata, newest first (JSON only)."""
     backup_dir = get_backup_dir()
     rows = []
-    for path in backup_dir.glob('philhealth_backup_*.*'):
+    for path in backup_dir.glob('philhealth_backup_*.json'):
         if not BACKUP_FILENAME_RE.match(path.name):
             continue
         try:
@@ -136,8 +126,8 @@ def list_backups():
             'size_bytes': stat.st_size,
             'size_display': _human_size(stat.st_size),
             'created_at': created,
-            'created_display': timezone.localtime(created).strftime('%b %d, %Y · %I:%M %p'),
-            'extension': path.suffix.lstrip('.').upper(),
+            'created_display': timezone.localtime(created).strftime('%b %d, %Y at %I:%M %p'),
+            'extension': 'JSON',
         })
     rows.sort(key=lambda r: r['created_at'], reverse=True)
     return rows
@@ -168,108 +158,49 @@ def _iter_file_chunks(file_obj, chunk_size=65536):
 
 
 def restore_backup(uploaded_file):
-    """Restores the database from an uploaded .json or .sql backup file.
-    Takes a safety backup of the current database before applying changes.
+    """Restores the database from an uploaded .json backup file.
+    Takes an automated safety backup of the current database before applying changes.
     Supports both Django UploadedFile instances and standard file-like objects.
     """
     filename = getattr(uploaded_file, 'name', '') or 'backup'
     is_json = filename.lower().endswith('.json')
-    is_sql = filename.lower().endswith('.sql')
 
     head = uploaded_file.read(4096)
     uploaded_file.seek(0)
     head_text = head.decode('utf-8', errors='ignore').strip()
 
-    if not is_json and not is_sql:
-        if head_text.startswith('[') or head_text.startswith('{'):
-            is_json = True
-        elif any(marker in head_text for marker in ('CREATE TABLE', 'INSERT INTO', 'PostgreSQL database dump', 'MySQL dump', '--')):
-            is_sql = True
-        else:
-            raise ValueError('The uploaded file does not look like a valid .json or .sql backup.')
+    if not is_json and not (head_text.startswith('[') or head_text.startswith('{')):
+        raise ValueError('Only .json backup files are supported for database restore.')
 
-    safety = create_backup()
+    with tempfile.NamedTemporaryFile(suffix='.json', delete=False, mode='wb') as tmp:
+        for chunk in _iter_file_chunks(uploaded_file):
+            tmp.write(chunk)
+        tmp_path = Path(tmp.name)
 
-    if is_json:
-        with tempfile.NamedTemporaryFile(suffix='.json', delete=False, mode='wb') as tmp:
-            for chunk in _iter_file_chunks(uploaded_file):
-                tmp.write(chunk)
-            tmp_path = Path(tmp.name)
+    try:
+        with open(tmp_path, 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError as err:
+                raise ValueError(f'Invalid JSON format: {err}')
+            if not isinstance(data, list):
+                raise ValueError('Invalid backup format: expected a valid JSON backup list.')
 
-        try:
-            with open(tmp_path, 'r', encoding='utf-8') as f:
-                try:
-                    data = json.load(f)
-                except json.JSONDecodeError as err:
-                    raise ValueError(f'Invalid JSON format: {err}')
-                if not isinstance(data, list):
-                    raise ValueError('Invalid backup format: expected a JSON array of fixtures.')
+        models_in_fixture = {
+            item.get('model') for item in data if isinstance(item, dict) and 'model' in item
+        }
 
-            models_in_fixture = {
-                item.get('model') for item in data if isinstance(item, dict) and 'model' in item
-            }
+        safety = create_backup()
 
-            from feedback.models import FeedbackEntry
+        from feedback.models import FeedbackEntry
 
-            with transaction.atomic():
-                if 'feedback.feedbackentry' in models_in_fixture:
-                    FeedbackEntry.objects.all().delete()
-                call_command('loaddata', str(tmp_path))
-        except Exception as exc:
-            raise RuntimeError(f'Failed to restore JSON backup: {exc}') from exc
-        finally:
-            tmp_path.unlink(missing_ok=True)
-
-    else:
-        with tempfile.NamedTemporaryFile(suffix='.sql', delete=False, mode='wb') as tmp:
-            for chunk in _iter_file_chunks(uploaded_file):
-                tmp.write(chunk)
-            tmp_path = Path(tmp.name)
-
-        try:
-            db_settings = get_db_settings()
-            engine = db_settings.get('ENGINE', '')
-            is_postgres = 'postgresql' in engine or 'postgres' in engine
-            is_mysql = 'mysql' in engine
-
-            if is_postgres and shutil.which('psql'):
-                env = os.environ.copy()
-                if db_settings.get('PASSWORD'):
-                    env['PGPASSWORD'] = str(db_settings['PASSWORD'])
-                cmd = [
-                    'psql',
-                    '-h', db_settings.get('HOST', 'localhost'),
-                    '-p', str(db_settings.get('PORT', 5432)),
-                    '-U', db_settings.get('USER', 'postgres'),
-                    '-d', db_settings.get('NAME', 'postgres'),
-                ]
-                with open(tmp_path, 'rb') as sql_in:
-                    res = subprocess.run(cmd, stdin=sql_in, stderr=subprocess.PIPE, env=env)
-                if res.returncode != 0:
-                    raise RuntimeError(res.stderr.decode(errors='replace')[:500])
-
-            elif is_mysql and shutil.which('mysql'):
-                cnf_path = _defaults_file(db_settings)
-                try:
-                    with open(tmp_path, 'rb') as sql_in:
-                        res = subprocess.run(
-                            ['mysql', f'--defaults-extra-file={cnf_path}', db_settings['NAME']],
-                            stdin=sql_in,
-                            stderr=subprocess.PIPE,
-                        )
-                    if res.returncode != 0:
-                        raise RuntimeError(res.stderr.decode(errors='replace')[:500])
-                finally:
-                    Path(cnf_path).unlink(missing_ok=True)
-
-            else:
-                with open(tmp_path, 'r', encoding='utf-8', errors='ignore') as sql_file:
-                    sql_text = sql_file.read()
-                with connection.cursor() as cursor:
-                    cursor.execute(sql_text)
-        except Exception as exc:
-            raise RuntimeError(f'Failed to restore SQL backup: {exc}') from exc
-        finally:
-            tmp_path.unlink(missing_ok=True)
+        with transaction.atomic():
+            if 'feedback.feedbackentry' in models_in_fixture:
+                FeedbackEntry.objects.all().delete()
+            call_command('loaddata', str(tmp_path))
+    except Exception as exc:
+        raise RuntimeError(f'Failed to restore backup: {exc}') from exc
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
     return safety

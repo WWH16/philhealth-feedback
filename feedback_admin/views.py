@@ -6,6 +6,7 @@ from functools import wraps
 
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.hashers import make_password
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
@@ -1392,7 +1393,17 @@ def backup_create(request):
     log_admin_event(request.user, FeedbackConfiguration.get_solo(), ADDITION,
                      f'Created backup "{result["filename"]}"')
 
-    return JsonResponse({'ok': True, 'message': f'Backup created: {result["filename"]}'})
+    return JsonResponse({
+        'ok': True,
+        'message': f'Backup created: {result["filename"]}',
+        'backup': {
+            'filename': result['filename'],
+            'size_bytes': result['size_bytes'],
+            'size_display': result.get('size_display', ''),
+            'created_display': result.get('created_display', ''),
+            'download_url': reverse('backup_download', args=[result['filename']]),
+        },
+    })
 
 
 @superuser_required
@@ -1432,22 +1443,38 @@ def backup_restore(request):
         return JsonResponse({'ok': False, 'error': 'Only superusers can restore backups.'}, status=403)
 
     uploaded = request.FILES.get('backup_file')
-    if not uploaded:
-        return JsonResponse({'ok': False, 'error': 'No file uploaded.'}, status=400)
+    existing_filename = request.POST.get('existing_filename', '').strip()
+
+    if not uploaded and not existing_filename:
+        return JsonResponse({'ok': False, 'error': 'No backup file or archive specified.'}, status=400)
 
     try:
-        safety = restore_backup(uploaded)
+        if uploaded:
+            safety = restore_backup(uploaded)
+            source_label = getattr(uploaded, 'name', 'uploaded backup')
+        else:
+            path = resolve_backup_path(existing_filename)
+            with open(path, 'rb') as f:
+                safety = restore_backup(f)
+            source_label = existing_filename
+    except (SuspiciousFileOperation, FileNotFoundError):
+        return JsonResponse({'ok': False, 'error': f'Backup file "{existing_filename}" was not found on disk.'}, status=404)
     except ValueError as e:
         return JsonResponse({'ok': False, 'error': str(e)}, status=400)
     except Exception as e:
         return JsonResponse({'ok': False, 'error': f'Restore failed: {e}'}, status=500)
 
     log_admin_event(request.user, FeedbackConfiguration.get_solo(), CHANGE,
-                     f'Restored database from upload (safety backup: "{safety["filename"]}")')
+                     f'Restored database from "{source_label}" (safety backup: "{safety["filename"]}")')
 
     return JsonResponse({
         'ok': True,
-        'message': (
-            f'Database restored successfully. The previous data was saved as "{safety["filename"]}".'
-        ),
+        'message': f'Database restored successfully from "{source_label}". Previous data was saved as "{safety["filename"]}".',
+        'safety_backup': {
+            'filename': safety['filename'],
+            'size_bytes': safety['size_bytes'],
+            'size_display': safety.get('size_display', ''),
+            'created_display': safety.get('created_display', ''),
+            'download_url': reverse('backup_download', args=[safety['filename']]),
+        },
     })

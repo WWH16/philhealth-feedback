@@ -105,6 +105,7 @@ DATABASES = {
             'sslmode': os.environ.get('DB_SSLMODE', 'prefer'),
         },
         'CONN_MAX_AGE': 0,
+        'DISABLE_SERVER_SIDE_CURSORS': True,
     }
 }
 
