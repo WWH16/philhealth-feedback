@@ -347,7 +347,7 @@
             </th>
             <th style="width:60px">ID</th>
             <th style="min-width:110px">Date &amp; Time</th>
-            <th style="min-width:160px">SQD0 Overall Satisfaction</th>
+            <th style="min-width:160px">SQD Rating</th>
             <th style="min-width:120px">Category</th>
             <th style="min-width:100px">Sentiment</th>
             <th style="min-width:110px">Status</th>
@@ -827,7 +827,7 @@ function goPage(p) {
 
 /* ── EXPORT ── */
 function buildCSVRows(data) {
-  const header = ['ID','Date','Time','SQD0 Overall Satisfaction','Category','Sentiment','Status','Comment'];
+  const header = ['ID','Date','Time','SQD Rating','Category','Sentiment','Status','Comment'];
   const body   = data.map(r => [
     r.id, r.date, r.time, r.rating,
     r.category || '',

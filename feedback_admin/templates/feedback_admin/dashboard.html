@@ -208,7 +208,7 @@
         <thead>
           <tr>
             <th style="min-width:100px">Date &amp; Time</th>
-            <th style="min-width:160px">SQD0 Overall Satisfaction</th>
+            <th style="min-width:160px">SQD Rating</th>
             <th style="min-width:120px">Category</th>
             <th>Feedback / Comment</th>
           </tr>
@@ -309,8 +309,6 @@ function updatePieChart(data, forceRecreate = false) {
       const { width, height, ctx } = chart;
       const dataset = chart.data.datasets[0];
       const t = dataset.data.reduce((acc, b) => acc + b, 0);
-      const positiveCount = (dataset.data[0] || 0) + (dataset.data[1] || 0);
-      const posPct = t ? Math.round((positiveCount / t) * 100) : 0;
       const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
       ctx.save();
       ctx.textAlign = 'center';
@@ -320,11 +318,11 @@ function updatePieChart(data, forceRecreate = false) {
 
       ctx.font = '700 22px "IBM Plex Sans", sans-serif';
       ctx.fillStyle = isDarkMode ? '#f8fafc' : '#0f172a';
-      ctx.fillText(`${posPct}%`, centerX, centerY - 8);
+      ctx.fillText(t.toLocaleString(), centerX, centerY - 8);
 
       ctx.font = '600 10px "IBM Plex Sans", sans-serif';
       ctx.fillStyle = isDarkMode ? '#94a3b8' : '#64748b';
-      ctx.fillText('Satisfaction', centerX, centerY + 12);
+      ctx.fillText('Total Responses', centerX, centerY + 12);
       ctx.restore();
     }
   };
